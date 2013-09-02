@@ -22,6 +22,8 @@ __maintainer__ = "Andrey Filippov"
 __email__ = "andrey@elphel.com"
 __status__ = "Development"
 import struct
+import ezynq_ddr
+
 # http://docs.python.org/2/howto/argparse.html
 import argparse
 parser = argparse.ArgumentParser()
@@ -36,32 +38,32 @@ args = parser.parse_args()
 #print args
 #print args.configs
 
-
-ERR_WRONG_USAGE=1    
-ERR_MISSING_CONFIG = 2    
-ERR_INVALID = 3
-ERR_NOSUCHPIN = 4
-ERR_NOSUCHSIGNAL = 5
-ERR_MIOCONFLICT = 6
-ERR_INOUT = 7
-ERR_HEAD = 8
-ERR_NONACCESSIBLE_REHGISTER = 9
-ERR_NOT_IMPLEMENTED=10
-                                                   
+ERROR_DEFS={
+    'WRONG_USAGE':1,    
+    'MISSING_CONFIG': 2,    
+    'INVALID': 3,
+    'NOSUCHPIN': 4,
+    'NOSUCHSIGNAL': 5,
+    'MIOCONFLICT':6,
+    'INOUT': 7,
+    'HEAD': 8,
+    'NONACCESSIBLE_REGISTER': 9,
+    'NOT_IMPLEMENTED':10}
 
 COMMENT_CHAR = '#'
 OPTION_CHAR = '='
-QULAIFIER_CHAR = '__'
+QUALIFIER_CHAR = '__'
 
 if not args.configs:
     parser.print_help()
-    exit (ERR_WRONG_USAGE)
+    exit (ERROR_DEFS['WRONG_USAGE'])
 WARN=args.warn
 MIO_HTML=args.html
 try:
-    MIO_HTML_MASK=int(args.html_mask)
+    MIO_HTML_MASK=int(args.html_mask,0)
 except:
-    MIO_HTML_MASK=0    
+    MIO_HTML_MASK=0
+
     
 MIO_TEMPLATES = {
   'QUADSPI':(
@@ -296,6 +298,8 @@ MIO_ATTR=[
     {'PREFIX':'CONFIG_EZYNQ_MIO_INOUT_',    'SPECIAL':'DIR'},
     {'PREFIX':'CONFIG_EZYNQ_MIO_GPIO_OUT_', 'SPECIAL':'GPIO_OUT'}]
 
+
+
 GPIO_MASKDATA=[
                {'NAME':'MASK_DATA_0_LSW','ADDRESS':0xE000A000,'DATA':0},
                {'NAME':'MASK_DATA_0_MSW','ADDRESS':0xE000A004,'DATA':0},
@@ -326,16 +330,13 @@ ACCESSIBLE_REGISTERS=((0xe0001000,0xe0001fff), # UART1 controller registers
                       (0xf8000a00,0xf8000a8c), # SLCR registers All shown "reserved" ???
                       (0xf8000ab0,0xf8000b74)) # SLCR registers iostd, voltages,  - more DDR stuff
            
-#TODO: list configurable interfaces (ordered list) and process it in the defined order
-#Each interface may have channel and always has name (as in MIO_TEMPLATES)
 
 
   
 if args.verbosity >= 2:
     print MIO_TEMPLATES
-def parse_config(filename):
-    attrib_suffix='ATTRIB'
-    options = {}
+def read_config(filename):
+    raw_configs = []
     f = open(filename)
     for line in f:
         # First, remove comments:
@@ -349,33 +350,42 @@ def parse_config(filename):
             # strip spaces:
             option = option.strip()
             value = value.strip().upper()
+            # strip quotes:
             value = value.strip('"')
-            if QULAIFIER_CHAR in option:
-                option,qualifier=option.split(QULAIFIER_CHAR,1)
-                if not option in options:
-                    options[option]={}
-                if not isinstance(options[option],dict): # make a former value a value in a dictionary
-                    options[option]={'INTERFACE_GROUP':options[option]}
-                if qualifier==attrib_suffix:
-                    value=str(value).upper()
-                    try:
-                        options[option]['ATTRIBS'].add(value)
-                    except:
-                        options[option]['ATTRIBS']=set([value])
-                    if not 'INTERFACE_GROUP' in options[option]:
-                        options[option]['INTERFACE_GROUP']='Y' # 'any' if not overwritten, so just setting attribute initializes interface
-                else:        
-                    options[option][qualifier]=value    
-            else: 
-            # store in dictionary:
-                if option in options:
-                    try:
-                        options[option]['INTERFACE_GROUP'] = value #qualified pins already defined
-                    except:
-                        options[option] = value # not a dictionary - just overwrite 
-                else:
-                    options[option] = value
+            raw_configs.append({'KEY':option,'VALUE':value})
     f.close()
+    return raw_configs
+def parse_config_mio(raw_configs):
+    attrib_suffix='ATTRIB'
+    options = {}
+    for line in raw_configs:
+        option = line['KEY']
+        value = line['VALUE']
+        if QUALIFIER_CHAR in option:
+            option,qualifier=option.split(QUALIFIER_CHAR,1)
+            if not option in options:
+                options[option]={}
+            if not isinstance(options[option],dict): # make a former value a value in a dictionary
+                options[option]={'INTERFACE_GROUP':options[option]}
+            if qualifier==attrib_suffix:
+                value=str(value).upper()
+                try:
+                    options[option]['ATTRIBS'].add(value)
+                except:
+                    options[option]['ATTRIBS']=set([value])
+                if not 'INTERFACE_GROUP' in options[option]:
+                    options[option]['INTERFACE_GROUP']='Y' # 'any' if not overwritten, so just setting attribute initializes interface
+            else:        
+                options[option][qualifier]=value    
+        else: 
+        # store in the dictionary:
+            if option in options:
+                try:
+                    options[option]['INTERFACE_GROUP'] = value #qualified pins already defined
+                except:
+                    options[option] = value # not a dictionary - just overwrite 
+            else:
+                options[option] = value
     return options
 
 def mio_set_defaults(mio_dflts, mio, options):
@@ -385,20 +395,20 @@ def mio_set_defaults(mio_dflts, mio, options):
         mio_dflts['MIO_0_VOLT'] = float(options['CONFIG_EZYNQ_MIO_0_VOLT'])
     except (KeyError):
         print "required CONFIG_EZYNQ_MIO_0_VOLT is not defined. It should be 1.8, 2.5 or 3.3"
-        exit (ERR_MISSING_CONFIG)
+        exit (ERROR_DEFS['MISSING_CONFIG'])
     if not mio_dflts['MIO_0_VOLT'] in VALID_VOLTAGES:
         print 'Invalid voltage specified for MIO bank 0: CONFIG_EZYNQ_MIO_0_VOLT = ' + options['CONFIG_EZYNQ_MIO_0_VOLT']
         print 'Valid values are : ' + str(VALID_VOLTAGES)
-        exit (ERR_INVALID)
+        exit (ERROR_DEFS['INVALID'])
     try:
         mio_dflts['MIO_1_VOLT'] = float(options['CONFIG_EZYNQ_MIO_1_VOLT'])
     except (KeyError):
         print "required CONFIG_EZYNQ_MIO_1_VOLT is not defined. It should be 1.8, 2.5 or 3.3"
-        exit (ERR_MISSING_CONFIG)
+        exit (ERROR_DEFS['MISSING_CONFIG'])
     if not mio_dflts['MIO_1_VOLT'] in VALID_VOLTAGES:
         print 'Invalid voltage specified for MIO bank 1: CONFIG_EZYNQ_MIO_1_VOLT = ' + options['CONFIG_EZYNQ_MIO_1_VOLT']
         print 'Valid values are : ' + str(VALID_VOLTAGES)
-        exit (ERR_INVALID)
+        exit (ERROR_DEFS['INVALID'])
     iostd0 = IOSTD[VALID_VOLTAGES.index(mio_dflts['MIO_0_VOLT'])]
     pullup0 = False
     if 'CONFIG_EZYNQ_MIO_0_PULLUP' in options:
@@ -452,7 +462,7 @@ def set_mio_interfaces(mio_interfaces, options):
                         for pin in func_pin['PINS'][channel]:
                             allowed_pins.append(pin)
                     print 'Allowed MIO pins are:',allowed_pins
-                    exit (ERR_NOSUCHPIN)
+                    exit (ERROR_DEFS['NOSUCHPIN'])
                 for tmpl_pin in iface_template:
                     iface_pin={}
                     for key in tmpl_pin.keys():
@@ -488,8 +498,8 @@ def set_mio_interfaces(mio_interfaces, options):
                             break;
                     else:
                         print 'Signal name '+individual_pin_name+' is not defined for interface '+iface_name+' in'
-                        print conf_iface['CONFIG_NAME']+QULAIFIER_CHAR+individual_pin_name+" = "+option[individual_pin_name]
-                        exit (ERR_NOSUCHSIGNAL)
+                        print conf_iface['CONFIG_NAME']+QUALIFIER_CHAR+individual_pin_name+" = "+option[individual_pin_name]
+                        exit (ERROR_DEFS['NOSUCHSIGNAL'])
                     if (value<0):
                         try:
                             del iface[individual_pin_name]
@@ -501,9 +511,9 @@ def set_mio_interfaces(mio_interfaces, options):
                             value=tmpl_pin['PINS'][channel][0] # first variant
                         if not value in tmpl_pin['PINS'][channel]:
                             print 'Invalid MIO pin number '+str(value)+' for interface '+iface_name+print_channel+', set in '
-                            print conf_iface['CONFIG_NAME']+QULAIFIER_CHAR+individual_pin_name+" = "+option[individual_pin_name]
+                            print conf_iface['CONFIG_NAME']+QUALIFIER_CHAR+individual_pin_name+" = "+option[individual_pin_name]
                             print 'Allowed MIO pins are:',tmpl_pin['PINS'][channel]
-                            exit (ERR_NOSUCHPIN)
+                            exit (ERROR_DEFS['NOSUCHPIN'])
 #set new pin data                            
                         iface_pin={}
                         for key in tmpl_pin.keys():
@@ -526,7 +536,7 @@ def config_name (iface, channel, signal):
     for mi in MIO_INTERFACES:
         if (mi['IFACE']==iface) and (mi['CHANNEL']==channel) :
             if signal:
-                return mi['CONFIG_NAME']+QULAIFIER_CHAR+signal
+                return mi['CONFIG_NAME']+QUALIFIER_CHAR+signal
             else:
                 return mi['CONFIG_NAME']
                                   
@@ -551,7 +561,7 @@ def apply_mio_interfaces(mio, mio_interfaces,warn):
                     print config_name (name, channel, signal)+'=free'
                     print 'to the board configuration file\n'
                 if not warn:
-                    exit (ERR_MIOCONFLICT)
+                    exit (ERROR_DEFS['MIOCONFLICT'])
             #add current pin usage information        
             mio[pin['PIN']]['USED_IN'].append({'NAME':name, 'CHANNEL':channel,'SIGNAL':signal,'PRINT_CHANNEL':print_channel})
             #modify mio pin attributes
@@ -627,7 +637,7 @@ def set_mio_attribs(mio,options):
                     key=int(option[len(prefix):])
                 except:
                     print 'Invalid pin number ',option[len(prefix):],' in',option
-                    exit (ERR_NOSUCHPIN)
+                    exit (ERROR_DEFS['NOSUCHPIN)'])
                 attribs[prefix][key]=options[option]
                 break
 #    print '------- attribs -----'
@@ -642,7 +652,7 @@ def set_mio_attribs(mio,options):
 #                    print '***',attr['PROPERTY'],pin,attr['VALUE']
                 else:
                     print attr['PREFIX']+str(pin)+': pin number',pin,' out of range 0...53'
-                    exit (ERR_NOSUCHPIN) 
+                    exit (ERROR_DEFS['NOSUCHPIN']) 
     #set IN, OUT, BIDIR (INOUT) parameters 
         elif ('SPECIAL' in attr) and (attr['SPECIAL']=='DIR') and (attr['PREFIX'] in attribs):
             for pin in attribs[attr['PREFIX']]:
@@ -657,11 +667,11 @@ def set_mio_attribs(mio,options):
                 else:
                     print 'Invalid MIO pin polarity in',attr['PREFIX']+str(pin),'=',value
                     print 'Polarity can only be IN, OUT or BIDIR'
-                    exit (ERR_INOUT)
+                    exit (ERROR_DEFS['INOUT'])
                 if (pin==7) or (pin==8) and (value!='OUT'):
                     print 'Invalid MIO pin polarity in',attr['PREFIX']+str(pin),'=',value
                     print 'Polarity for MIO pins 7 and 8 can only be OUT'
-                    exit (ERR_INOUT)
+                    exit (ERROR_DEFS['INOUT'])
                 mio[pin]['INOUT']=value #Where is it used?
                 if value=='IN':
                     mio[pin]['TRISTATE']=True
@@ -782,7 +792,7 @@ def output_slcr_lock(registers,f,lock,MIO_HTML_MASK):
 
 #    for i,word in enumerate (GPIO_MASKDATA):
     word=SLCR_LOCK[lock!=0]
-#    print word       
+#    print word
     registers.append({'ADDRESS':word['ADDRESS'],'DATA':word['DATA']})
     if f:
         f.write('  <tr><td>'+word['NAME']+'</td><td>'+hex(word['ADDRESS'])+'</td><td>'+hex(word['DATA'])+'</td></tr>\n')
@@ -825,7 +835,7 @@ def image_generator (image, registers, user_def,ocm_offset,ocm_len,start_exec):
     reserved0044=0;
     if 'CONFIG_EZYNQ_RESERVED44' in options: reserved0044= int(options['CONFIG_EZYNQ_RESERVED44'],0)
 
-    rfi_word=0xeafffffe #froma actual image
+    rfi_word=0xeafffffe #from actual image
     waddr=0
     for _ in range (0x20/4):
         image[waddr]=rfi_word # fill reserved for interrupts fields
@@ -849,17 +859,17 @@ def image_generator (image, registers, user_def,ocm_offset,ocm_len,start_exec):
     #ocm_offset
     if ocm_offset<0x8c0:
         print 'Start offset should be >= 0x8c0, specified', hex(ocm_offset)
-        exit (ERR_HEAD)
+        exit (ERROR_DEFS['HEAD'])
     elif (ocm_offset & 0x3f) != 0:
         print 'Start offset should be 64-bytes aligned, specified', hex(ocm_offset)
-        exit (ERR_HEAD)
+        exit (ERROR_DEFS['HEAD'])
     image[waddr]=ocm_offset # offset 0x30
     waddr+=1
        
     #ocm_len    
     if ocm_len>0x30000:
         print 'Loaded to the OCM image should fit into 3 mapped pages of OCM - 192K (0x30000), specified ',hex(ocm_len)
-        exit (ERR_HEAD)
+        exit (ERROR_DEFS['HEAD'])
     image[waddr]=ocm_len # offset 0x34
     waddr+=1
 
@@ -870,7 +880,7 @@ def image_generator (image, registers, user_def,ocm_offset,ocm_len,start_exec):
     #start_exec    
     if (start_exec>0x30000) or (start_exec<0):
         print 'Start address is relative to  OCM and should fit there - in 192K (0x30000), specified ',hex(start_exec)
-        exit (ERR_HEAD)
+        exit (ERROR_DEFS['HEAD'])
     image[waddr]=start_exec # offset 0x3c
     waddr+=1
     
@@ -899,7 +909,7 @@ def image_generator (image, registers, user_def,ocm_offset,ocm_len,start_exec):
     for register in registers:
         if not verify_register_accessible (register['ADDRESS']):
             print 'Tried to set non-accessible register', hex(register['ADDRESS']),' with data ', hex(register['DATA'])
-            exit (ERR_NONACCESSIBLE_REHGISTER)
+            exit (ERROR_DEFS['NONACCESSIBLE_REGISTER'])
         image[waddr]=register['ADDRESS']
         waddr+=1
         image[waddr]=register['DATA']
@@ -927,8 +937,25 @@ def write_image(image,name):
     bf.write(data)
     bf.close()
          
-#=========================  
-options = parse_config(args.configs)
+#=========================
+raw_configs=read_config(args.configs)
+
+permit_undefined_bits=False
+force=True #False
+warn_notfit=True # False
+
+ddr=ezynq_ddr.EzynqDDR(permit_undefined_bits, force, warn_notfit)
+ddr.parse_raw_register_set(raw_configs,QUALIFIER_CHAR,force,warn_notfit)
+#ddr.print_html_registers(html_file, show_bit_fields=True, show_comments=True)      
+#class EzynqDDR:
+#    def __init__(self,permit_undefined_bits=False,force=False,warn=False):
+#    def parse_raw_register_set(self,raw_configs,qualifier_char,force=True,warn=True):
+#    def print_html_registers(self, html_file, show_bit_fields=True, show_comments=True):
+
+
+
+
+options = parse_config_mio(raw_configs)
 if args.verbosity >= 3:
     print options
 if args.verbosity >= 1:
@@ -945,7 +972,7 @@ set_mio_interfaces(mio_interfaces, options)
 apply_mio_interfaces(mio, mio_interfaces,WARN)
 set_mio_attribs(mio,options)
 parse_mio(mio)
-#sett MIO pin options and initial value for GPIO output
+#set MIO pin options and initial value for GPIO output
 
 if args.verbosity >= 1:
     print '\n===== mio_interfaces === '
@@ -971,6 +998,10 @@ else:
     f=False
 #output_slcr_lock(registers,f,False,MIO_HTML_MASK) #prohibited by RBL    
 output_mio(registers,f,mio,MIO_HTML_MASK)
+
+ddr.print_html_registers(f, MIO_HTML_MASK & 0x100, MIO_HTML_MASK & 0x200)      
+
+
 #output_gpio_out(registers,f,MIO_HTML_MASK)        #prohibited by RBL
 #output_slcr_lock(registers,f,True,MIO_HTML_MASK)  #prohibited by RBL
 if 'CONFIG_EZYNQ_UART_LOOPBACK_0' in options: uart_remote_loopback(registers,f, 0,MIO_HTML_MASK)
