@@ -23,6 +23,7 @@ __email__ = "andrey@elphel.com"
 __status__ = "Development"
 import struct
 import ezynq_ddr
+import ezynq_registers
 
 # http://docs.python.org/2/howto/argparse.html
 import argparse
@@ -943,9 +944,11 @@ raw_configs=read_config(args.configs)
 permit_undefined_bits=False
 force=True #False
 warn_notfit=True # False
-
-ddr=ezynq_ddr.EzynqDDR(permit_undefined_bits, force, warn_notfit)
-ddr.parse_raw_register_set(raw_configs,QUALIFIER_CHAR,force,warn_notfit)
+regs_masked=[]
+ddr=ezynq_ddr.EzynqDDR(regs_masked,permit_undefined_bits, force, warn_notfit)
+ddr.parse_parameters(raw_configs)
+##ddr.parse_ddriob_raw_register_set(raw_configs,QUALIFIER_CHAR,force,warn_notfit)
+##ddr.parse_ddrc_raw_register_set(raw_configs,QUALIFIER_CHAR,force,warn_notfit)
 #ddr.print_html_registers(html_file, show_bit_fields=True, show_comments=True)      
 #class EzynqDDR:
 #    def __init__(self,permit_undefined_bits=False,force=False,warn=False):
@@ -999,7 +1002,26 @@ else:
 #output_slcr_lock(registers,f,False,MIO_HTML_MASK) #prohibited by RBL    
 output_mio(registers,f,mio,MIO_HTML_MASK)
 
-ddr.print_html_registers(f, MIO_HTML_MASK & 0x100, MIO_HTML_MASK & 0x200)      
+ddr.check_missing_features()
+ddr.html_list_features(f)
+#ddr.ddr_init_memory(current_reg_sets,force=False,warn=False): # will program to sequence 'MAIN'
+
+ddr.ddr_init_memory([],False,False) # will program to sequence 'MAIN'
+reg_sets=ddr.get_new_register_sets()
+
+#ezynq_registers.print_html_reg_header(f, title, show_bit_fields=True, show_comments=True,filter_fields=True)
+ezynq_registers.print_html_reg_header(f, 'DDR Configuration', MIO_HTML_MASK & 0x100, MIO_HTML_MASK & 0x200, not MIO_HTML_MASK & 0x400)
+ezynq_registers.print_html_registers(f, reg_sets, MIO_HTML_MASK & 0x100, MIO_HTML_MASK & 0x200, not MIO_HTML_MASK & 0x400)
+#print_html_registers(html_file, reg_sets, show_bit_fields=True, show_comments=True,filter_fields=True):
+
+ezynq_registers.print_html_reg_footer(f)
+
+
+
+
+
+
+#ddr.print_html_registers(f, MIO_HTML_MASK & 0x100, MIO_HTML_MASK & 0x200, not MIO_HTML_MASK & 0x400)  #filter_fields=True
 
 
 #output_gpio_out(registers,f,MIO_HTML_MASK)        #prohibited by RBL
