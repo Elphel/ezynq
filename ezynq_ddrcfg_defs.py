@@ -111,15 +111,31 @@ DDR_CFG_DEFS=[
     {'NAME':'XP',             'CONF_NAME':'CONFIG_EZYNQ_DDR_XP','TYPE':'I','MANDATORY':False,'DERIVED':False,'DEFAULT':4,
                 'DESCRIPTION':'Minimal Minimal time from power down (DLL on) to any operation (in tCK)'},              
     {'NAME':'T_DQSCK_MAX',           'CONF_NAME':'CONFIG_EZYNQ_DDR_T_DQSCK_MAX','TYPE':'F','MANDATORY':False,'DERIVED':False,'DEFAULT':7.5,
-                'DESCRIPTION':'DQS output access time from CK (ns). Used for LPDDR2 '},   
+                'DESCRIPTION':'DQS output access time from CK (ns). Used for LPDDR2'},   
+
+    {'NAME':'T_RP',           'CONF_NAME':'CONFIG_EZYNQ_DDR_T_RP','TYPE':'F','MANDATORY':False,'DERIVED':False,'DEFAULT':13.1,
+                'DESCRIPTION':'Precharge command period (ns).  May be used to calculate CONFIG_EZYNQ_DDR_RP automatically'},   
+    {'NAME':'T_RCD',          'CONF_NAME':'CONFIG_EZYNQ_DDR_T_RCD','TYPE':'F','MANDATORY':False,'DERIVED':False,'DEFAULT':13.1,
+                'DESCRIPTION':'Activate to internal Read or Write (ns). May be used to calculate CONFIG_EZYNQ_DDR_RCD automatically'},   
+
+    {'NAME':'CCD',             'CONF_NAME':'CONFIG_EZYNQ_DDR_CCD','TYPE':'I','MANDATORY':False,'DERIVED':False,'DEFAULT':5,
+                'DESCRIPTION':'CAS-to-CAS command delay (in tCK)'},              
+    {'NAME':'RRD',             'CONF_NAME':'CONFIG_EZYNQ_DDR_RRD','TYPE':'I','MANDATORY':False,'DERIVED':False,'DEFAULT':6,
+                'DESCRIPTION':'ACTIVATE-to-ACTIVATE minimal command period (in tCK)'},              
+    {'NAME':'T_RRD',          'CONF_NAME':'CONFIG_EZYNQ_DDR_T_RRD','TYPE':'F','MANDATORY':False,'DERIVED':False,'DEFAULT':10.0,
+                'DESCRIPTION':'ACTIVATE-to-ACTIVATE minimal command period (ns). May be used to calculate CONFIG_EZYNQ_DDR_RRD automatically'},   
+
               
-# CONFIG_EZYNQ_DDR_RTP = 4
 # CONFIG_EZYNQ_DDR_T_RTP = 7.5
 # CONFIG_EZYNQ_DDR_WTR = 4
 # CONFIG_EZYNQ_DDR_T_WTR = 7.5
 # CONFIG_EZYNQ_DDR_XP = 4 # power down (DLL on) to any operation, cycles
 # CONFIG_EZYNQ_DDR_T_DQSCK_MAX = 5.5 # (LPDDR2 only)
-              
+# CONFIG_EZYNQ_DDR_T_RP = 13.1
+# CONFIG_EZYNQ_DDR_T_RCD = 13.1
+# CONFIG_EZYNQ_DDR_CCD = 4
+# CONFIG_EZYNQ_DDR_RRD = 4
+# CONFIG_EZYNQ_DDR_T_RRD = 10.0
               
 ]
 

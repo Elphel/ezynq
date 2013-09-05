@@ -55,9 +55,37 @@ class EzynqDDR:
     def check_missing_features(self):
         self.features.check_missing_features()
     def html_list_features(self,html_file):
-        
         html_file.write('<h2>DDR memory configuration parameters</h2>\n')
         self.features.html_list_features(html_file)
+    def calculate_dependent_pars(self):
+#TODO: just testing on a few pars, migrate more of them
+        try:
+            tCK=1000.0/self.features.get_par_value('FREQ_MHZ')
+            try:
+                self.features.set_max_value('RP', int(math.ceil(self.features.get_par_value('T_RP')/tCK)))
+            except:
+                pass # get_par_value('T_RP') failed
+
+            try:    
+                self.features.set_max_value('RCD', int(math.ceil(self.features.get_par_value('T_RCD')/tCK)))
+            except:
+                pass
+                
+            try:
+                self.features.set_max_value('RRD', int(math.ceil(self.features.get_par_value('T_RRD')/tCK)))
+            except:
+                pass
+        except:
+            print "*** DDR Clock frequency is not defined"
+            
+#    def set_max_value(self,name,value):
+#    def set_min_value(self,name,value):
+            
+# CONFIG_EZYNQ_DDR_T_RP = 13.1
+# CONFIG_EZYNQ_DDR_T_RCD = 13.1
+#CONFIG_EZYNQ_DDR_RRD = 4
+#CONFIG_EZYNQ_DDR_T_RRD = 10.0
+
     
 #    def ddr_init_memory(self,current_reg_sets,force=False,warn=False,html_file, show_bit_fields=True, show_comments=True,filter_fields=True): # will program to sequence 'MAIN'
 
@@ -218,19 +246,30 @@ class EzynqDDR:
                                                            ('reg_ddrc_wr2rd',           WR2RD), # 0xe
                                                            ('reg_ddrc_rd2wr',           RD2WR), # 0x7 
                                                            ('reg_ddrc_write_latency',   write_latency)),force,warn) #5
-# reg DRAM_param_reg3, 0x272872d0
-        ddrc_register_set.set_bitfields('dram_param_reg3',(('reg_ddrc_loopback',           ?), #0
-                                                           ('reg_ddrc_dis_pad_pd',          ?), #0
-                                                           ('reg_phy_mode_ddr1_ddr2',          ?), #1
-                                                           ('reg_ddrc_read_latency',            ?), #7
-                                                           ('reg_ddrc_en_dfi_dram_clk_disable',           ?), #0
-                                                           ('reg_ddrc_mobile',           ?), # 0
-                                                           ('reg_ddrc_sdram',           ?), # 1
-                                                           ('reg_ddrc_refresh_to_x32',           ?), # 8
-                                                           ('reg_ddrc_t_rp',           ?), # 7
-                                                           ('reg_ddrc_refresh_margin',           ?), # 2
-                                                           ('reg_ddrc_t_rrd',           ?), # 6
-                                                           ('reg_ddrc_t_ccd',           ?)),force,warn) #4
+# reg DRAM_param_reg3, 0x270872d0 , 0x272872d0, 0x272872d0 (first time reg_ddrc_sdram is not set, the rest is the same)
+        enable_pad_powerdown=     True  # ?
+        mode_ddr1_ddr2=           1
+        en_dfi_dram_clk_disable = 0 # not clear - is it just enable for the action, or actually stopping the clock?
+        ddrc_refresh_to_x32=      8 # start refresh after this inactivity (x32 cycles) if it is useful, but not yet required. Dynamic field
+        RP=                       self.features.get_par_value('RP')
+        refresh_margin=           2 # default, recommended not to be changed
+#CONFIG_EZYNQ_DDR_CCD = 4
+#CONFIG_EZYNQ_DDR_RRD = 4
+        CCD=                      self.features.get_par_value('CCD')
+        RRD=                      self.features.get_par_value('RRD')
+
+        ddrc_register_set.set_bitfields('dram_param_reg3',(('reg_ddrc_loopback',               0), #0
+                                                           ('reg_ddrc_dis_pad_pd',             (1,0)[enable_pad_powerdown]), #0
+                                                           ('reg_phy_mode_ddr1_ddr2',          mode_ddr1_ddr2), #1
+                                                           ('reg_ddrc_read_latency',           RL), #7
+                                                           ('reg_ddrc_en_dfi_dram_clk_disable',en_dfi_dram_clk_disable), #0
+                                                           ('reg_ddrc_mobile',                 (0,1)[is_LPDDR2]), # 0
+                                                           ('reg_ddrc_sdram',                  1),  # Shown reserved/default==0, but actually is set to 1 (2 and 3-rd time)
+                                                           ('reg_ddrc_refresh_to_x32',         ddrc_refresh_to_x32), # 8
+                                                           ('reg_ddrc_t_rp',                   RP), # 7
+                                                           ('reg_ddrc_refresh_margin',         refresh_margin), # 2
+                                                           ('reg_ddrc_t_rrd',                  RRD), # 6
+                                                           ('reg_ddrc_t_ccd',                  CCD-1)),force,warn) #4
          
 # CONFIG_EZYNQ_DDR_XP = 4
 # CONFIG_EZYNQ_DDR_RCD = 7 (was CONFIG_EZYNQ_DDR_T_RCD = 7) *

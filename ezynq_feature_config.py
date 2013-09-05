@@ -75,7 +75,8 @@ class EzynqFeatures:
         self.channel=channel
         self.pars={}
         self.config_names={}
-        self.defined=[]
+        self.defined=set()
+        self.calculated=set()
         for name in self.defs:
             cn=self.defs[name];
             self.config_names[cn['CONF_NAME'].replace('@',str(channel))]=name
@@ -128,7 +129,7 @@ class EzynqFeatures:
             elif (feature['TYPE']=='T'):
                 pass #keep string value
             self.pars[name]=value
-            self.defined.append(name)
+            self.defined.add(name)
     #check after calculating derivative parameters                    
     def check_missing_features(self):
         all_set=True
@@ -159,12 +160,48 @@ class EzynqFeatures:
         try:
             return self.pars[name]
         except:
-            print 'name=',name
-            print self.pars
-            raise Exception (name+' not found in self.pars')               
+#            print 'name=',name
+#            print self.pars
+            try: 
+                config_name=self.defs[name]['CONF_NAME']
+            except:    
+                raise Exception (name+' not found in self.defs') # should not happen with wrong data, program bug
+            raise Exception (config_name+' is not defined, nor calculated')
+    def is_known(self,name): # specified or calculated
+        return (name in self.defined) or (name in self.calculated)
+
+    def is_mandatory(self,name):
+        try:
+            return self.defs[name]['MANDATORY']
+        except:
+            raise Exception (name+' not found in self.defs') # should not happen with wrong data, program bug
+    def is_specified(self,name): # directly specified
+        return name in self.defined
+
+    
+    def set_calculated_value(self,name,value,force=True):
+        if (not force) and (name in self.defined):
+            config_name=self.defs[name]['CONF_NAME']
+            raise Exception (name+' ('+config_name+') is specifically defined in configuration file, value will not change') # should not happen with wrong data, program bug
+        else:
+            self.pars[name]=value
+            self.calculated.add(name)
+            if name in self.defined:
+                self.defined.remove(name)
+
+    def set_max_value(self,name,value):
+#        print 'set_max_value (',name,',',value,')'
+        if (not self.is_known(name)) or (value>self.pars[name]):
+            self.set_calculated_value(name,value,True)
+
+    def set_min_value(self,name,value):
+        if (not self.is_known(name)) or (value<self.pars[name]):
+            self.set_calculated_value(name,value,True)
+            
+                               
     def html_list_features(self,html_file):
         html_file.write('<table border="1">\n')
-        html_file.write('<tr><th>Configuration name</th><th>Value</th><th>Type/<br/>Choices</th><th>Mandatory</th><th>Derived</th><th>Default</th><th>Description</th></tr>\n')
+        html_file.write('<tr><th>Configuration name</th><th>Value</th><th>Type/<br/>Choices</th><th>Mandatory</th><th>Origin</th><th>Default</th><th>Description</th></tr>\n')
 #        print  self.get_par_names()
 #        for name in self.pars:
         for name in self.get_par_names():
@@ -176,7 +213,13 @@ class EzynqFeatures:
                     value=hex(value)
                 else:
                     value=str(value)
-            derived= not name in self.defined
+            if name in self.defined:
+                origin="Defined"
+            elif name in self.calculated:
+                origin="Calculated"
+            else:    
+                origin="Default"
+            
             if isinstance (feature['TYPE'],tuple):
                 par_type='<select>\n'
                 for t in feature['TYPE']:
@@ -187,7 +230,7 @@ class EzynqFeatures:
                 par_type={'H':'Integer','I':'Integer','F':'Float','B':'Boolean','T':'Text'}[feature['TYPE']]
 
             html_file.write('<tr><th>'+feature['CONF_NAME']+'</th><td>'+str(value)+'</td><td>'+par_type+
-                            '</td><td>'+('-','Y')[feature['MANDATORY']]+'</td><td>'+('-','Y')[derived]+'</td><td>'+str(feature['DEFAULT'])+'</td><td>'+feature['DESCRIPTION']+'</td></tr>\n')
+                            '</td><td>'+('-','Y')[feature['MANDATORY']]+'</td><td>'+origin+'</td><td>'+str(feature['DEFAULT'])+'</td><td>'+feature['DESCRIPTION']+'</td></tr>\n')
         html_file.write('</table>\n')
 
         

@@ -1001,7 +1001,7 @@ else:
     f=False
 #output_slcr_lock(registers,f,False,MIO_HTML_MASK) #prohibited by RBL    
 output_mio(registers,f,mio,MIO_HTML_MASK)
-
+ddr.calculate_dependent_pars()
 ddr.check_missing_features()
 ddr.html_list_features(f)
 #ddr.ddr_init_memory(current_reg_sets,force=False,warn=False): # will program to sequence 'MAIN'
