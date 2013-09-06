@@ -129,9 +129,9 @@ DDRC_DEFS={ #not all fields are defined currently
     'dram_addr_map_bank':      {'OFFS': 0x03C,'DFLT':0x00000F77,'RW':'RW','FIELDS':{ #0x777
                   'reg_ddrc_addrmap_col_b6':          {'r':(16,19),'d':0,'c':'Selects address bits for column address bit 7, half bus width - column address bits 8, int. base=9'},  
                   'reg_ddrc_addrmap_col_b5':          {'r':(12,15),'d':0,'c':'Selects address bits for column address bit 6, half bus width - column address bits 7, int. base=8'},  
-                  'reg_ddrc_addrmap_ba nk_b2':        {'r':( 8,11),'d':0xf,'c':'Selects AXI address bit for bank2. Valid 0..15. Int. base=7. If 15, bank2 is set to 0'},  #7
-                  'reg_ddrc_addrmap_ba nk_b2':        {'r':( 4, 7),'d':0x7,'c':'Selects AXI address bit for bank1. Valid 0..14. Int. base=6.'},  
-                  'reg_ddrc_addrmap_ba nk_b2':        {'r':( 0, 3),'d':0x7,'c':'Selects AXI address bit for bank0. Valid 0..14. Int. base=5.'}}},  
+                  'reg_ddrc_addrmap_bank_b2':         {'r':( 8,11),'d':0xf,'c':'Selects AXI address bit for bank2. Valid 0..15. Int. base=7. If 15, bank2 is set to 0'},  #7
+                  'reg_ddrc_addrmap_bank_b1':         {'r':( 4, 7),'d':0x7,'c':'Selects AXI address bit for bank1. Valid 0..14. Int. base=6.'},  
+                  'reg_ddrc_addrmap_bank_b0':         {'r':( 0, 3),'d':0x7,'c':'Selects AXI address bit for bank0. Valid 0..14. Int. base=5.'}}},  
     'dram_addr_map_col':       {'OFFS': 0x040,'DFLT':0xFFF00000,'RW':'RW','FIELDS':{ # 0xfff00000
                   'reg_ddrc_addrmap_col_b11':         {'r':(28,31),'d':0xF,'c':'Selects address bits for col. addr. bit 13 (LP - 12), Valid 0..7 and 15, half width - unused (LP-13), int. base=14'},  
                   'reg_ddrc_addrmap_col_b10':         {'r':(24,27),'d':0xF,'c':'Selects address bits for col. addr. bit 12 (LP - 11), Valid 0..7 and 15, half width - 13 (LP-12), int. base=13'},  

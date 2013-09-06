@@ -28,6 +28,14 @@ import ezynq_registers
 import ezynq_ddrcfg_defs
 import ezynq_feature_config
 import ezynq_ddriob_def
+def set_random_bits(old,d,bits):
+    data = 0
+    mask = 0
+    for i,b in enumerate(bits):
+        mask  |= 1<< b
+        data |= ((d>>i) & 1) << b
+    return ((old ^ data) & mask) ^ old    
+        
 class EzynqDDR:
     def __init__(self,regs_masked,permit_undefined_bits=False,force=False,warn=False):
         self.DDRC_DEFS=  ezynq_ddrc_defs.DDRC_DEFS
@@ -77,7 +85,145 @@ class EzynqDDR:
                 pass
         except:
             print "*** DDR Clock frequency is not defined"
+    def pre_validate(self):
+        if not self.features.get_par_value('ENABLE'):
+            return
+        is_LPDDR2=   (self.features.get_par_value('MEMORY_TYPE')=='LPDDR2')
+        if (not is_LPDDR2) and (self.features.get_par_value('BL')>8):
+            raise Exception("BL=16 is only supported in LPDDR2 memory")
+    def post_validate(self):
+        if not self.features.get_par_value('ENABLE'):
+            return
+        self._fix_address_map()
+
+    def _fix_address_map(self):
+        half_width= self.features.get_par_value('BUS_WIDTH') == 16
+        ba_count=   self.features.get_par_value('BANK_ADDR_COUNT')
+        ra_count=   self.features.get_par_value('ROW_ADDR_COUNT')
+        ca_count=   self.features.get_par_value('COL_ADDR_COUNT')
+        ba_map=     self.features.get_par_value('BANK_ADDR_MAP')
+        try:
+            _=self._map_ddr_addresses (ca_count,ra_count,ba_count,ba_map,half_width)
+            return # all OK already
+        except Exception, err:
+            print "Specified value for the "+self.features.get_par_confname('BANK_ADDR_MAP')+'='+str(ba_map)+" is not valid:\n"+str(err)
+        best_match=None
+        for bm in range(3,30):
+            if (best_match==None) or (abs(bm-ba_map) < abs(bm-ba_map)):
+                try:
+                    _=self._map_ddr_addresses (ca_count,ra_count,ba_count,bm,half_width)
+                    best_match=bm
+                except:
+                    continue
+        if best_match==None:
+            raise Exception ('Could not find a suitable value for '+self.features.get_par_confname('BANK_ADDR_MAP'))            
+        print "Replacing with: "+self.features.get_par_confname('BANK_ADDR_MAP')+'='+str(best_match)
+        self.features.set_value('BANK_ADDR_MAP', best_match)
+                        
+        
+                 
+    def _map_ddr_addresses (self,num_ca,num_ra,num_ba,skip_ba,half_width):
+        map_capabilities={
+        #C/R/B, bit(s) (for CA - in full width mode), internal base - bit number, (valid:min,max) [,disable value]
+            'col_b2':   ('C', 3, 2,( 0, 7)),
+            'col_b3':   ('C', 4, 2,( 0, 7)),
+            'col_b4':   ('C', 5, 2,( 0, 7)),
+            'col_b5':   ('C', 6, 2,( 0, 7)),
+            'col_b6':   ('C', 7, 2,( 0, 7)),
+            'col_b7':   ('C', 8, 2,( 0, 7),0xf),
+            'col_b8':   ('C', 9, 2,( 0, 7),0xf),
+            'col_b9':   ('C',10, 2,( 0, 7),0xf),
+            'col_b10':  ('C',11, 2,( 0, 7),0xf),
+            'col_b11':  ('C',12, 2,( 0, 7),0xf),
+
+            'row_b0':   ('R', 0, 9,( 0, 11)),
+            'row_b1':   ('R', 1, 9,( 0, 11)),
+            'row_b2_11':('R',( 2,11), 9,( 0, 11)),
+            'row_b12':  ('R', 12, 9,( 0, 8),0xf),
+            'row_b13':  ('R', 13, 9,( 0, 7),0xf),
+            'row_b14':  ('R', 14, 9,( 0, 6),0xf),
+            'row_b15':  ('R', 15, 9,( 0, 5),0xf),
+
+            'bank_b0':('B', 0, 5,( 0, 14)),
+            'bank_b1':('B', 1, 5,( 0, 14)),
+            'bank_b2':('B', 2, 5,( 0, 14),0xf),
+         }
+        def map_field(name,bit):
+            capability=map_capabilities[name]
+            group=capability[0]
+            add_base=capability[2]
+            valid_limits=capability[3]
+            try:
+                disable=capability[4]
+            except:
+                disable=None
+            if half_width and (group=='C'):
+                bit += 1
+            for i, map_bit in enumerate (map_axi):
+                if (map_bit['TYPE']==group) and (map_bit['BIT']==bit):
+                    extra=i-(bit+add_base)
+                    if not extra in range(valid_limits[0],valid_limits[1]+1):
+                        raise Exception ('Failed to map AXI_A['+str(i)+'] to '+group+'A ['+str(bit)+'], as the required value for '+
+                                         name+'='+str(extra)+' is not in the valid range of '+str(valid_limits)+'.')
+#                    print name, '->', extra    
+                    return extra # this is the value of the bit field
+            else: # This address bit of the group is not used - try to disable it
+                if disable==None:
+                    raise Exception ('Address bit '+group+'A ['+str(bit)+'], is not used, but it is not possible to disable it in the bit field '+name)
+#                print name, '-> disable:', disable    
+                return disable
             
+        map_ba=skip_ba+(2,1)[half_width] # full AXI address to map BA0 to
+        if (num_ba<2) or (num_ba>3):
+            raise Exception('Wring number of bank addresses: '+str(num_ba)+", only 2 or 3 are supported")
+        if (map_ba<5):
+            raise Exception('Map bank address is too low, should be at least '+str(5-(2,1)[half_width]))
+#        num_addresses=(2,1)[half_width]+num_ca+num_ra+num_ba
+        map_axi=[{'TYPE':'NONE','BIT':0} for i in range((2,1)[half_width]+num_ca+num_ra+num_ba)]
+        if map_ba > (len(map_axi)- num_ba):
+            raise Exception('Map bank address is too high, should be not higher than '+str(len(map_axi)- num_ba))
+        #Map AXI addresses to CA (logical, skipping A10 when applicable), RA, BA without restricting to hardware possibility
+        map_left=skip_ba
+        next_ca=0
+        next_ra=0
+        next_ba=0
+        for i, map_bit in enumerate (map_axi):
+            if i<(2,1)[half_width]:
+                continue # did not get to the first address to map
+            if (map_left==0) or (next_ba>0) and (next_ba<num_ba):
+                map_bit['TYPE']='B'
+                map_bit['BIT']=next_ba
+                next_ba+=1
+                map_left-=1 # so it will never trigger (map_left==0) again 
+#                print 'i=',i,'type=',map_bit['TYPE'],'map_left=',map_left,'next_ca=',next_ca,'next_ra=',next_ra,'next_ba=',next_ba
+                continue
+            if (next_ca<num_ca):
+                map_bit['TYPE']='C'
+                map_bit['BIT']=next_ca
+                next_ca+=1
+            else:
+                map_bit['TYPE']='R'
+                map_bit['BIT']=next_ra
+                next_ra+=1
+            map_left-=1
+#            print 'i=',i,'type=',map_bit['TYPE'],'map_left=',map_left,'next_ca=',next_ca,'next_ra=',next_ra,'next_ba=',next_ba
+#        print map_axi     
+        #now validate mapping, raise exception if invalid
+        address_mapping={}
+        for name in map_capabilities:
+            capability=map_capabilities[name]
+            bit=capability[1]
+            if isinstance(bit,tuple):
+                value=map_field(name,capability[1][0])
+                for bit in range(capability[1][0]+1,capability[1][1]+1):
+                    other=map_field (name,bit)
+                    if other != value:
+                        raise Exception ('It is not possible to independently assign mappings for '+capability[0]+'A['+str(capability[1][0])+
+                                         ']='+str(value)+' and '+capability[0]+'A['+str(bit)+']='+str(other)+' as they are controlled by the same '+name+'.')
+            else:
+                value=map_field(name,capability[1])
+            address_mapping[name]=value             
+        return address_mapping
 #    def set_max_value(self,name,value):
 #    def set_min_value(self,name,value):
             
@@ -103,9 +249,12 @@ class EzynqDDR:
             print 'DDR configuration is disabled'
             # do some stuff (write regs, output)
             return
+#        self.pre_validate() # already done
+        
         ddriob_register_set=self.ddriob_register_sets['MAIN']
         ddrc_register_set=  self.ddrc_register_sets['MAIN']
         ddriob_register_set.set_initial_state(current_reg_sets, True)# start from the current registers state
+        
         self.ddr_init_ddriob(force,warn) # will program to sequence 'MAIN'
         regs1=ddriob_register_set.get_register_sets(True,True)
         ddrc_register_set.set_initial_state(regs1, True)# add
@@ -192,10 +341,10 @@ class EzynqDDR:
         tRAS_MAX_x1024=int(tRAS_MAX/tCK/1024)
         tFAWx1=int(math.ceil(self.features.get_par_value('T_FAW')/tCK))
         inactiveToPDx32=6 # cycles 'Power down after this many clocks of NOP/DESELECT (if enabled in mcr). Make configurable?
-        tWRx1=int(math.ceil(tWR/tCK))
+        WR=int(math.ceil(tWR/tCK))
         WL=self.features.get_par_value('CWL')
         BL=self.features.get_par_value('BL')
-        wr2pre=WL+BL/2+tWRx1
+        wr2pre=WL+BL/2+WR
         if is_LPDDR2:
             wr2pre+=1
         ddrc_register_set.set_bitfields('dram_param_reg1',(('reg_ddrc_t_cke',           tCKEx1), # Default - OK, Micron tXSDLL=tDLLK=512 /32
@@ -270,6 +419,291 @@ class EzynqDDR:
                                                            ('reg_ddrc_refresh_margin',         refresh_margin), # 2
                                                            ('reg_ddrc_t_rrd',                  RRD), # 6
                                                            ('reg_ddrc_t_ccd',                  CCD-1)),force,warn) #4
+# reg DRAM_param_reg4, 0, 0x3c, 0x3c
+        ddrc_register_set.set_word     ('dram_param_reg4',0x0,force) # reset all fields. This register is controlled by the hardware during automatic initialization
+        #Maybe just the LSBB (reg_ddrc_en_2t_timing_mode) is needed for "2t timing mode" - is it non-common? 
+        ddrc_register_set.set_bitfields('dram_param_reg4',(('reg_ddrc_max_rank_rd',            0xf)),force,warn) # Not documented, but appears to be set in 2-nd and 3-rd round
+        
+        
+# reg DRAM_init_param,  0x2007 always (default)
+#        ddrc_register_set.set_word     ('dram_init_param',  0x2007, force)
+# CONFIG_EZYNQ_DDR_MRD = 4
+        MRD = self.features.get_par_value('CCD')
+        pre_ocd_x32=0 # ... may be set to zero ...
+        final_wait_x32=0x7 # leaving default - time to start scheduler after dram init init
+        ddrc_register_set.set_bitfields('dram_init_param',(('reg_ddrc_t_mrd',                  MRD),         # 0x4
+                                                           ('reg_ddrc_pre_ocd_x32',            pre_ocd_x32), # 0x0
+                                                           ('reg_ddrc_final_wait_x32',         final_wait_x32)),force,warn) # 0x7
+# reg DRAM_emr_reg,     0x8 always (default)
+#        ddrc_register_set.set_word     ('dram_emr_reg',        0x8, force)
+        emr3=0 # Only 3 LSBs are used by DDR and should be set to 0 - correct values will be set by  the DDRC
+        if is_LPDDR2:
+            #use MR3 for the emr2. Lower 3 bits encode impedance, for now just using default value of
+            emr2=2 # 40 Ohm
+        else: #DDR2, DDR3
+            emr2_00_02=0
+            emr2_03_05=WL-5
+            if emr2_03_05 < 0:
+                emr2_03_05=0
+            emr2_03_05 &= 0x7
+            emr2_06_06= 0 # Auto Self Refresh - 0 manual, 1 - auto
+            emr2_07_07= (0,1)[self.features.get_par_value('HIGH_TEMP')] # 
+            emr2_08_08= 0
+            emr2_09_10= 0 # Dynamic ODT control
+            emr2_11_15= 0
+            emr2=((emr2_00_02 <<  0) |
+                  (emr2_03_05 <<  3) |
+                  (emr2_06_06 <<  6) |
+                  (emr2_07_07 <<  7) |
+                  (emr2_08_08 <<  8) |
+                  (emr2_09_10 <<  9) |
+                  (emr2_11_15 << 11))
+        ddrc_register_set.set_bitfields('dram_emr_reg',   (('reg_ddrc_emr3',                   emr3), # 0
+                                                           ('reg_ddrc_emr2',                   emr2)),force,warn) # 0x8
+# reg DRAM_emr_mr_reg,  0x40930 always (default)
+#calculate mr value for different memory types            
+        emr=0
+        if is_DDR3 : # MR1
+            emr_disableDLL=0     #  Disable DLL
+            emr_driveStrength=0  #  0 - 40 OHm, 1 - 34 Ohm, 2,3 - reserved
+            if AL==0:
+                emr_AL=0
+            elif AL==(CL-1):
+                emr_AL=1     
+            elif AL==(CL-2):
+                emr_AL=2     
+            else:
+                raise Exception ("Wrong value for additive latency (CONFIG_EZYNQ_DDR_AL): "+str(AL)+", only 0, CL-1, CL-2 are supported in DDR3 memory. CL is "+str(CL))
+            emr_RTT=0
+            if self.features.get_par_value('DDR3_RTT')[:2]=='60':
+                emr_RTT=1
+            elif self.features.get_par_value('DDR3_RTT')[:2]=='12':
+                emr_RTT=2
+            elif self.features.get_par_value('DDR3_RTT')[:2]=='40':
+                emr_RTT=3
+
+            emr_WL=   0       # 0 - disabled (normal), 1 - write leveling (will be set by DDRC, set to 0 here)
+            emr_TDQS= 0 # Termination data strobe - only applicable to x8 memory
+            emr_Qoff= 0 # 1 - tristate all DQ and DQS outputs
+            #According to description of the MR1 bits:
+            emr=set_random_bits(emr,  emr_disableDLL,    (0,))
+            emr=set_random_bits(emr,  emr_driveStrength, (1,5))
+            emr=set_random_bits(emr,  emr_AL,            (3,4))
+            emr=set_random_bits(emr,  emr_RTT,           (2,6,9))
+            emr=set_random_bits(emr,  emr_WL,            (7,))
+            emr=set_random_bits(emr,  emr_TDQS,          (11,))
+            emr=set_random_bits(emr,  emr_Qoff,          (12,))
+        elif is_DDR2: # EMR
+            emr_disableDLL=   0  #  Disable DLL
+            emr_driveStrength=0  #  0 -full, 1 - reduced
+            emr_AL=AL
+            if (AL<0) or (AL>6):
+                raise Exception ("Wrong value for additive latency (CONFIG_EZYNQ_DDR_AL): "+str(AL)+", only 0...6 are supported in DDR2 memory")
+            emr_RTT=0
+            if self.features.get_par_value('DDR2_RTT')[:2]=='75':
+                emr_RTT=1
+            elif self.features.get_par_value('DDR2_RTT')[:2]=='15':
+                emr_RTT=2
+            elif self.features.get_par_value('DDR2_RTT')[:2]=='50':
+                emr_RTT=3
+            emr_OCD_oper=   0 # these bits are ignored for DDR2
+            emr_DQS_disable=0
+            emr_RDQS=       0
+            emr_DQ_disable= 0
+            emr=set_random_bits(emr,  emr_disableDLL,    (0,))
+            emr=set_random_bits(emr,  emr_driveStrength, (1,))
+            emr=set_random_bits(emr,  emr_AL,            (3,4,5))
+            emr=set_random_bits(emr,  emr_RTT,           (2,6))
+            emr=set_random_bits(emr,  emr_OCD_oper,      (7,8,9))
+            emr=set_random_bits(emr,  emr_DQS_disable,   (10,))
+            emr=set_random_bits(emr,  emr_RDQS,          (11,))
+            emr=set_random_bits(emr,  emr_DQ_disable,    (12,))
+        elif is_LPDDR2: # MR2
+            rlwl_options=((3,1),(4,2),(5,2),(6,3),(7,4),(8,4))
+            rlwl=(RL,WL)
+            try:
+                mr2_rlwl=((3,1),(4,2),(5,2),(6,3)).index(rlwl)+1
+            except:
+                raise Exception('Wrong RL/WL combination: '+str(rlwl)+', LPDDR2 only supports '+str(rlwl_options))    
+            emr=mr2_rlwl
+#calculate mr value for different memory types            
+        mr=0
+        if is_DDR3 : #MR0
+            if BL==4:
+                mr_bl=2
+            elif BL==8:        
+                mr_bl=0
+            else:
+                raise Exception('Wrong burst length for DDR3: '+str(BL)+' - only 4 and 8 are supported')
+            mr_bt=0 # 0 - sequential, 1 - interleaved - is it supported?
+            try:  
+                mr_cl=(2,4,6,8,10,12,14,1,3,5)[CL-5]
+            except:
+                raise Exception('Wrong value for CAS latency: '+str(CL)+ ' - only CL=5..14 are supported by DDR3')
+            mr_dll_reset=1 # Seems to be always set (including dflt)?
+            wr_options=(16,5,6,7,8,10,12,14)
+            try:
+                mr_write_recovery=wr_options.index(WR)
+            except:
+                raise Exception('Wrong value for Write recovery (WR): '+str(WR)+ ' (may be defined by tWR), DDR3 only supports '+str(wr_options))
+            mr_PD = 0 # 0 - DLL off during PD (slow exit), 1 - DLL on during PD (fast exit)            
+            mr=set_random_bits(mr,  mr_bl,            (0,1))
+            mr=set_random_bits(mr,  mr_bt,            (3, ))
+            mr=set_random_bits(mr,  mr_cl,            (2,4,5,6))
+            mr=set_random_bits(mr,  mr_dll_reset,     (8,))
+            mr=set_random_bits(mr,  mr_write_recovery,(9,10,11))
+            mr=set_random_bits(mr,  mr_PD,            (12,))
+        elif is_DDR2: # MR
+            if BL==4:
+                mr_bl=2
+            elif BL==8:        
+                mr_bl=3
+            else:
+                raise Exception('Wrong burst length for DDR2: '+str(BL)+' - only 4 and 8 are supported')
+            mr_bt=0 # 0 - sequential, 1 - interleaved - is it supported?
+            try:  
+                mr_cl=(3,4,5,6,7)[CL-3]
+            except:
+                raise Exception('Wrong value for CAS latency '+str(CL)+ ' - only CL=3..7 are supported')
+            mr_tm=0 # 0 - normal, 1 - test
+            mr_dll_reset=1 # Always reset for DDR3, doing the same for DDR2 
+            wr_options=(2,3,4,5,6,7,8)
+            try:
+                mr_write_recovery=wr_options.index(WR)+1
+            except:
+                raise Exception('Wrong value for Write recovery (WR) (may be defined by tWR) '+str(WR)+ ', DDR2 only supports '+str(wr_options))
+            mr_PD = 0 # 0 - fast exit (normal), 1 - slow exit (low power)            
+            
+            mr=set_random_bits(mr,  mr_bl,            (0,1,2))
+            mr=set_random_bits(mr,  mr_bt,            (3, ))
+            mr=set_random_bits(mr,  mr_cl,            (4,5,6))
+            mr=set_random_bits(mr,  mr_tm,            (7,))
+            mr=set_random_bits(mr,  mr_dll_reset,     (8,))
+            mr=set_random_bits(mr,  mr_write_recovery,(9,10,11))
+            mr=set_random_bits(mr,  mr_PD,            (12,))
+
+        elif is_LPDDR2: # MR1
+            bl_options=(4,8,16)
+            try:
+                mr_bl=bl_options.index(BL)
+            except:
+                raise Exception('Wrong burst length '+str(BL)+' - LPDDR2 only supports '+str(bl_options))
+            mr_bt=0 # 0 - sequential, 1 - interleaved - is it supported?
+            mr_wrap=0 # 0 - wrap(default), 1 - no wrap
+            wr_options=(3,4,5,6,7,8)
+            try:
+                mr_write_recovery=wr_options.index(WR)+1
+            except:
+                raise Exception('Wrong value for Write recovery (WR) (may be defined by tWR) '+str(WR)+ ', LPDDR2 only supports '+str(wr_options))
+            mr=set_random_bits(mr,  mr_bl,            (0,1,2))
+            mr=set_random_bits(mr,  mr_bt,            (3, ))
+            mr=set_random_bits(mr,  mr_wrap,          (4, ))
+            mr=set_random_bits(mr,  mr_write_recovery,(5,6,7))
+
+#        ddrc_register_set.set_word     ('dram_emr_mr_reg', 0x40930, force)
+        ddrc_register_set.set_bitfields('dram_emr_mr_reg',(('reg_ddrc_emr',                    emr), # 0x4
+                                                           ('reg_ddrc_mr',                     mr)),force,warn) # 0x930
+# reg DRAM_burst8_rdwr, 0x10694 always (default=0x20304)
+#
+        if   is_DDR3:
+            t_post_cke=400.0
+            t_pre_cke= 200000.0
+        elif is_DDR2:
+            t_post_cke=400.0
+            t_pre_cke= 200000.0
+        elif is_LPDDR2:
+            t_post_cke=200000.0
+            t_pre_cke= 20000000.0 # UG585.790 specifies :LPDDR2 - tINIT0 of 20 mS (max) + tINIT1 of 100nS (min), and 20mS > 10 bits
+        post_cke_x1024= int(math.ceil(t_post_cke/tCK/1024))
+        pre_cke_x1024=  int(math.ceil(t_pre_cke/tCK/1024))
+        if (pre_cke_x1024)>1023:
+            pre_cke_x1024=1023 # maximal value
+        if BL==4:
+            burst_rdwr=2
+        elif BL==8:      
+            burst_rdwr=4
+        elif BL==16: # LPDDR2 only      
+            burst_rdwr=8
+#        ddrc_register_set.set_word     ('dram_burst8_rdwr',0x10694, force)
+        ddrc_register_set.set_bitfields('dram_burst8_rdwr',(('reg_ddrc_burstchop',             0), #  0
+                                                            ('reg_ddrc_post_cke_x1024',        post_cke_x1024), #  0x1
+                                                            ('reg_ddrc_pre_cke_x1024',         pre_cke_x1024), #  0x69
+                                                            ('reg_ddrc_burst_rdwr',            burst_rdwr)),force,warn) # 0x4
+# reg DRAM_disable_dq,  0 always (default)
+#        ddrc_register_set.set_word     ('dram_disable_dq',     0x0, force)
+        ddrc_register_set.set_bitfields('dram_disable_dq',(('reg_phy_dq0_wait_t',              0), # 0
+                                                           ('reg_phy_rd_level_start',          0), # 0
+                                                           ('reg_phy_wr_level_start',          0), # 0
+                                                           ('reg_phy_debug_mode',              0), # 0
+                                                           ('reg_ddrc_dis_dq',                 0), # 0
+                                                           ('reg_ddrc_force_low_pri_n',        0)),force,warn) # 0
+        
+# Using some of the the possible address mappings, defined by a single parameter BANK_ADDR_MAP:
+# First CA and RA are considered continuous (skipping CA[10] when applicable), then all bank address bits are inserted,
+# leaving BANK_ADDR_MAP bits (some CA, all CA or ALL CA and some RA ) lower          
+        half_width= self.features.get_par_value('BUS_WIDTH') == 16
+        ba_count=   self.features.get_par_value('BANK_ADDR_COUNT')
+        ra_count=   self.features.get_par_value('ROW_ADDR_COUNT')
+        ca_count=   self.features.get_par_value('COL_ADDR_COUNT')
+        ba_map=     self.features.get_par_value('BANK_ADDR_MAP')
+        addr_map =self._map_ddr_addresses (ca_count,ra_count,ba_count,ba_map,half_width)
+
+        
+# reg DRAM_addr_map_bank,  0x777 always (default)
+        ddrc_register_set.set_bitfields('dram_addr_map_bank',(('reg_ddrc_addrmap_col_b6',   addr_map['col_b6']),             # 0
+                                                              ('reg_ddrc_addrmap_col_b5',   addr_map['col_b5']),             # 0
+                                                              ('reg_ddrc_addrmap_bank_b2',  addr_map['bank_b2']),            # 0x7
+                                                              ('reg_ddrc_addrmap_bank_b1',  addr_map['bank_b1']),            # 0x7
+                                                              ('reg_ddrc_addrmap_bank_b0',  addr_map['bank_b0'])),force,warn)# 0x7
+
+# reg DRAM_addr_map_col,   0xfff00000 always (default)
+        ddrc_register_set.set_bitfields('dram_addr_map_col', (('reg_ddrc_addrmap_col_b11',  addr_map['col_b11']),            # 0xf
+                                                              ('reg_ddrc_addrmap_col_b10',  addr_map['col_b10']),            # 0xf
+                                                              ('reg_ddrc_addrmap_col_b9',   addr_map['col_b9']),             # 0xf
+                                                              ('reg_ddrc_addrmap_col_b8',   addr_map['col_b8']),             # 0
+                                                              ('reg_ddrc_addrmap_col_b7',   addr_map['col_b7']),             # 0
+                                                              ('reg_ddrc_addrmap_col_b4',   addr_map['col_b4']),             # 0
+                                                              ('reg_ddrc_addrmap_col_b3',   addr_map['col_b3']),             # 0
+                                                              ('reg_ddrc_addrmap_col_b2',   addr_map['col_b2'])),force,warn) # 0
+
+# reg DRAM_addr_map_row,   0xf666666 always (default)
+        ddrc_register_set.set_bitfields('dram_addr_map_row', (('reg_ddrc_addrmap_row_b15',  addr_map['row_b15']),            # 0xf
+                                                              ('reg_ddrc_addrmap_row_b14',  addr_map['row_b14']),            # 0x6
+                                                              ('reg_ddrc_addrmap_row_b13',  addr_map['row_b13']),            # 0x6
+                                                              ('reg_ddrc_addrmap_row_b12',  addr_map['row_b12']),            # 0x6
+                                                              ('reg_ddrc_addrmap_row_b2_11',addr_map['row_b2_11']),          # 0x6
+                                                              ('reg_ddrc_addrmap_row_b1',   addr_map['row_b1']),             # 0x6
+                                                              ('reg_ddrc_addrmap_row_b0',   addr_map['row_b0'])),force,warn) # 0x6
+#CONFIG_EZYNQ_DDR_BANK_ADDR_COUNT = 3
+#CONFIG_EZYNQ_DDR_ROW_ADDR_COUNT = 15
+#CONFIG_EZYNQ_DDR_COL_ADDR_COUNT = 10 # not counting A10
+#CONFIG_EZYNQ_DDR_BANK_ADDR_MAP  = 10        
+ 
+#     'dram_addr_map_bank':      {'OFFS': 0x03C,'DFLT':0x00000F77,'RW':'RW','FIELDS':{ #0x777
+#                   'reg_ddrc_addrmap_col_b6':          {'r':(16,19),'d':0,'c':'Selects address bits for column address bit 7, half bus width - column address bits 8, int. base=9'},  
+#                   'reg_ddrc_addrmap_col_b5':          {'r':(12,15),'d':0,'c':'Selects address bits for column address bit 6, half bus width - column address bits 7, int. base=8'},  
+#                   'reg_ddrc_addrmap_bank_b2':         {'r':( 8,11),'d':0xf,'c':'Selects AXI address bit for bank2. Valid 0..15. Int. base=7. If 15, bank2 is set to 0'},  #7
+#                   'reg_ddrc_addrmap_bank_b1':         {'r':( 4, 7),'d':0x7,'c':'Selects AXI address bit for bank1. Valid 0..14. Int. base=6.'},  
+#                   'reg_ddrc_addrmap_bank_b0':         {'r':( 0, 3),'d':0x7,'c':'Selects AXI address bit for bank0. Valid 0..14. Int. base=5.'}}},  
+#     'dram_addr_map_col':       {'OFFS': 0x040,'DFLT':0xFFF00000,'RW':'RW','FIELDS':{ # 0xfff00000
+#                   'reg_ddrc_addrmap_col_b11':         {'r':(28,31),'d':0xF,'c':'Selects address bits for col. addr. bit 13 (LP - 12), Valid 0..7 and 15, half width - unused (LP-13), int. base=14'},  
+#                   'reg_ddrc_addrmap_col_b10':         {'r':(24,27),'d':0xF,'c':'Selects address bits for col. addr. bit 12 (LP - 11), Valid 0..7 and 15, half width - 13 (LP-12), int. base=13'},  
+#                   'reg_ddrc_addrmap_col_b9':          {'r':(20,23),'d':0xF,'c':'Selects address bits for col. addr. bit 11 (LP - 10), Valid 0..7 and 15, half width - 12 (LP-11), int. base=12'},  
+#                   'reg_ddrc_addrmap_col_b8':          {'r':(16,19),'d':0,'c':'Selects address bits for col. addr. bit 9, Valid 0..7 and 15, half width - 11 (LP-10), int. base=11'},  
+#                   'reg_ddrc_addrmap_col_b7':          {'r':(12,15),'d':0,'c':'Selects address bits for col. addr. bit 8, Valid 0..7 and 15, half width - 9, int. base=10'},  
+#                   'reg_ddrc_addrmap_col_b4':          {'r':( 8,11),'d':0,'c':'Selects address bits for col. addr. bit 5, Valid 0..7, half width - bit 6, int. base=7'},  
+#                   'reg_ddrc_addrmap_col_b3':          {'r':( 4, 7),'d':0,'c':'Selects address bits for col. addr. bit 4, Valid 0..7, half width - bit 5, int. base=6'},  
+#                   'reg_ddrc_addrmap_col_b2':          {'r':( 0, 3),'d':0,'c':'Selects address bits for col. addr. bit 3, Valid 0..7, half width - bit 4, int. base=5'}}},  
+#     'dram_addr_map_row':       {'OFFS': 0x044,'DFLT':0x0FF55555,'RW':'RW','FIELDS':{ # 0xf666666
+#                   'reg_ddrc_addrmap_row_b15':         {'r':(24,27),'d':0xF,'c':'Selects address bits for row. addr. bit 15, Valid 0..5 and 15, int. base=24 if 15 - address bit 15 is set to 0'},  # 0xf
+#                   'reg_ddrc_addrmap_row_b14':         {'r':(20,23),'d':0xF,'c':'Selects address bits for row. addr. bit 14, Valid 0..6 and 15, int. base=23 if 15 - address bit 14 is set to 0'},  # 0x6
+#                   'reg_ddrc_addrmap_row_b13':         {'r':(16,19),'d':0x5,'c':'Selects address bits for row. addr. bit 13, Valid 0..7 and 15, int. base=22 if 15 - address bit 13 is set to 0'},  # 0x6
+#                   'reg_ddrc_addrmap_row_b12':         {'r':(12,15),'d':0x5,'c':'Selects address bits for row. addr. bit 12, Valid 0..8 and 15, int. base=21 if 15 - address bit 12 is set to 0'},  # 0x6
+#                   'reg_ddrc_addrmap_row_b2_11':       {'r':( 8,11),'d':0x5,'c':'Selects address bits for row. addr. bits 2 to 11, Valid 0..11, int. base=11 (for a2) to 20 (for a 11)'},           # 0x6
+#                   'reg_ddrc_addrmap_row_b1':          {'r':( 4, 7),'d':0x5,'c':'Selects address bits for row. addr. bit 1,  Valid 0..11, int. base=10'},                                           # 0x6
+#                   'reg_ddrc_addrmap_row_b0':          {'r':( 0, 3),'d':0x5,'c':'Selects address bits for row. addr. bit 0,  Valid 0..11, int. base=9'}}},                                          # 0x6
+
+
          
 # CONFIG_EZYNQ_DDR_XP = 4
 # CONFIG_EZYNQ_DDR_RCD = 7 (was CONFIG_EZYNQ_DDR_T_RCD = 7) *
@@ -295,30 +729,6 @@ class EzynqDDR:
 
 
 
-#     'dram_param_reg3':         {'OFFS': 0x020,'DFLT':0x250882D0,'RW':'M','FIELDS':{ #272872d0
-#                   'reg_ddrc_loopback':                {'r':(31,31),'d': 0,'c':'reserved'},
-#                   'reg_ddrc_dis_pad_pd':              {'r':(30,30),'d': 0,'c':'Disable pad power down'},                                                                                               
-#                   'reg_phy_mode_ddr1_ddr2':           {'r':(29,29),'d': 1,'c':'Unused'},                                             # 0x1                                                                                          
-#                   'reg_ddrc_read_latency':            {'r':(24,28),'d': 0x5,'c':'Read Latency, clocks'},                             # 0x7 
-#                   'reg_ddrc_en_dfi_dram_clk_disable': {'r':(23,23),'d': 0,'c':'Enables clock disable...'}, 
-#                   'reg_ddrc_mobile':                  {'r':(22,22),'d': 0,'c':'0 - DDR2/DDR3, 1 - LPDDR2'},                           
-#                   'reg_ddrc_sdram':                   {'r':(21,21),'d': 0,'c':'reserved'},                                           # 0x1
-#                   'reg_ddrc_refresh_to_x32':          {'r':(16,20),'d': 0x8,'c':'Dynamic, "speculative refresh"'}, 
-#                   'reg_ddrc_t_rp':                    {'r':(12,15),'d': 0x8,'c':'tRP'},                                              # 0x7
-#                   'reg_ddrc_refresh_margin':          {'r':( 8,11),'d': 0x2,'c':'do refresh this cycles before timer expires'},
-#                   'reg_ddrc_t_rrd':                   {'r':( 5, 7),'d': 0x6,'c':'tRRD Minimal time between activates of different banks'}, 
-#                   'reg_ddrc_t_ccd':                   {'r':( 2, 4),'d': 0x4,'c':'tCCD One less than minimal time between reads of writes to different banks'}, 
-#                   'reserved2':                        {'r':( 0, 1),'d': 0,'m':'R','c':'reserved'}}},
-#     'dram_param_reg4':         {'OFFS': 0x024,'DFLT':0x0000003C,'RW':'M','FIELDS':{ #0x3c
-#                   'reg_ddrc_mr_rdata_valid':          {'r':(27,27),'d': 0,'m':'R','c':'cleared by reading mode_reg_read (0x2a4), set when mode_reg_read gets new data'}, 
-#                   'reg_ddrc_mr_type':                 {'r':(26,26),'d': 0,'c':'0 - mode register write, 1 - mode register read'},  
-#                   'ddrc_reg_mr_wr_busy':              {'r':(25,25),'d': 0,'m':'R','c':'1 - do not issue mode register R/W (wait 0)'},  
-#                   'reg_ddrc_mr_data':                 {'r':( 9,24),'d': 0,'c':'DDR2/3: Mode Register Write data'},   
-#                   'reg_ddrc_mr_addr':                 {'r':( 7, 8),'d': 0,'c':'DDR2/3: Mode Register address (0 - MR0, ... 3 - MR3)'},  
-#                   'reg_ddrc_mr_wr':                   {'r':( 6, 6),'d': 0,'m':'W','c':'low-to-high starts mode reg r/w (if not ddrc_reg_mr_wr_busy)'},  
-#                   'reg_ddrc_max_rank_rd':             {'r':( 2, 5),'d': 0xF,'c':'reserved'},
-#                   'reg_ddrc_prefer_write':            {'r':( 1, 1),'d': 0,'c':'1: Bank selector prefers writes over reads'}, 
-#                   'reg_ddrc_en_2t_timing_mode':       {'r':( 0, 0),'d': 0,'c':'0 - DDRC uses 1T timing, 1 - 2T timing'}}}, 
 
 
 

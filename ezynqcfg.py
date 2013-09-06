@@ -1002,8 +1002,9 @@ else:
 #output_slcr_lock(registers,f,False,MIO_HTML_MASK) #prohibited by RBL    
 output_mio(registers,f,mio,MIO_HTML_MASK)
 ddr.calculate_dependent_pars()
-ddr.check_missing_features()
-ddr.html_list_features(f)
+ddr.pre_validate() # before applying default values (some timings should be undefined, not defaults)
+ddr.check_missing_features() #and apply defualt values
+ddr.html_list_features(f) #verify /fix values after defaults are applied
 #ddr.ddr_init_memory(current_reg_sets,force=False,warn=False): # will program to sequence 'MAIN'
 
 ddr.ddr_init_memory([],False,False) # will program to sequence 'MAIN'

@@ -57,12 +57,15 @@ DDR_CFG_DEFS=[
                 'DESCRIPTION':'Number of DDR banks'},              
     {'NAME':'COL_ADDR_COUNT',  'CONF_NAME':'CONFIG_EZYNQ_DDR_COL_ADDR_COUNT','TYPE':'I','MANDATORY':True,'DERIVED':False,'DEFAULT':10,
                 'DESCRIPTION':'Number of DDR banks'},              
+    {'NAME':'BANK_ADDR_MAP',  'CONF_NAME':'CONFIG_EZYNQ_DDR_BANK_ADDR_MAP','TYPE':'I','MANDATORY':True,'DERIVED':False,'DEFAULT':10,
+                'DESCRIPTION':'DRAM address mapping: number of combined column and row addresses lower than BA0'},              
+              
     {'NAME':'ECC',             'CONF_NAME':'CONFIG_EZYNQ_DDR_ECC','TYPE':'B','MANDATORY':False,'DERIVED':False,'DEFAULT':False,
                 'DESCRIPTION':'Enable ECC for the DDR memory'},
     {'NAME':'BUS_WIDTH',       'CONF_NAME':'CONFIG_EZYNQ_DDR_BUS_WIDTH','TYPE':'I','MANDATORY':True,'DERIVED':False,'DEFAULT':32,
                 'DESCRIPTION':'SoC DDR bus width'},
-    {'NAME':'BL',              'CONF_NAME':'CONFIG_EZYNQ_DDR_BL','TYPE':(8,4),'MANDATORY':True,'DERIVED':False,'DEFAULT':8, # DDR2 may have different lengths?
-                'DESCRIPTION':'Burst length'},
+    {'NAME':'BL',              'CONF_NAME':'CONFIG_EZYNQ_DDR_BL','TYPE':(8,4,16),'MANDATORY':True,'DERIVED':False,'DEFAULT':8, # DDR2 may have different lengths?
+                'DESCRIPTION':'Burst length, 16 is only supported for LPDDR2'},
     {'NAME':'HIGH_TEMP',       'CONF_NAME':'CONFIG_EZYNQ_DDR_HIGH_TEMP','TYPE':'B','MANDATORY':True,'DERIVED':False,'DEFAULT':False,
                 'DESCRIPTION':'High temperature (influences refresh)'},
     {'NAME':'T_REFI_US',           'CONF_NAME':'CONFIG_EZYNQ_DDR_T_REFI_US','TYPE':'F','MANDATORY':False,'DERIVED':False,'DEFAULT':7.8,
@@ -124,8 +127,15 @@ DDR_CFG_DEFS=[
                 'DESCRIPTION':'ACTIVATE-to-ACTIVATE minimal command period (in tCK)'},              
     {'NAME':'T_RRD',          'CONF_NAME':'CONFIG_EZYNQ_DDR_T_RRD','TYPE':'F','MANDATORY':False,'DERIVED':False,'DEFAULT':10.0,
                 'DESCRIPTION':'ACTIVATE-to-ACTIVATE minimal command period (ns). May be used to calculate CONFIG_EZYNQ_DDR_RRD automatically'},   
+    {'NAME':'MRD',            'CONF_NAME':'CONFIG_EZYNQ_DDR_MRD','TYPE':'I','MANDATORY':False,'DERIVED':False,'DEFAULT':4,
+                'DESCRIPTION':'MODE REGISTER SET command period (in tCK)'},              
+    {'NAME':'DDR2_RTT',      'CONF_NAME':'CONFIG_EZYNQ_DDR2_RTT','TYPE':('DISABLED','75','150','50'),'MANDATORY':False,'DERIVED':False,'DEFAULT':'75',
+                'DESCRIPTION':'DDR2 on-chip termination, Ohm'},              
+    {'NAME':'DDR3_RTT',      'CONF_NAME':'CONFIG_EZYNQ_DDR3_RTT','TYPE':('DISABLED','60','120','40'),'MANDATORY':False,'DERIVED':False,'DEFAULT':'60',
+                'DESCRIPTION':'DDR3 on-chip termination, Ohm'}, # Does not include 20 & 30 - not clear if DDRC can use them with auto write leveling               
 
-              
+# CONFIG_EZYNQ_DDR3_RTT = 60 # DISABLED, 60,120,40 - only used for DDR3              
+# CONFIG_EZYNQ_DDR2_RTT = 75 # DISABLED, 75,150,50 - only used for DDR2              
 # CONFIG_EZYNQ_DDR_T_RTP = 7.5
 # CONFIG_EZYNQ_DDR_WTR = 4
 # CONFIG_EZYNQ_DDR_T_WTR = 7.5
@@ -136,6 +146,7 @@ DDR_CFG_DEFS=[
 # CONFIG_EZYNQ_DDR_CCD = 4
 # CONFIG_EZYNQ_DDR_RRD = 4
 # CONFIG_EZYNQ_DDR_T_RRD = 10.0
+# CONFIG_EZYNQ_DDR_MRD = 4
               
 ]
 
@@ -161,6 +172,7 @@ DDR_CFG_DEFS=[
 # CONFIG_EZYNQ_DDR_BANK_ADDR_COUNT = 3 *
 # CONFIG_EZYNQ_DDR_ROW_ADDR_COUNT = 15 *
 # CONFIG_EZYNQ_DDR_COL_ADDR_COUNT = 10 *
+# CONFIG_EZYNQ_DDR_BANK_ADDR_MAP  = 10
 
 # CONFIG_EZYNQ_DDR_ENABLE = 1          *
 # CONFIG_EZYNQ_DDR_MEMORY_TYPE = DDR3  *

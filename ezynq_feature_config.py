@@ -156,6 +156,12 @@ class EzynqFeatures:
 #        return [n for n in sorted([(name,self.defs[name]['OFFS']) for name in self.registers], key = lambda l: l[1])]
         return [n[0] for n in sorted([(name,self.defs[name]['INDEX']) for name in self.pars], key = lambda l: l[1])]
 #TODO: Use SELECT for options?
+    def get_par_confname(self,name):
+        try:
+            return self.defs[name]['CONF_NAME']
+        except:
+            raise Exception (name+' not found in self.defs') # should not happen with wrong data, program bug
+
     def get_par_value(self,name):
         try:
             return self.pars[name]
