@@ -213,7 +213,7 @@ DDRC_DEFS={ #not all fields are defined currently
                   'reserved1':                        {'r':(11,11),'d':0,'m':'R','c':'reserved'},      
                   'reg_ddrc_dis_collision_page_opt':  {'r':(10,10),'d':0,'c':'Disable autoprecharge for collisions (write+write or read+write to the same address) when  reg_ddrc_dis_wc==1'},     
                   'reg_ddrc_dis_wc':                  {'r':( 9, 9),'d':0,'c':'1 - disable write combine, 0 - enable'},      
-                  'reg_ddrc_refresh_update_level':    {'r':( 8, 8),'d':0,'c':'Dynamic: toggle to indicate refressh register(s) update'},    
+                  'reg_ddrc_refresh_update_level':    {'r':( 8, 8),'d':0,'c':'Dynamic: toggle to indicate refresh register(s) update'},    
                   'reg_ddrc_auto_pre_en':             {'r':( 7, 7),'d':0,'c':'1 - most R/W will be with autoprecharge'},      
                   'reg_ddrc_lpr_num_entries':         {'r':( 1, 6),'d':0x1F,'c':'(bit 6 ignored) (Size of low priority transaction store+1). HPR - 32 - this value'},      
                   'reg_ddrc_pageclose':               {'r':( 0, 0),'d':0,'c':'1 - close bank if no transactions in the store for it, 0 - keep open until not needed by other'}}}, 
@@ -222,16 +222,16 @@ DDRC_DEFS={ #not all fields are defined currently
                   'reserved1':                        {'r':(13,16),'d':0,'m':'R','c':'reserved'},      
                   'reg_ddrc_go2critical_hysteresis':  {'r':( 5,12),'d':0,'c':'Latency of moving to critical state'},    
                   'reserved2':                        {'r':( 0, 4),'d':0,'m':'R','c':'reserved'}}},
-    'ctrl_reg3':               {'OFFS': 0x068,'DFLT':0x00284027,'RW':'RW','FIELDS':{ # 0x284141 TODO: Update hardware.h
+    'ctrl_reg3':               {'OFFS': 0x068,'DFLT':0x00284027,'RW':'RW','FIELDS':{ # 0x284141
                   'reg_ddrc_dfi_t_wlmrd':             {'r':(16,25),'d':0x28,'c':'DDR3 only: tMLRD from DRAM specs'},
                   'reg_ddrc_rdlvl_rr':                {'r':( 8,15),'d':0x40,'c':'DDR3 read leveling read-to-read delay'},                    #0x41
                   'reg_ddrc_wrlvl_ww':                {'r':( 0, 7),'d':0x27,'c':'DDR3 and LPDDR2 - write  leveling write-to-write delay'}}}, #0x41       
-    'ctrl_reg4':               {'OFFS': 0x06C,'DFLT':0x00001610,'RW':'RW','FIELDS':{ # 0x610 in code it was called 'rd_dll_force0'
+    'ctrl_reg4':               {'OFFS': 0x06C,'DFLT':0x00001610,'RW':'RW','FIELDS':{ # 0x610
                   'dfi_t_ctrlupd_interval_max_x1024': {'r':( 8,15),'d':0x16,'c':'maximal time between DFI update requests in 1024 clocks'},        
                   'dfi_t_ctrlupd_interval_min_x1024': {'r':( 0, 7),'d':0x10,'c':'minimal time between DFI update requests in 1024 clocks'}}}, 
     'rd_dll_force1':           {'OFFS': 0x070},
     'wr_ratio_reg':            {'OFFS': 0x074},
-    'ctrl_reg5':               {'OFFS': 0x078,'DFLT':0x00455111,'RW':'M','FIELDS':{# 0x466111 in code it was called 'rd_ratio_reg'
+    'ctrl_reg5':               {'OFFS': 0x078,'DFLT':0x00455111,'RW':'M','FIELDS':{# 0x466111
                   'reserved1':                        {'r':(26,31),'d':0,'m':'R','c':'reserved'},      
                   'reg_ddrc_t_ckesr':                 {'r':(20,25),'d':0x4,'c':'Min CKE low for self refresh, recomm.: DDR3:tCKE+1,DDR2:tCKE,LPDDR2:tCKESR'},       
                   'reg_ddrc_t_cksrx':                 {'r':(16,19),'d':0x5,'c':'CK valid before self refresh exit, recomm. DDR3:tCKSRX,DDR2:1,LPDDR2:2'}, # 0x6
@@ -239,7 +239,7 @@ DDRC_DEFS={ #not all fields are defined currently
                   'reg_ddrc_dfi_t_dram_clk_enable':   {'r':( 8,11),'d':0x1,'c':'deassert dfi_dram_clock disable to PHY clock enable in DFI clock cycles'},       
                   'reg_ddrc_dfi_t_dram_clk_disable':  {'r':( 4, 7),'d':0x1,'c':'assert  dfi_dram_clock disable to PHY clock disable in DFI clock cycles'}, 
                   'reg_ddrc_dfi_t_ctrl_delay':        {'r':( 0, 3),'d':0x1,'c':'assert/deassert  DFI control signals to PHY-DRAM control signals'}}},      
-    'ctrl_reg6':               {'OFFS': 0x07C,'DFLT':0x00032222,'RW':'M','FIELDS':{# 0x32222 in code it was called 'mstr_dll_status1_reg'
+    'ctrl_reg6':               {'OFFS': 0x07C,'DFLT':0x00032222,'RW':'M','FIELDS':{# 0x32222
                   'reserved1':                        {'r':(20,31),'d':0,'m':'R','c':'reserved'},      
                   'reg_ddrc_t_ckcsx':                 {'r':(16,19),'d':0x3,'c':'Clock stable before exiting clock stop. Recommended for LPDDR2: tXP+2'},     
                   'reg_ddrc_t_ckdpdx':                {'r':(12,15),'d':0x2,'c':'Clock stable before Deep Power Down exit. Recommended for LPDDR2: 2'},    
@@ -262,16 +262,16 @@ DDRC_DEFS={ #not all fields are defined currently
                   'reg_ddrc_t_zq_long_nop':           {'r':(12,21),'d':0x300,'c':'DDR3 and LPDDR2 only: number of NOP after ZQCL (ZQ calibration long)'}, # 0x200        
                   'reg_ddrc_t_mod':                   {'r':( 2,11),'d':0x200,'c':'Mode register set command update delay >=0x80'},      
                   'reg_ddrc_ddr3':                    {'r':( 1, 1),'d':0x1,'c':'0 - DDR2, 1 - DDR3'},    
-                  'reg_ddrc_dis_auto_zq ':            {'r':( 0, 0),'d':0,'c':'DDR3 and LPDDR2 only: 1 - disable auto generation of ZQCS, 0 - enable'}}},  
+                  'reg_ddrc_dis_auto_zq':             {'r':( 0, 0),'d':0,'c':'DDR3 and LPDDR2 only: 1 - disable auto generation of ZQCS, 0 - enable'}}},  
     'che_t_zq_short_interval_reg': {'OFFS': 0x0A8,'DFLT':0x0020003A,'RW':'RW','FIELDS':{ # 0x690cb73
                   'dram_rstn_x1024':                  {'r':(20,27),'d':0x2,'c':'DDR3 only: Number of cycles to assert reset during init sequence (in 1024 cycles)'},     #0x69 
                   't_zq_short_interval_x1024':        {'r':( 0,19),'d':0x3a,'c':'DDR3 and LPDDR2 only: AVerage interval between automatic ZQCS in 1024 clock cycles'}}}, #0xcb73
 #     
-    ' deep_pwrdwn_reg':{'OFFS': 0x0AC,'DFLT':0x00000000,'RW':'RW','FIELDS':{ # 1fe in code it was called 'status_data_sl_dll_01_reg' 
+    'deep_pwrdwn_reg':{'OFFS': 0x0AC,'DFLT':0x00000000,'RW':'RW','FIELDS':{ # 1fe 
                   'deeppowerdown_to_x1024':           {'r':( 1, 8),'d':0,'c':'LPDDR2 only: minimal deep power down time in 1024 clk (specs - 500usec)'},    # 0xff   
                   'deeppowerdown_en':                 {'r':( 0, 0),'d':0,'c':'LPDDR2 only: 0 - normal, 1 - go to deep power down when transaction store is empty'}}}, 
                                                                                      
-    'reg_2c':                  {'OFFS': 0x0B0,'DFLT':0x00000000,'RW':'M','FIELDS':{ # 0xffffff in code it was called 'status_data_sl_dll_23_reg' 
+    'reg_2c':                  {'OFFS': 0x0B0,'DFLT':0x00000000,'RW':'M','FIELDS':{ # 0xffffff 
                   'reg_ddrc_dfi_rd_data_eye_train':   {'r':(28,28),'d':0,'c':'DDR3 and LPDDR2 only: 1 - read data eye training (part of init sequence)'},      
                   'reg_ddrc_dfi_rd_dqs_gate_level':   {'r':(27,27),'d':0,'c':'1 - Read DQS gate leveling mode (DDR3 DFI only)'},   
                   'reg_ddrc_dfi_wr_level_en':         {'r':(26,26),'d':0,'c':'1 - Write leveling mode (DDR3 DFI only)'}, 
@@ -279,11 +279,11 @@ DDRC_DEFS={ #not all fields are defined currently
                   'ddrc_reg_twrlvl_max_error':        {'r':(24,24),'d':0,'m':'R','c':'DDR3 only: write leveling timeout (clear on write)'},     
                   'dfi_rdlvl_max_x1024':              {'r':(12,23),'d':0,'c':'Read leveling maximal time in 1024 clk. Typical value 0xFFF'},   # 0xfff
                   'dfi_wrlvl_max_x1024':              {'r':( 0,11),'d':0,'c':'Write leveling maximal time in 1024 clk. Typical value 0xFFF'}}},# 0xfff 
-    'reg_2d':                  {'OFFS': 0x0B4,'DFLT':0x00000200,'RW':'RW','FIELDS':{ # 200 in code it was called 'status_dqs_sl_dll_01_reg'
-                  'reserved1':                        {'r':(10,10),'d':0,'c':'reserved'},      
+    'reg_2d':                  {'OFFS': 0x0B4,'DFLT':0x00000200,'RW':'RW','FIELDS':{ # 200
+                  'reg_ddrc_dis_pre_bypass':          {'r':(10,10),'d':0,'c':'reserved'},      
                   'reg_ddrc_skip_ocd':                {'r':( 9, 9),'d':0x1,'c':'should be 1, 0 is not supported. 1 - skip OCD adjustment step during DDR2 init,  use OCD_Default and OCD_exit'},    
-                  'reserved2':                        {'r':( 0, 8),'d':0,'c':'reserved'}}},
-    'dfi_timimg':              {'OFFS': 0x0B8,'DFLT':0x00200067,'RW':'RW','FIELDS':{ # 0x200066 in code it was called 'status_dqs_sl_dll_23_reg'
+                  'reg_ddrc_2t_delay':                {'r':( 0, 8),'d':0,'c':'reserved'}}},
+    'dfi_timimg':              {'OFFS': 0x0B8,'DFLT':0x00200067,'RW':'RW','FIELDS':{ # 0x200066
                   'reg_ddrc_dfi_t_ctrlup_max':        {'r':(15,24),'d':0x40,'c':'Maximal number of clocks  ddrc_dfi_ctrlupd_req can assert'},  
                   'reg_ddrc_dfi_t_ctrlup_min':        {'r':( 5,14),'d':0x3,'c':'Minimal number of clocks  ddrc_dfi_ctrlupd_req must be asserted'},     
                   'reg_ddrc_dfi_t_rddata_en':         {'r':( 0, 4),'d':0x7,'c':'LPDDR2 - RL, DDR2 and DDR3 - RL-1'}}}, # 0x6

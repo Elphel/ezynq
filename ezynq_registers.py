@@ -127,7 +127,7 @@ class EzynqRegisters:
         mask=self._mask(bits)
         smask=mask>>min(bits)
         if (data  & ~smask)!=0 :
-            msg ='Data '+hex(data)+' does not fit info the bit field '+bits
+            msg ='Data '+hex(data)+' does not fit info the bit field '+str(bits)
             if warn:
                 print 'WARNING: '+msg
             else:

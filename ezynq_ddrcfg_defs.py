@@ -128,12 +128,41 @@ DDR_CFG_DEFS=[
     {'NAME':'T_RRD',          'CONF_NAME':'CONFIG_EZYNQ_DDR_T_RRD','TYPE':'F','MANDATORY':False,'DERIVED':False,'DEFAULT':10.0,
                 'DESCRIPTION':'ACTIVATE-to-ACTIVATE minimal command period (ns). May be used to calculate CONFIG_EZYNQ_DDR_RRD automatically'},   
     {'NAME':'MRD',            'CONF_NAME':'CONFIG_EZYNQ_DDR_MRD','TYPE':'I','MANDATORY':False,'DERIVED':False,'DEFAULT':4,
-                'DESCRIPTION':'MODE REGISTER SET command period (in tCK)'},              
+                'DESCRIPTION':'MODE REGISTER SET command period (in tCK)'},
+    {'NAME':'MOD',             'CONF_NAME':'CONFIG_EZYNQ_DDR_MOD','TYPE':'I','MANDATORY':False,'DERIVED':False,'DEFAULT':12,
+                'DESCRIPTION':'MODE REGISTER SET update delay (in tCK)'},              
+    {'NAME':'T_MOD',          'CONF_NAME':'CONFIG_EZYNQ_DDR_T_MOD','TYPE':'F','MANDATORY':False,'DERIVED':False,'DEFAULT':15.0,
+                'DESCRIPTION':'MODE REGISTER SET update delay  (ns).'},   
     {'NAME':'DDR2_RTT',      'CONF_NAME':'CONFIG_EZYNQ_DDR2_RTT','TYPE':('DISABLED','75','150','50'),'MANDATORY':False,'DERIVED':False,'DEFAULT':'75',
                 'DESCRIPTION':'DDR2 on-chip termination, Ohm'},              
     {'NAME':'DDR3_RTT',      'CONF_NAME':'CONFIG_EZYNQ_DDR3_RTT','TYPE':('DISABLED','60','120','40'),'MANDATORY':False,'DERIVED':False,'DEFAULT':'60',
                 'DESCRIPTION':'DDR3 on-chip termination, Ohm'}, # Does not include 20 & 30 - not clear if DDRC can use them with auto write leveling               
+    {'NAME':'T_WLMRD',          'CONF_NAME':'CONFIG_EZYNQ_DDR_T_WLMRD','TYPE':'F','MANDATORY':False,'DERIVED':False,'DEFAULT':40.0,
+                'DESCRIPTION':'Write leveling : time to the first DQS rising edge (ns).'},
 
+    {'NAME':'CKE',             'CONF_NAME':'CONFIG_EZYNQ_DDR_CKE','TYPE':'I','MANDATORY':False,'DERIVED':False,'DEFAULT':3,
+                'DESCRIPTION':'CKE min pulse width (in tCK)'},              
+    {'NAME':'T_CKE',          'CONF_NAME':'CONFIG_EZYNQ_DDR_T_CKE','TYPE':'F','MANDATORY':False,'DERIVED':False,'DEFAULT':7.5,
+                'DESCRIPTION':'CKE min pulse width (ns).'},   
+
+    {'NAME':'CKSRE',             'CONF_NAME':'CONFIG_EZYNQ_DDR_CKSRE','TYPE':'I','MANDATORY':False,'DERIVED':False,'DEFAULT':3,
+                'DESCRIPTION':'Keep valid clock after self refresh/power down entry (in tCK)'},              
+    {'NAME':'T_CKSRE',          'CONF_NAME':'CONFIG_EZYNQ_DDR_T_CKSRE','TYPE':'F','MANDATORY':False,'DERIVED':False,'DEFAULT':7.5,
+                'DESCRIPTION':'Keep valid clock after self refresh/power down entry (ns).'},   
+
+    {'NAME':'CKSRX',             'CONF_NAME':'CONFIG_EZYNQ_DDR_CKSRX','TYPE':'I','MANDATORY':False,'DERIVED':False,'DEFAULT':3,
+                'DESCRIPTION':'Valid clock before self refresh, power down or reset exit (in tCK)'},              
+    {'NAME':'T_CKSRX',          'CONF_NAME':'CONFIG_EZYNQ_DDR_T_CKSRX','TYPE':'F','MANDATORY':False,'DERIVED':False,'DEFAULT':7.5,
+                'DESCRIPTION':'Valid clock before self refresh, power down or reset exit (ns).'},   
+
+    {'NAME':'ZQCS',             'CONF_NAME':'CONFIG_EZYNQ_DDR_ZQCS','TYPE':'I','MANDATORY':False,'DERIVED':False,'DEFAULT':64,
+                'DESCRIPTION':'ZQCS command: short calibration time (in tCK)'},              
+    {'NAME':'ZQCL',             'CONF_NAME':'CONFIG_EZYNQ_DDR_ZQCL','TYPE':'I','MANDATORY':False,'DERIVED':False,'DEFAULT':512,
+                'DESCRIPTION':'ZQCL command: long calibration time, including init (in tCK)'},
+
+                            
+                 
+]
 # CONFIG_EZYNQ_DDR3_RTT = 60 # DISABLED, 60,120,40 - only used for DDR3              
 # CONFIG_EZYNQ_DDR2_RTT = 75 # DISABLED, 75,150,50 - only used for DDR2              
 # CONFIG_EZYNQ_DDR_T_RTP = 7.5
@@ -147,8 +176,22 @@ DDR_CFG_DEFS=[
 # CONFIG_EZYNQ_DDR_RRD = 4
 # CONFIG_EZYNQ_DDR_T_RRD = 10.0
 # CONFIG_EZYNQ_DDR_MRD = 4
-              
-]
+# CONFIG_EZYNQ_DDR_T_WLMRD = 40.0 #
+# CONFIG_EZYNQ_DDR_T_MOD = 15.0
+# CONFIG_EZYNQ_DDR_MOD =   12
+
+ 
+# CONFIG_EZYNQ_DDR_T_CKE = 5.625 # 7.5
+# CONFIG_EZYNQ_DDR_CKE =   3
+
+# CONFIG_EZYNQ_DDR_T_CKSRE = 10.0
+# CONFIG_EZYNQ_DDR_CKSRE =   5
+
+# CONFIG_EZYNQ_DDR_T_CKSRX = 10.0
+# CONFIG_EZYNQ_DDR_CKSRX =   5
+
+#CONFIG_EZYNQ_DDR_ZQCS = 64
+#CONFIG_EZYNQ_DDR_ZQCL = 512
 
 
 #TODO make some of (possibly) derived, leave '_T_' for ns only!

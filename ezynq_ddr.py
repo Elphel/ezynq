@@ -78,11 +78,28 @@ class EzynqDDR:
                 self.features.set_max_value('RCD', int(math.ceil(self.features.get_par_value('T_RCD')/tCK)))
             except:
                 pass
-                
             try:
                 self.features.set_max_value('RRD', int(math.ceil(self.features.get_par_value('T_RRD')/tCK)))
             except:
                 pass
+
+            try:
+                self.features.set_max_value('CKE', int(math.ceil(self.features.get_par_value('T_CKE')/tCK)))
+            except:
+                pass
+            try:
+                self.features.set_max_value('CKSRE', int(math.ceil(self.features.get_par_value('T_CKSRE')/tCK)))
+            except:
+                pass
+            try:
+                self.features.set_max_value('CKSRX', int(math.ceil(self.features.get_par_value('T_CKSRX')/tCK)))
+            except:
+                pass
+            try:
+                self.features.set_max_value('MOD', int(math.ceil(self.features.get_par_value('T_MOD')/tCK)))
+            except:
+                pass
+        
         except:
             print "*** DDR Clock frequency is not defined"
     def pre_validate(self):
@@ -335,10 +352,16 @@ class EzynqDDR:
                                                            ('reg_ddrc_t_rfc_min',           tRFCx1),
                                                            ('reg_ddrc_t_rc',                tRCx1)),force,warn)
 # reg DRAM_param_reg1, 0x44e458d2
-        tCKEx1=4 # good default
-        tRAS_MINx1= int(math.ceil(self.features.get_par_value('T_RAS_MIN')/tCK))
-        tRAS_MAX=9*tREFI # for Micron
-        tRAS_MAX_x1024=int(tRAS_MAX/tCK/1024)
+
+#CONFIG_EZYNQ_DDR_CKE =   3
+#CONFIG_EZYNQ_DDR_CKSRE =   5
+#CONFIG_EZYNQ_DDR_CKSRX =   5
+
+        CKE=  self.features.get_par_value('CKE') # 4
+        
+        RAS_MIN= int(math.ceil(self.features.get_par_value('T_RAS_MIN')/tCK))
+        RAS_MAX=9*tREFI # for Micron
+        RAS_MAXx1024=int(RAS_MAX/tCK/1024)
         tFAWx1=int(math.ceil(self.features.get_par_value('T_FAW')/tCK))
         inactiveToPDx32=6 # cycles 'Power down after this many clocks of NOP/DESELECT (if enabled in mcr). Make configurable?
         WR=int(math.ceil(tWR/tCK))
@@ -347,9 +370,9 @@ class EzynqDDR:
         wr2pre=WL+BL/2+WR
         if is_LPDDR2:
             wr2pre+=1
-        ddrc_register_set.set_bitfields('dram_param_reg1',(('reg_ddrc_t_cke',           tCKEx1), # Default - OK, Micron tXSDLL=tDLLK=512 /32
-                                                           ('reg_ddrc_t_ras_min',       tRAS_MINx1),
-                                                           ('reg_ddrc_t_ras_max',       tRAS_MAX_x1024),
+        ddrc_register_set.set_bitfields('dram_param_reg1',(('reg_ddrc_t_cke',           CKE), # Default - OK, Micron tXSDLL=tDLLK=512 /32
+                                                           ('reg_ddrc_t_ras_min',       RAS_MIN),
+                                                           ('reg_ddrc_t_ras_max',       RAS_MAXx1024),
                                                            ('reg_ddrc_t_faw',           tFAWx1),
                                                            ('reg_ddrc_powerdown_to_x32',inactiveToPDx32),
                                                            ('reg_ddrc_wr2pre',          wr2pre)),force,warn)
@@ -674,37 +697,229 @@ class EzynqDDR:
                                                               ('reg_ddrc_addrmap_row_b2_11',addr_map['row_b2_11']),          # 0x6
                                                               ('reg_ddrc_addrmap_row_b1',   addr_map['row_b1']),             # 0x6
                                                               ('reg_ddrc_addrmap_row_b0',   addr_map['row_b0'])),force,warn) # 0x6
+        
+
+# reg DRAM_odt_reg,  0x3c000, 0x3c248,0x3c248
+# Could not find documentation, default value may work (first time 3 default/do not change values were different
+        rank0_wr_odt = 1  # default, was 0 first time
+        rank1_rd_odt = 1  # default, was 0 first time
+        rank1_wr_odt = 1  # default, was 0 first time
+        wr_local_odt = 3  # default
+        idle_local_odt= 3 # default
+         
+        ddrc_register_set.set_bitfields('dram_odt_reg', (
+                                                      #  ('reg_ddrc_rank3_wr_odt',  0),              # 0
+                                                      #  ('reg_ddrc_rank3_rd_odt',  0),              # 0
+                                                      #  ('reg_ddrc_rank2_wr_odt',  0),              # 0
+                                                      #  ('reg_ddrc_rank2_rd_odt',  0),              # 0 
+                                                         ('reg_phy_idle_local_odt', idle_local_odt), # 0x3 0x3
+                                                         ('reg_phy_wr_local_odt',   wr_local_odt),   # 0x3 0x3
+                                                      #  ('reg_phy_rd_local_odt',   0),              # 0
+                                                         ('reg_ddrc_rank1_wr_odt',  rank1_wr_odt),   # 0   0x1
+                                                         ('reg_ddrc_rank1_rd_odt',  rank1_rd_odt),   # 0   0x1
+                                                         ('reg_ddrc_rank0_wr_odt',  rank0_wr_odt),   # 0   0x1
+                                                         ('reg_ddrc_rank0_rd_odt',  0)),force,warn)  # 0
+        
+
+        
+# reg phy_cmd_timeout_rddata_cpt,  0x77010800 (default) all 3 times
+        wrlvl_num_of_dq0   = 7 # write. lev. :recomm. 8 - higher longer, but better
+        gatelvl_num_of_dq0 = 7 # gate training :recomm. 8 - higher longer, but better
+        use_fixed_re       = 1 # FIFO control mode. Should be set to 1 during training/leveling
+        rdc_we_to_re_delay = 8 # Fifo control, used when use_fixed_re=1 
+        ddrc_register_set.set_bitfields('phy_cmd_timeout_rddata_cpt',(
+                                                         ('reg_phy_wrlvl_num_of_dq0',        wrlvl_num_of_dq0),  # 0x7
+                                                         ('reg_phy_gatelvl_num_of_dq0',      gatelvl_num_of_dq0),# 0x7
+                                                      #  ('reserved1',                       0),                 # 0
+                                                      #  ('reg_phy_clk_stall_level',         0),                 # 0
+                                                      #  ('reg_phy_dis_phy_ctrl_rstn',       0),                 # 0
+                                                      #  ('reg_phy_rdc_fifo_rst_err_cnt_clr',0),                 # 0
+                                                         ('reg_phy_use_fixed_re',            use_fixed_re),      # 0x1
+                                                      #  ('reg_phy_rdc_fifo_rst_disable',    0),                 # 0
+                                                      #  ('reserved2',                       0),                 # 0
+                                                         ('reg_phy_rdc_we_to_re_delay',      rdc_we_to_re_delay),# 0x8
+                                                      #  ('reg_phy_wr_cmd_to_data',          0),                 # 0
+                                                      #  ('reg_phy_rd_cmd_to_data',          0)                  # 0
+                                                                                               ),force,warn)
+# reg DLL_calib,  0x0, then 2 times 0x101 (default). Does it need to be 0 before training. Not listed in 10-11 - probably can be skipped during init
+        dis_dll_calib = 0 # if 1 - disable automatic periodic DLL correction
+        dll_calib_to_max_x1024 = 1 # reserved, do not modify
+        dll_calib_to_min_x1024 = 1 # reserved, do not modify
+        ddrc_register_set.set_bitfields('dll_calib',(('reg_ddrc_dis_dll_calib',             dis_dll_calib),          # 0
+                                                     ('reg_ddrc_dll_calib_to_max_x1024',    dll_calib_to_max_x1024), # 1
+                                                     ('reg_ddrc_dll_calib_to_min_x1024',    dll_calib_to_min_x1024)  # 1
+                                                                                             ),force,warn)
+# reg odt_delay_hold,  0x5003 (default) always
+        if BL==4:
+            wr_odt_hold= 2 # recommended ug585:801
+        elif BL==8:   
+            wr_odt_hold= 4 # recommended ug585:801
+        else: #BL==16?
+            wr_odt_hold= 8 # guessed
+        wr_odt_hold+=1     # actually for BL==8 was programmed 5, so increment by 1. Or is it for 8 only?
+        if is_DDR2:    
+            wr_odt_delay=WL-5
+            if wr_odt_delay<0:
+                wr_odt_delay=0
+        else:
+            wr_odt_delay=0
+        ddrc_register_set.set_bitfields('odt_delay_hold',(
+                                                     ('reg_ddrc_wr_odt_hold',          wr_odt_hold),       # 5
+                                                #    ('reg_ddrc_rd_odt_hold',          0),                 # 0 - 'unused'
+                                                     ('reg_ddrc_wr_odt_delay',         wr_odt_delay),      # 0
+                                                #    ('reg_ddrc_rd_odt_delay',         0),                 # 3 - 'unused' - keep default
+                                                                                             ),force,warn)
+# reg  ctrl_reg1 - all 3 times 0x3e (default) 
+        ddrc_register_set.set_bitfields('ctrl_reg1',(
+                                                     ('reg_ddrc_selfref_en',            0),       # 0 Dynamic - 1 - go to Self Refresh when transaction store is empty  
+                                                     ('reserved1',                      0),       # 0
+                                                     ('reg_ddrc_dis_collision_page_opt',0),       # 0 Disable autoprecharge for collisions (write+write or read+write to the same address) when  reg_ddrc_dis_wc==1
+                                                     ('reg_ddrc_dis_wc',                0),       # 0 1 - disable write combine, 0 - enable
+                                                     ('reg_ddrc_refresh_update_level',  0),       # 0 Dynamic: toggle to indicate refresh register(s) update
+                                                     ('reg_ddrc_auto_pre_en',           0),       # 0 1 - most R/W will be with autoprecharge
+                                                     ('reg_ddrc_lpr_num_entries',       0x1f),    # 0x1f - (bit 6 ignored) (Size of low priority transaction store+1). HPR - 32 - this value
+                                                     ('reg_ddrc_pageclose',             0)        # 0 1 - close bank if no transactions in the store for it, 0 - keep open until not needed by other
+                                                                                          ),force,warn)
+# reg  ctrl_reg2 0x20000 - all 3 times (default)
+        ddrc_register_set.set_bitfields('ctrl_reg2',(
+                                                     ('reg_arb_go2critical_en',         0x1),     # 0x1 0 - ignore "urgent" from AXI master, 1 - grant
+                                                     ('reserved1',                      0),       # 0 
+                                                     ('reg_ddrc_go2critical_hysteresis',0),       # 0 Latency of moving to critical state
+                                                     ('reserved2',                      0),       # 0
+                                                                                          ),force,warn)
+# reg  ctrl_reg3 0x284141 - all 3 times (non-default, default=0x00284027)
+        if is_DDR3: # other - N/A
+            dfi_t_wlmrd= int(math.ceil(self.features.get_par_value('T_WLMRD')/tCK))
+            rdlvl_rr  = 0x41 # default = 0x40 (Did not understand how to calculate, using actual for DDR3) 
+            ddrc_register_set.set_bitfields('ctrl_reg3',(('reg_ddrc_dfi_t_wlmrd', dfi_t_wlmrd),
+                                                         ('reg_ddrc_rdlvl_rr',    rdlvl_rr)),force,warn)   # 0x28 DDR3 only: tWLMRD from DRAM specs
+        if is_DDR3 or is_LPDDR2: # DDR2 - N/A
+            wrlvl_ww=RL+rdc_we_to_re_delay+50 #ug585:804
+            ddrc_register_set.set_bitfields('ctrl_reg3',(('reg_ddrc_wrlvl_ww', wrlvl_ww)),force,warn)   # 0x41 (dflt 0x27) DDR3 and LPDDR2 - write  leveling write-to-write delay'
+        
+# reg  ctrl_reg4 0x1610 - all 3 times (default) - keeping
+        ddrc_register_set.set_bitfields('ctrl_reg4',(
+                                                     ('dfi_t_ctrlupd_interval_max_x1024',            0x16),       # 0x16 - maximal time between DFI update requests in 1024 clocks
+                                                     ('dfi_t_ctrlupd_interval_min_x1024',            0x10),       # 0x10 - minimal time between DFI update requests in 1024 clocks
+                                                                                          ),force,warn)
+#     'rd_dll_force1':           {'OFFS': 0x070},
+#     'wr_ratio_reg':            {'OFFS': 0x074},
+
+# reg  ctrl_reg5 0x466111 - only 2 times set, but same default
+        #CKE=  self.features.get_par_value('CKE') # 4 defined earlier
+        CKSRE=  self.features.get_par_value('CKSRE') # 6
+        CKSRX=  self.features.get_par_value('CKSRX') # 6
+        if is_DDR3:
+            t_ckesr=CKE+1 # contradicts dram_param_reg1 in actual settings - both have 0x4, but one - CKE, another CKE+1. Better safe than sorry, and SR exit is not that often
+            t_cksrx=CKSRX
+            t_cksre=CKSRE
+        elif is_DDR2:
+            t_ckesr=CKE
+            t_cksrx=1
+            t_cksre=1
+        elif is_LPDDR2:
+            t_ckesr=CKSRX
+            t_cksrx=2
+            t_cksre=2
+        dfi_t_dram_clk_enable=1 # keeping defaults==actual for DDR3 - not clear what specs to use 
+        dfi_t_dram_clk_disable=1 # keeping defaults==actual for DDR3 - not clear what specs to use
+        dfi_t_ctrl_delay=1 # keeping defaults==actual for DDR3 - not clear what specs to use
+        ddrc_register_set.set_bitfields('ctrl_reg5',(
+                                                     ('reserved1',                       0  ),       # 0
+                                                     ('reg_ddrc_t_ckesr',                t_ckesr),       # 0x4->5 Min CKE low for self refresh, recomm.: DDR3:tCKE+1,DDR2:tCKE,LPDDR2:tCKESR
+                                                     ('reg_ddrc_t_cksrx',                t_cksrx),       # 0x6 CK valid before self refresh exit, recomm. DDR3:tCKSRX,DDR2:1,LPDDR2:2
+                                                     ('reg_ddrc_t_cksre',                t_cksre),       # 0x6 CK valid after self refresh entry, recomm. DDR3:tCKSRE,DDR2:1,LPDDR2:2
+                                                     ('reg_ddrc_dfi_t_dram_clk_enable',  dfi_t_dram_clk_enable),       # 0x1 deassert dfi_dram_clock disable to PHY clock enable in DFI clock cycles
+                                                     ('reg_ddrc_dfi_t_dram_clk_disable', dfi_t_dram_clk_disable),       # 0x1 assert  dfi_dram_clock disable to PHY clock disable in DFI clock cycles
+                                                     ('reg_ddrc_dfi_t_ctrl_delay',       dfi_t_ctrl_delay),       # 0x1 ssert/deassert  DFI control signals to PHY-DRAM control signals
+                                                                                          ),force,warn)
+
+# reg  ctrl_reg6 0x32222 - only 2 times set, but same default
+# Keeping actual/defaults - all recommendations are listed for LPDDR2 only (tXP+2 for DDR3 would be 6 - does not match actual).
+        ddrc_register_set.set_bitfields('ctrl_reg6',(
+                                                     ('reserved1',            0),         # 0
+                                                     ('reg_ddrc_t_ckcsx',     0x3),       # 0x3 Clock stable before exiting clock stop. Recommended for LPDDR2: tXP+2
+                                                     ('reg_ddrc_t_ckdpdx',    0x2),       # 0x2 Clock stable before Deep Power Down exit. Recommended for LPDDR2: 2
+                                                     ('reg_ddrc_t_ckdpde',    0x2),       # 0x2 Maintain clock after Deep Power Down entry. Recommended for LPDDR2: 2
+                                                     ('reg_ddrc_t_ckpdx',     0x2),       # 0x2 Clock stable before Power Down exit. Recommended for LPDDR2: 2
+                                                     ('reg_ddrc_t_ckpde',     0x2),       # 0x2 Maintain clock after Power Down entry. Recommended for LPDDR2: 2
+                                                                                          ),force,warn)
+# reg  che_refresh_timer01_reg dflt=0x00008000 = act 
+        ddrc_register_set.set_bitfields('che_refresh_timer01_reg',(
+                                                     ('refresh_timer1_start_value_x32',  0x8),# 0x8 reserved, do not modify
+                                                     ('refresh_timer0_start_value_x32',  0),  # 0   reserved, do not modify
+                                                                                          ),force,warn)
+
+# reg  che_t_zq  dflt=0x10300802 act=0x10200802
+#CONFIG_EZYNQ_DDR_ZQCS = 64
+#CONFIG_EZYNQ_DDR_ZQCL = 512
+        ZQCS=self.features.get_par_value('ZQCS')
+        ZQCL=self.features.get_par_value('ZQCL')
+        MOD= self.features.get_par_value('MOD')
+        t_mod=max(MOD,512) # 128) # according to documentation should be 128, but actually it is set to 0x200
+        dis_auto_zq=0 # default 0 - enable auto ZQ
+        ddrc_register_set.set_bitfields('che_t_zq',(
+                                                     ('reg_ddrc_t_zq_short_nop',  ZQCS), # 0x40 DDR3 and LPDDR2 only: number of NOP after ZQCS (ZQ calibration short)
+                                                     ('reg_ddrc_t_zq_long_nop',   ZQCL), # 0x200 DDR3 and LPDDR2 only: number of NOP after ZQCL (ZQ calibration long)
+                                                     ('reg_ddrc_t_mod',           t_mod), # 0x200 Mode register set command update delay >=0x80
+                                                     ('reg_ddrc_ddr3',            (0,1)[is_DDR3]), # 0x1 0 - DDR2, 1 - DDR3
+                                                     ('reg_ddrc_dis_auto_zq',     dis_auto_zq), # 0 DDR3 and LPDDR2 only: 1 - disable auto generation of ZQCS, 0 - enable'
+                                                                                          ),force,warn)
+
+# reg che_t_zq_short_interval_reg   dflt=0x0020003A act=0x690cb73
+        rstn_x1024=              0x69   # using actual
+        zq_short_interval_x1024= 0xcb73 # using actual
+        ddrc_register_set.set_bitfields('che_t_zq_short_interval_reg',(
+                                                     ('dram_rstn_x1024',            rstn_x1024), # 0x69 DDR3 only: Number of cycles to assert reset during init sequence (in 1024 cycles)
+                                                     ('t_zq_short_interval_x1024',  zq_short_interval_x1024), # 0xcb73 DDR3 and LPDDR2 only: AVerage interval between automatic ZQCS in 1024 clock cycles
+                                                                                     ),force,warn)
+
+# reg deep_pwrdwn_reg       dflt=0 act=0x1fe
+        deeppowerdown_to_x1024=0xff # LPDDR2 only, using actual
+        ddrc_register_set.set_bitfields('deep_pwrdwn_reg',(
+                                                     ('deeppowerdown_to_x1024',deeppowerdown_to_x1024), # 0xff LPDDR2 only: minimal deep power down time in 1024 clk (specs - 500usec)
+                                                     ('deeppowerdown_en',            0), # 0 LPDDR2 only: 0 - normal, 1 - go to deep power down when transaction store is empty
+                                                                                      ),force,warn)
+
+# reg  reg_2c   dflt=0 act=0xffffff
+        dfi_rdlvl_max_x1024=0xfff # using actual/recommended
+        dfi_wrlvl_max_x1024=0xfff # using actual/recommended
+        ddrc_register_set.set_bitfields('reg_2c',(
+                                                     ('reg_ddrc_dfi_rd_data_eye_train', 0), # 0 DDR3 and LPDDR2 only: 1 - read data eye training (part of init sequence)
+                                                     ('reg_ddrc_dfi_rd_dqs_gate_level', 0), # 0 1 - Read DQS gate leveling mode (DDR3 DFI only)
+                                                     ('reg_ddrc_dfi_wr_level_en',       0), # 0 1 - Write leveling mode (DDR3 DFI only)
+                                                     ('ddrc_reg_trdlvl_max_error',      0), # 0 READONLY: DDR3 and LPDDR2 only: leveling/gate training timeout (clear on write)
+                                                     ('ddrc_reg_twrlvl_max_error',      0), # 0 READONLY: DDR3 only: write leveling timeout (clear on write) 
+                                                     ('dfi_rdlvl_max_x1024',dfi_rdlvl_max_x1024), # 0xfff Read leveling maximal time in 1024 clk. Typical value 0xFFF
+                                                     ('dfi_wrlvl_max_x1024',dfi_wrlvl_max_x1024), # 0xfff Write leveling maximal time in 1024 clk. Typical value 0xFFF
+                                                                                          ),force,warn)
+
+# reg   reg_2d   dflt=0x200 act=0x200
+        ddrc_register_set.set_bitfields('reg_2d',(
+                                                     ('reg_ddrc_dis_pre_bypass',  0),  # 0 reserved
+                                                     ('reg_ddrc_skip_ocd',        0x1),# 0x1 should be 1, 0 is not supported. 1 - skip OCD adjustment step during DDR2 init,  use OCD_Default and OCD_exit
+                                                     ('reg_ddrc_2t_delay',        0),  # 0 reserved
+                                                                                   ),force,warn)
+
+# reg  dfi_timimg  dflt=0x00200067 act=0x0x200066
+        dfi_t_ctrlup_max=0x40 # using actual for (ddr3), not clear how to calculate
+        dfi_t_ctrlup_min=0x3  # using actual for (ddr3), not clear how to calculate
+        if is_DDR2 or is_DDR3:
+            dfi_t_rddata_en=RL-1
+        elif is_LPDDR2:
+            dfi_t_rddata_en=RL
+        ddrc_register_set.set_bitfields('dfi_timimg',(
+                                                     ('reg_ddrc_dfi_t_ctrlup_max', dfi_t_ctrlup_max), # 0x40 Maximal number of clocks  ddrc_dfi_ctrlupd_req can assert
+                                                     ('reg_ddrc_dfi_t_ctrlup_min', dfi_t_ctrlup_min), # 0x3 Minimal number of clocks  ddrc_dfi_ctrlupd_req must be asserted
+                                                     ('reg_ddrc_dfi_t_rddata_en',  dfi_t_rddata_en), # 0x6 LPDDR2 - RL, DDR2 and DDR3 - RL-1
+                                                                                     ),force,warn)
+
+        
+        
 #CONFIG_EZYNQ_DDR_BANK_ADDR_COUNT = 3
 #CONFIG_EZYNQ_DDR_ROW_ADDR_COUNT = 15
 #CONFIG_EZYNQ_DDR_COL_ADDR_COUNT = 10 # not counting A10
 #CONFIG_EZYNQ_DDR_BANK_ADDR_MAP  = 10        
- 
-#     'dram_addr_map_bank':      {'OFFS': 0x03C,'DFLT':0x00000F77,'RW':'RW','FIELDS':{ #0x777
-#                   'reg_ddrc_addrmap_col_b6':          {'r':(16,19),'d':0,'c':'Selects address bits for column address bit 7, half bus width - column address bits 8, int. base=9'},  
-#                   'reg_ddrc_addrmap_col_b5':          {'r':(12,15),'d':0,'c':'Selects address bits for column address bit 6, half bus width - column address bits 7, int. base=8'},  
-#                   'reg_ddrc_addrmap_bank_b2':         {'r':( 8,11),'d':0xf,'c':'Selects AXI address bit for bank2. Valid 0..15. Int. base=7. If 15, bank2 is set to 0'},  #7
-#                   'reg_ddrc_addrmap_bank_b1':         {'r':( 4, 7),'d':0x7,'c':'Selects AXI address bit for bank1. Valid 0..14. Int. base=6.'},  
-#                   'reg_ddrc_addrmap_bank_b0':         {'r':( 0, 3),'d':0x7,'c':'Selects AXI address bit for bank0. Valid 0..14. Int. base=5.'}}},  
-#     'dram_addr_map_col':       {'OFFS': 0x040,'DFLT':0xFFF00000,'RW':'RW','FIELDS':{ # 0xfff00000
-#                   'reg_ddrc_addrmap_col_b11':         {'r':(28,31),'d':0xF,'c':'Selects address bits for col. addr. bit 13 (LP - 12), Valid 0..7 and 15, half width - unused (LP-13), int. base=14'},  
-#                   'reg_ddrc_addrmap_col_b10':         {'r':(24,27),'d':0xF,'c':'Selects address bits for col. addr. bit 12 (LP - 11), Valid 0..7 and 15, half width - 13 (LP-12), int. base=13'},  
-#                   'reg_ddrc_addrmap_col_b9':          {'r':(20,23),'d':0xF,'c':'Selects address bits for col. addr. bit 11 (LP - 10), Valid 0..7 and 15, half width - 12 (LP-11), int. base=12'},  
-#                   'reg_ddrc_addrmap_col_b8':          {'r':(16,19),'d':0,'c':'Selects address bits for col. addr. bit 9, Valid 0..7 and 15, half width - 11 (LP-10), int. base=11'},  
-#                   'reg_ddrc_addrmap_col_b7':          {'r':(12,15),'d':0,'c':'Selects address bits for col. addr. bit 8, Valid 0..7 and 15, half width - 9, int. base=10'},  
-#                   'reg_ddrc_addrmap_col_b4':          {'r':( 8,11),'d':0,'c':'Selects address bits for col. addr. bit 5, Valid 0..7, half width - bit 6, int. base=7'},  
-#                   'reg_ddrc_addrmap_col_b3':          {'r':( 4, 7),'d':0,'c':'Selects address bits for col. addr. bit 4, Valid 0..7, half width - bit 5, int. base=6'},  
-#                   'reg_ddrc_addrmap_col_b2':          {'r':( 0, 3),'d':0,'c':'Selects address bits for col. addr. bit 3, Valid 0..7, half width - bit 4, int. base=5'}}},  
-#     'dram_addr_map_row':       {'OFFS': 0x044,'DFLT':0x0FF55555,'RW':'RW','FIELDS':{ # 0xf666666
-#                   'reg_ddrc_addrmap_row_b15':         {'r':(24,27),'d':0xF,'c':'Selects address bits for row. addr. bit 15, Valid 0..5 and 15, int. base=24 if 15 - address bit 15 is set to 0'},  # 0xf
-#                   'reg_ddrc_addrmap_row_b14':         {'r':(20,23),'d':0xF,'c':'Selects address bits for row. addr. bit 14, Valid 0..6 and 15, int. base=23 if 15 - address bit 14 is set to 0'},  # 0x6
-#                   'reg_ddrc_addrmap_row_b13':         {'r':(16,19),'d':0x5,'c':'Selects address bits for row. addr. bit 13, Valid 0..7 and 15, int. base=22 if 15 - address bit 13 is set to 0'},  # 0x6
-#                   'reg_ddrc_addrmap_row_b12':         {'r':(12,15),'d':0x5,'c':'Selects address bits for row. addr. bit 12, Valid 0..8 and 15, int. base=21 if 15 - address bit 12 is set to 0'},  # 0x6
-#                   'reg_ddrc_addrmap_row_b2_11':       {'r':( 8,11),'d':0x5,'c':'Selects address bits for row. addr. bits 2 to 11, Valid 0..11, int. base=11 (for a2) to 20 (for a 11)'},           # 0x6
-#                   'reg_ddrc_addrmap_row_b1':          {'r':( 4, 7),'d':0x5,'c':'Selects address bits for row. addr. bit 1,  Valid 0..11, int. base=10'},                                           # 0x6
-#                   'reg_ddrc_addrmap_row_b0':          {'r':( 0, 3),'d':0x5,'c':'Selects address bits for row. addr. bit 0,  Valid 0..11, int. base=9'}}},                                          # 0x6
-
-
-         
 # CONFIG_EZYNQ_DDR_XP = 4
 # CONFIG_EZYNQ_DDR_RCD = 7 (was CONFIG_EZYNQ_DDR_T_RCD = 7) *
 # CONFIG_EZYNQ_DDR_RP = 7 (was CONFIG_EZYNQ_DDR_T_RP = 7) *
