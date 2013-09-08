@@ -331,7 +331,7 @@ DDRC_DEFS={ #not all fields are defined currently
     'phy_rcvr_enable':         {'OFFS': 0x114,'DFLT':0x00000000,'RW':'RW','FIELDS':{ # 0x0
                   'reg_phy_dif_off':                  {'r':( 4, 7),'d':0,'c':'"Off" value of the drive of the receiver-enabled pins'},       
                   'reg_phy_dif_on':                   {'r':( 0, 3),'d':0,'c':'"On" value of the drive of the receiver-enabled pins'}}},
-    'phy_config0':             {'OFFS': 0x118,'DFLT':0x40000001,'RW':'RW','FIELDS':{ # 0x40000001
+    'phy_config0':             {'OFFS': 0x118,'DFLT':0x40000001,'RW':'RW','COMMENTS':'PHY configuration for data slice 0','FIELDS':{ # 0x40000001
                   'reg_phy_dq_offset':                {'r':(24,30),'d':0x40,'c':'Offset value of DQS to DQ during write leveling of data slice 0. Default is 0x40 for 90-degree shift'},       
                   'reg_phy_bist_err_clr':             {'r':(15,23),'d':0,'c':'reserved'},      
                   'reg_phy_bist_shift_dq':            {'r':( 6,14),'d':0,'c':'reserved'},      
@@ -341,7 +341,7 @@ DDRC_DEFS={ #not all fields are defined currently
                   'reg_phy_gatelvl_inc_mode':         {'r':( 2, 2),'d':0,'c':'reserved'},       
                   'reg_phy_rdlvl_inc_mode':           {'r':( 1, 1),'d':0,'c':'reserved'},       
                   'reg_phy_data_slice_in_use':        {'r':( 0, 0),'d':1,'c':'Data bus width for read FIFO generation. 0 - read data responses are ignored, 1 - data slice 0 is valid (always 1)'}}},
-    'phy_config1':             {'OFFS': 0x11C,'DFLT':0x40000001,'RW':'RW','FIELDS':{ # 0x40000001
+    'phy_config1':             {'OFFS': 0x11C,'DFLT':0x40000001,'RW':'RW','COMMENTS':'PHY configuration for data slice 1','FIELDS':{ # 0x40000001
                   'reg_phy_dq_offset':                {'r':(24,30),'d':0x40,'c':'Offset value of DQS to DQ during write leveling of data slice 1. Default is 0x40 for 90-degree shift'},       
                   'reg_phy_bist_err_clr':             {'r':(15,23),'d':0,'c':'reserved'},      
                   'reg_phy_bist_shift_dq':            {'r':( 6,14),'d':0,'c':'reserved'},      
@@ -351,7 +351,7 @@ DDRC_DEFS={ #not all fields are defined currently
                   'reg_phy_gatelvl_inc_mode':         {'r':( 2, 2),'d':0,'c':'reserved'},       
                   'reg_phy_rdlvl_inc_mode':           {'r':( 1, 1),'d':0,'c':'reserved'},       
                   'reg_phy_data_slice_in_use':        {'r':( 0, 0),'d':1,'c':'Data bus width for read FIFO generation. 0 - read data responses are ignored, 1 - data slice 1 is valid'}}},
-    'phy_config2':             {'OFFS': 0x120,'DFLT':0x40000001,'RW':'RW','FIELDS':{ # 0x40000001
+    'phy_config2':             {'OFFS': 0x120,'DFLT':0x40000001,'RW':'RW','COMMENTS':'PHY configuration for data slice 2','FIELDS':{ # 0x40000001
                   'reg_phy_dq_offset':                {'r':(24,30),'d':0x40,'c':'Offset value of DQS to DQ during write leveling of data slice 2. Default is 0x40 for 90-degree shift'},       
                   'reg_phy_bist_err_clr':             {'r':(15,23),'d':0,'c':'reserved'},      
                   'reg_phy_bist_shift_dq':            {'r':( 6,14),'d':0,'c':'reserved'},      
@@ -361,7 +361,7 @@ DDRC_DEFS={ #not all fields are defined currently
                   'reg_phy_gatelvl_inc_mode':         {'r':( 2, 2),'d':0,'c':'reserved'},       
                   'reg_phy_rdlvl_inc_mode':           {'r':( 1, 1),'d':0,'c':'reserved'},       
                   'reg_phy_data_slice_in_use':        {'r':( 0, 0),'d':1,'c':'Data bus width for read FIFO generation. 0 - read data responses are ignored, 1 - data slice 2 is valid'}}},
-    'phy_config3':             {'OFFS': 0x124,'DFLT':0x40000001,'RW':'RW','FIELDS':{ # 0x40000001
+    'phy_config3':             {'OFFS': 0x124,'DFLT':0x40000001,'RW':'RW','COMMENTS':'PHY configuration for data slice 3','FIELDS':{ # 0x40000001
                   'reg_phy_dq_offset':                {'r':(24,30),'d':0x40,'c':'Offset value of DQS to DQ during write leveling of data slice 3. Default is 0x40 for 90-degree shift'},       
                   'reg_phy_bist_err_clr':             {'r':(15,23),'d':0,'c':'reserved'},      
                   'reg_phy_bist_shift_dq':            {'r':( 6,14),'d':0,'c':'reserved'},      
@@ -372,83 +372,83 @@ DDRC_DEFS={ #not all fields are defined currently
                   'reg_phy_rdlvl_inc_mode':           {'r':( 1, 1),'d':0,'c':'reserved'},       
                   'reg_phy_data_slice_in_use':        {'r':( 0, 0),'d':1,'c':'Data bus width for read FIFO generation. 0 - read data responses are ignored, 1 - data slice 3 is valid'}}},
 #     u32 reserved3[1];              /* 0x128*/,
-    'phy_init_ratio0':         {'OFFS': 0x12C,'DFLT':0x00000000,'RW':'RW','FIELDS':{ # 0x0
+    'phy_init_ratio0':         {'OFFS': 0x12C,'DFLT':0x00000000,'RW':'RW','COMMENTS':'PHY init ratio register for data slice 0','FIELDS':{ # 0x0
                   'reg_phy_gatelvl_init_ratio':       {'r':(10,19),'d':0,'c':'User-programmable init ratio used by Gate Leveling FSM, data slice 0'},       
                   'reg_phy_wrlvl_init_ratio':         {'r':( 0, 9),'d':0,'c':'User-programmable init ratio used by Write Leveling FSM, data slice 0'}}},
-    'phy_init_ratio1':         {'OFFS': 0x130,'DFLT':0x00000000,'RW':'RW','FIELDS':{ # 0x0
+    'phy_init_ratio1':         {'OFFS': 0x130,'DFLT':0x00000000,'RW':'RW','COMMENTS':'PHY init ratio register for data slice 1','FIELDS':{ # 0x0
                   'reg_phy_gatelvl_init_ratio':       {'r':(10,19),'d':0,'c':'User-programmable init ratio used by Gate Leveling FSM, data slice 1'},       
                   'reg_phy_wrlvl_init_ratio':         {'r':( 0, 9),'d':0,'c':'User-programmable init ratio used by Write Leveling FSM, data slice 1'}}},
-    'phy_init_ratio2':         {'OFFS': 0x134,'DFLT':0x00000000,'RW':'RW','FIELDS':{ # 0x0
+    'phy_init_ratio2':         {'OFFS': 0x134,'DFLT':0x00000000,'RW':'RW','COMMENTS':'PHY init ratio register for data slice 2','FIELDS':{ # 0x0
                   'reg_phy_gatelvl_init_ratio':       {'r':(10,19),'d':0,'c':'User-programmable init ratio used by Gate Leveling FSM, data slice 2'},       
                   'reg_phy_wrlvl_init_ratio':         {'r':( 0, 9),'d':0,'c':'User-programmable init ratio used by Write Leveling FSM, data slice 2'}}},
-    'phy_init_ratio3':         {'OFFS': 0x138,'DFLT':0x00000000,'RW':'RW','FIELDS':{ # 0x0
+    'phy_init_ratio3':         {'OFFS': 0x138,'DFLT':0x00000000,'RW':'RW','COMMENTS':'PHY init ratio register for data slice 3','FIELDS':{ # 0x0
                   'reg_phy_gatelvl_init_ratio':       {'r':(10,19),'d':0,'c':'User-programmable init ratio used by Gate Leveling FSM, data slice 3'},       
                   'reg_phy_wrlvl_init_ratio':         {'r':( 0, 9),'d':0,'c':'User-programmable init ratio used by Write Leveling FSM, data slice 3'}}},
 #     
-    'phy_rd_dqs_cfg0':         {'OFFS': 0x140,'DFLT':0x00000040,'RW':'RW','FIELDS':{ # 0x35
+    'phy_rd_dqs_cfg0':         {'OFFS': 0x140,'DFLT':0x00000040,'RW':'RW','COMMENTS':'PHY read DQS configuration register for data slice 0','FIELDS':{ # 0x35
                   'reg_phy_rd_dqs_slave_delay':       {'r':(11,19),'d':0,'c':'If reg_phy_rd_dqs_slave_force is 1, use this tap/delay value for read DQS slave DLL, data slice 0'},       
                   'reg_phy_rd_dqs_slave_force':       {'r':(10,10),'d':0,'c':'0 - use reg_phy_rd_dqs_slave_ratio  for the read DQS slave DLL, 1 - use provided in reg_phy_rd_dqs_slave_delay, data slice 0'},       
                   'reg_phy_rd_dqs_slave_ratio':       {'r':( 0, 9),'d':0x40,'c':'Fraction of the clock cycle (256 = full period) for the read DQS slave DLL, data slice 0'}}}, # 0x35
-    'phy_rd_dqs_cfg1':         {'OFFS': 0x144,'DFLT':0x00000040,'RW':'RW','FIELDS':{ # 0x35
+    'phy_rd_dqs_cfg1':         {'OFFS': 0x144,'DFLT':0x00000040,'RW':'RW','COMMENTS':'PHY read DQS configuration register for data slice 1','FIELDS':{ # 0x35
                   'reg_phy_rd_dqs_slave_delay':       {'r':(11,19),'d':0,'c':'If reg_phy_rd_dqs_slave_force is 1, use this tap/delay value for read DQS slave DLL, data slice 1'},       
                   'reg_phy_rd_dqs_slave_force':       {'r':(10,10),'d':0,'c':'0 - use reg_phy_rd_dqs_slave_ratio  for the read DQS slave DLL, 1 - use provided in reg_phy_rd_dqs_slave_delay, data slice 1'},       
                   'reg_phy_rd_dqs_slave_ratio':       {'r':( 0, 9),'d':0x40,'c':'Fraction of the clock cycle (256 = full period) for the read DQS slave DLL, data slice 1'}}}, # 0x35
-    'phy_rd_dqs_cfg2':         {'OFFS': 0x148,'DFLT':0x00000040,'RW':'RW','FIELDS':{ # 0x35
+    'phy_rd_dqs_cfg2':         {'OFFS': 0x148,'DFLT':0x00000040,'RW':'RW','COMMENTS':'PHY read DQS configuration register for data slice 2','FIELDS':{ # 0x35
                   'reg_phy_rd_dqs_slave_delay':       {'r':(11,19),'d':0,'c':'If reg_phy_rd_dqs_slave_force is 1, use this tap/delay value for read DQS slave DLL, data slice 2'},       
                   'reg_phy_rd_dqs_slave_force':       {'r':(10,10),'d':0,'c':'0 - use reg_phy_rd_dqs_slave_ratio  for the read DQS slave DLL, 1 - use provided in reg_phy_rd_dqs_slave_delay, data slice 2'},       
                   'reg_phy_rd_dqs_slave_ratio':       {'r':( 0, 9),'d':0x40,'c':'Fraction of the clock cycle (256 = full period) for the read DQS slave DLL, data slice 2'}}}, # 0x35
-    'phy_rd_dqs_cfg3':         {'OFFS': 0x14C,'DFLT':0x00000040,'RW':'RW','FIELDS':{ # 0x35
+    'phy_rd_dqs_cfg3':         {'OFFS': 0x14C,'DFLT':0x00000040,'RW':'RW','COMMENTS':'PHY read DQS configuration register for data slice 3','FIELDS':{ # 0x35
                   'reg_phy_rd_dqs_slave_delay':       {'r':(11,19),'d':0,'c':'If reg_phy_rd_dqs_slave_force is 1, use this tap/delay value for read DQS slave DLL, data slice 3'},       
                   'reg_phy_rd_dqs_slave_force':       {'r':(10,10),'d':0,'c':'0 - use reg_phy_rd_dqs_slave_ratio  for the read DQS slave DLL, 1 - use provided in reg_phy_rd_dqs_slave_delay, data slice 3'},       
                   'reg_phy_rd_dqs_slave_ratio':       {'r':( 0, 9),'d':0x40,'c':'Fraction of the clock cycle (256 = full period) for the read DQS slave DLL, data slice 3'}}}, # 0x35
 #     u32 reserved4[1];              /* 0x150 */
-    'phy_wr_dqs_cfg0':         {'OFFS': 0x154,'DFLT':0x00000000,'RW':'RW','FIELDS':{ # 0x0
+    'phy_wr_dqs_cfg0':         {'OFFS': 0x154,'DFLT':0x00000000,'RW':'RW','COMMENTS':'PHY write DQS configuration register for data slice 0','FIELDS':{ # 0x0 
                   'reg_phy_wr_dqs_slave_delay':       {'r':(11,19),'d':0,'c':'If reg_phy_wr_dqs_slave_force is 1, use this tap/delay value for write DQS slave DLL, data slice 0'},       
                   'reg_phy_wr_dqs_slave_force':       {'r':(10,10),'d':0,'c':'0 - use reg_phy_wr_dqs_slave_ratio  for the write DQS slave DLL, 1 - use provided in reg_phy_wr_dqs_slave_delay, data slice 0'},       
                   'reg_phy_wr_dqs_slave_ratio':       {'r':( 0, 9),'d':0,'c':'Fraction of the clock cycle (256 = full period) for the write DQS slave DLL, data slice 0. Program manual training ratio'}}},
-    'phy_wr_dqs_cfg1':         {'OFFS': 0x158,'DFLT':0x00000000,'RW':'RW','FIELDS':{ # 0x0
+    'phy_wr_dqs_cfg1':         {'OFFS': 0x158,'DFLT':0x00000000,'RW':'RW','COMMENTS':'PHY write DQS configuration register for data slice 1','FIELDS':{ # 0x0
                   'reg_phy_wr_dqs_slave_delay':       {'r':(11,19),'d':0,'c':'If reg_phy_wr_dqs_slave_force is 1, use this tap/delay value for write DQS slave DLL, data slice 1'},       
                   'reg_phy_wr_dqs_slave_force':       {'r':(10,10),'d':0,'c':'0 - use reg_phy_wr_dqs_slave_ratio  for the write DQS slave DLL, 1 - use provided in reg_phy_wr_dqs_slave_delay, data slice 1'},       
                   'reg_phy_wr_dqs_slave_ratio':       {'r':( 0, 9),'d':0,'c':'Fraction of the clock cycle (256 = full period) for the write DQS slave DLL, data slice 1. Program manual training ratio'}}},
-    'phy_wr_dqs_cfg2':         {'OFFS': 0x15C,'DFLT':0x00000000,'RW':'RW','FIELDS':{ # 0x0
+    'phy_wr_dqs_cfg2':         {'OFFS': 0x15C,'DFLT':0x00000000,'RW':'RW','COMMENTS':'PHY write DQS configuration register for data slice 2','FIELDS':{ # 0x0
                   'reg_phy_wr_dqs_slave_delay':       {'r':(11,19),'d':0,'c':'If reg_phy_wr_dqs_slave_force is 1, use this tap/delay value for write DQS slave DLL, data slice 2'},       
                   'reg_phy_wr_dqs_slave_force':       {'r':(10,10),'d':0,'c':'0 - use reg_phy_wr_dqs_slave_ratio  for the write DQS slave DLL, 1 - use provided in reg_phy_wr_dqs_slave_delay, data slice 2'},       
                   'reg_phy_wr_dqs_slave_ratio':       {'r':( 0, 9),'d':0,'c':'Fraction of the clock cycle (256 = full period) for the write DQS slave DLL, data slice 2. Program manual training ratio'}}},
-    'phy_wr_dqs_cfg3':         {'OFFS': 0x160,'DFLT':0x00000000,'RW':'RW','FIELDS':{ # 0x0
+    'phy_wr_dqs_cfg3':         {'OFFS': 0x160,'DFLT':0x00000000,'RW':'RW','COMMENTS':'PHY write DQS configuration register for data slice 3','FIELDS':{ # 0x0
                   'reg_phy_wr_dqs_slave_delay':       {'r':(11,19),'d':0,'c':'If reg_phy_wr_dqs_slave_force is 1, use this tap/delay value for write DQS slave DLL, data slice 3'},       
                   'reg_phy_wr_dqs_slave_force':       {'r':(10,10),'d':0,'c':'0 - use reg_phy_wr_dqs_slave_ratio  for the write DQS slave DLL, 1 - use provided in reg_phy_wr_dqs_slave_delay, data slice 3'},       
                   'reg_phy_wr_dqs_slave_ratio':       {'r':( 0, 9),'d':0,'c':'Fraction of the clock cycle (256 = full period) for the write DQS slave DLL, data slice 3. Program manual training ratio'}}},
 #     u32 reserved5[1];              /* 0x164 */
-    'phy_we_cfg0':             {'OFFS': 0x168,'DFLT':0x00000040,'RW':'RW','FIELDS':{ # 0x35
+    'phy_we_cfg0':             {'OFFS': 0x168,'DFLT':0x00000040,'RW':'RW','COMMENTS':'PHY FIFO write enable configuration register for data slice 0','FIELDS':{ # 0x35
                   'reg_phy_fifo_we_in_delay':         {'r':(12,20),'d':0,'c':'If reg_phy_fifo_we_in_force is 1, use this tap/delay value for fifo_we_0 slave DLL, data slice 0'},       
                   'reg_phy_fifo_we_in_force':         {'r':(11,11),'d':0,'c':'0 - use reg_phy_fifo_we_slave_ratio for fifo_we_0 slave DLL, 1 - use provided in reg_phy_fifo_we_in_delay, data slice 0'},       
                   'reg_phy_fifo_we_slave_ratio':      {'r':( 0,10),'d':0x40,'c':'Fraction of the clock cycle (256 = full period) for fifo_we_0 slave DLL, data slice 0. Program manual training ratio'}}}, # 0x35
-    'phy_we_cfg1':             {'OFFS': 0x16C,'DFLT':0x00000040,'RW':'RW','FIELDS':{ # 0x35
+    'phy_we_cfg1':             {'OFFS': 0x16C,'DFLT':0x00000040,'RW':'RW','COMMENTS':'PHY FIFO write enable configuration register for data slice 1','FIELDS':{ # 0x35
                   'reg_phy_fifo_we_in_delay':         {'r':(12,20),'d':0,'c':'If reg_phy_fifo_we_in_force is 1, use this tap/delay value for fifo_we_1 slave DLL, data slice 1'},       
                   'reg_phy_fifo_we_in_force':         {'r':(11,11),'d':0,'c':'0 - use reg_phy_fifo_we_slave_ratio for fifo_we_1 slave DLL, 1 - use provided in reg_phy_fifo_we_in_delay, data slice 1'},       
                   'reg_phy_fifo_we_slave_ratio':      {'r':( 0,10),'d':0x40,'c':'Fraction of the clock cycle (256 = full period) for fifo_we_0 slave DLL, data slice 1. Program manual training ratio'}}}, # 0x35
-    'phy_we_cfg2':             {'OFFS': 0x170,'DFLT':0x00000040,'RW':'RW','FIELDS':{ # 0x35
+    'phy_we_cfg2':             {'OFFS': 0x170,'DFLT':0x00000040,'RW':'RW','COMMENTS':'PHY FIFO write enable configuration register for data slice 2','FIELDS':{ # 0x35
                   'reg_phy_fifo_we_in_delay':         {'r':(12,20),'d':0,'c':'If reg_phy_fifo_we_in_force is 1, use this tap/delay value for fifo_we_2 slave DLL, data slice 2'},       
                   'reg_phy_fifo_we_in_force':         {'r':(11,11),'d':0,'c':'0 - use reg_phy_fifo_we_slave_ratio for fifo_we_2 slave DLL, 1 - use provided in reg_phy_fifo_we_in_delay, data slice 2'},       
                   'reg_phy_fifo_we_slave_ratio':      {'r':( 0,10),'d':0x40,'c':'Fraction of the clock cycle (256 = full period) for fifo_we_0 slave DLL, data slice 2. Program manual training ratio'}}}, # 0x35
-    'phy_we_cfg3':             {'OFFS': 0x174,'DFLT':0x00000040,'RW':'RW','FIELDS':{ # 0x35
+    'phy_we_cfg3':             {'OFFS': 0x174,'DFLT':0x00000040,'RW':'RW','COMMENTS':'PHY FIFO write enable configuration register for data slice 3','FIELDS':{ # 0x35
                   'reg_phy_fifo_we_in_delay':         {'r':(12,20),'d':0,'c':'If reg_phy_fifo_we_in_force is 1, use this tap/delay value for fifo_we_3 slave DLL, data slice 3'},       
                   'reg_phy_fifo_we_in_force':         {'r':(11,11),'d':0,'c':'0 - use reg_phy_fifo_we_slave_ratio for fifo_we_3 slave DLL, 1 - use provided in reg_phy_fifo_we_in_delay, data slice 3'},       
                   'reg_phy_fifo_we_slave_ratio':      {'r':( 0,10),'d':0x40,'c':'Fraction of the clock cycle (256 = full period) for fifo_we_0 slave DLL, data slice 3. Program manual training ratio'}}},
 #     u32 reserved6[1];              /* 0x178 */
-    'wr_data_slv0':            {'OFFS': 0x17C,'DFLT':0x00000080,'RW':'RW','FIELDS':{ # 0x40
+    'wr_data_slv0':            {'OFFS': 0x17C,'DFLT':0x00000080,'RW':'RW','COMMENTS':'PHY write data slave ratio configuration register for data slice 0','FIELDS':{ # 0x40
                   'reg_phy_wr_data_slave_delay':       {'r':(11,19),'d':0,'c':'If reg_phy_wr_dqs_slave_force is 1, use this tap/delay value for write data slave DLL, data slice 0'},       
                   'reg_phy_wr_data_slave_force':       {'r':(10,10),'d':0,'c':'0 - use reg_phy_wr_dqs_slave_ratio  for the write data slave DLL, 1 - use provided in reg_phy_wr_dqs_slave_delay, data slice 0'},       
                   'reg_phy_wr_data_slave_ratio':       {'r':( 0, 9),'d':0x80,'c':'Fraction of the clock cycle (256 = full period) for the write data slave DLL, data slice 0. Program manual training ratio'}}}, # 0x40
-    'wr_data_slv1':            {'OFFS': 0x180,'DFLT':0x00000080,'RW':'RW','FIELDS':{ # 0x40
+    'wr_data_slv1':            {'OFFS': 0x180,'DFLT':0x00000080,'RW':'RW','COMMENTS':'PHY write data slave ratio configuration register for data slice 1','FIELDS':{ # 0x40
                   'reg_phy_wr_data_slave_delay':       {'r':(11,19),'d':0,'c':'If reg_phy_wr_dqs_slave_force is 1, use this tap/delay value for write data slave DLL, data slice 1'},       
                   'reg_phy_wr_data_slave_force':       {'r':(10,10),'d':0,'c':'0 - use reg_phy_wr_dqs_slave_ratio  for the write data slave DLL, 1 - use provided in reg_phy_wr_dqs_slave_delay, data slice 1'},       
                   'reg_phy_wr_data_slave_ratio':       {'r':( 0, 9),'d':0x80,'c':'Fraction of the clock cycle (256 = full period) for the write data slave DLL, data slice 1. Program manual training ratio'}}}, # 0x40
-    'wr_data_slv2':            {'OFFS': 0x184,'DFLT':0x00000080,'RW':'RW','FIELDS':{ # 0x40
+    'wr_data_slv2':            {'OFFS': 0x184,'DFLT':0x00000080,'RW':'RW','COMMENTS':'PHY write data slave ratio configuration register for data slice 2','FIELDS':{ # 0x40
                   'reg_phy_wr_data_slave_delay':       {'r':(11,19),'d':0,'c':'If reg_phy_wr_dqs_slave_force is 1, use this tap/delay value for write data slave DLL, data slice 2'},       
                   'reg_phy_wr_data_slave_force':       {'r':(10,10),'d':0,'c':'0 - use reg_phy_wr_dqs_slave_ratio  for the write data slave DLL, 1 - use provided in reg_phy_wr_dqs_slave_delay, data slice 2'},       
                   'reg_phy_wr_data_slave_ratio':       {'r':( 0, 9),'d':0x80,'c':'Fraction of the clock cycle (256 = full period) for the write data slave DLL, data slice 2. Program manual training ratio'}}}, # 0x40
-    'wr_data_slv3':            {'OFFS': 0x188,'DFLT':0x00000080,'RW':'RW','FIELDS':{ # 0x40
+    'wr_data_slv3':            {'OFFS': 0x188,'DFLT':0x00000080,'RW':'RW','COMMENTS':'PHY write data slave ratio configuration register for data slice 3','FIELDS':{ # 0x40
                   'reg_phy_wr_data_slave_delay':       {'r':(11,19),'d':0,'c':'If reg_phy_wr_dqs_slave_force is 1, use this tap/delay value for write data slave DLL, data slice 3'},       
                   'reg_phy_wr_data_slave_force':       {'r':(10,10),'d':0,'c':'0 - use reg_phy_wr_dqs_slave_ratio  for the write data slave DLL, 1 - use provided in reg_phy_wr_dqs_slave_delay, data slice 3'},       
                   'reg_phy_wr_data_slave_ratio':       {'r':( 0, 9),'d':0x80,'c':'Fraction of the clock cycle (256 = full period) for the write data slave DLL, data slice 3. Program manual training ratio'}}}, # 0x40
@@ -472,7 +472,7 @@ DDRC_DEFS={ #not all fields are defined currently
                   'reg_phy_loopback':                 {'r':( 0, 0),'d':0,'c':'reserved'}}},
     'reg_65':                  {'OFFS': 0x194,'DFLT':0x00000000,'RW':'RW','COMMENTS':'Training control 3','FIELDS':{ # 0x3c82
                   'reg_phy_ctrl_slave_delay':         {'r':(18,19),'d':0,'c':'when reg_phy_rd_dqs_slave_force==1 this value (combined with bits 21:27 of reg_64) set address/command slave DLL'},      
-                  'reg_phy_dis_calib_rst':            {'r':(17,17),'d':0,'c':'disable dll_claib from resetting Read Capture FIFO'},      
+                  'reg_phy_dis_calib_rst':            {'r':(17,17),'d':0,'c':'disable dll_calib from resetting Read Capture FIFO'},      
                   'reg_phy_use_rd_data_eye_level':    {'r':(16,16),'d':0,'c':'Read Data Eye training control - 0 use fixed register data, 1 use data eye leveling data'},      
                   'reg_phy_use_rd_dqs_gate_level':    {'r':(15,15),'d':0,'c':'Read DQS Gate training control: 0 - used fixed data, 1 - use calculated data'},      
                   'reg_phy_use_wr_level':             {'r':(14,14),'d':0,'c':'Write leveling control: 0 - used programmed register data, 1 - use calculated data'},      
@@ -592,28 +592,28 @@ DDRC_DEFS={ #not all fields are defined currently
                   'reserved2':                             {'r':(10,15),'d':0,    'm':'R','c':'reserved'},      
                   'reg_arb_pri_wr_portn':                  {'r':( 0, 9),'d':0x3FF,        'c':'Priority for this write port, >=4, lower value - higher priority'}}},
     'axi_priority_rd_port0':   {'OFFS': 0x218,'DFLT':0x000003FF,'RW':'M','COMMENTS':'AXI priority control for read port 0','FIELDS':{ #0x3ff
-                  'reg_arb_set_hpr_rd_portn':              {'r':(19,19),'d':0x1,          'c':'Enable reads to be HPR for this port'},      
+                  'reg_arb_set_hpr_rd_portn':              {'r':(19,19),'d':0,            'c':'Enable reads to be HPR for this port'},      
                   'reg_arb_dis_page_match_rd_portn':       {'r':(18,18),'d':0,            'c':'Disable page match feature'},      
                   'reg_arb_disable_urgent_rd_portn':       {'r':(17,17),'d':0,            'c':'Disable urgent for this Read Port'},      
                   'reg_arb_disable_aging_rd_portn':        {'r':(16,16),'d':0,            'c':'Disable aging for this Read Port'},      
                   'reserved1':                             {'r':(10,15),'d':0,    'm':'R','c':'reserved'},      
                   'reg_arb_pri_rd_portn':                  {'r':( 0, 9),'d':0x3FF,        'c':'Priority for this Read port, lower value - higher priority'}}},
     'axi_priority_rd_port1':   {'OFFS': 0x21C,'DFLT':0x000003FF,'RW':'M','COMMENTS':'AXI priority control for read port 1','FIELDS':{ #0x3ff
-                  'reg_arb_set_hpr_rd_portn':              {'r':(19,19),'d':0x1,          'c':'Enable reads to be HPR for this port'},      
+                  'reg_arb_set_hpr_rd_portn':              {'r':(19,19),'d':0,            'c':'Enable reads to be HPR for this port'},      
                   'reg_arb_dis_page_match_rd_portn':       {'r':(18,18),'d':0,            'c':'Disable page match feature'},      
                   'reg_arb_disable_urgent_rd_portn':       {'r':(17,17),'d':0,            'c':'Disable urgent for this Read Port'},      
                   'reg_arb_disable_aging_rd_portn':        {'r':(16,16),'d':0,            'c':'Disable aging for this Read Port'},      
                   'reserved1':                             {'r':(10,15),'d':0,    'm':'R','c':'reserved'},      
                   'reg_arb_pri_rd_portn':                  {'r':( 0, 9),'d':0x3FF,        'c':'Priority for this Read port, lower value - higher priority'}}},
     'axi_priority_rd_port2':   {'OFFS': 0x220,'DFLT':0x000003FF,'RW':'M','COMMENTS':'AXI priority control for read port 2','FIELDS':{ #0x3ff
-                  'reg_arb_set_hpr_rd_portn':              {'r':(19,19),'d':0x1,          'c':'Enable reads to be HPR for this port'},      
+                  'reg_arb_set_hpr_rd_portn':              {'r':(19,19),'d':0,            'c':'Enable reads to be HPR for this port'},      
                   'reg_arb_dis_page_match_rd_portn':       {'r':(18,18),'d':0,            'c':'Disable page match feature'},      
                   'reg_arb_disable_urgent_rd_portn':       {'r':(17,17),'d':0,            'c':'Disable urgent for this Read Port'},      
                   'reg_arb_disable_aging_rd_portn':        {'r':(16,16),'d':0,            'c':'Disable aging for this Read Port'},      
                   'reserved1':                             {'r':(10,15),'d':0,    'm':'R','c':'reserved'},      
                   'reg_arb_pri_rd_portn':                  {'r':( 0, 9),'d':0x3FF,        'c':'Priority for this Read port, lower value - higher priority'}}},
     'axi_priority_rd_port3':   {'OFFS': 0x224,'DFLT':0x000003FF,'RW':'M','COMMENTS':'AXI priority control for read port 3','FIELDS':{ #0x3ff
-                  'reg_arb_set_hpr_rd_portn':              {'r':(19,19),'d':0x1,          'c':'Enable reads to be HPR for this port'},      
+                  'reg_arb_set_hpr_rd_portn':              {'r':(19,19),'d':0,            'c':'Enable reads to be HPR for this port'},      
                   'reg_arb_dis_page_match_rd_portn':       {'r':(18,18),'d':0,            'c':'Disable page match feature'},      
                   'reg_arb_disable_urgent_rd_portn':       {'r':(17,17),'d':0,            'c':'Disable urgent for this Read Port'},      
                   'reg_arb_disable_aging_rd_portn':        {'r':(16,16),'d':0,            'c':'Disable aging for this Read Port'},      
@@ -643,12 +643,12 @@ DDRC_DEFS={ #not all fields are defined currently
                   'reserved2':                             {'r':( 1, 1),'d':0,    'c':'reserved'},      
                   'reg_ddrc_lpddr2':                       {'r':( 0, 0),'d':0,    'c':'0 - DDR2/DDR3 in use, 1 - LPDDR2 in use'}}},
     'lpddr_ctrl1':             {'OFFS': 0x2AC,'DFLT':0x00000000,'RW':'RW','COMMENTS':'LPDDR2 control register 1','FIELDS':{ # 0x0
-                  'reg_ddrc_mr4_read_int erval':           {'r':(31, 0),'d':0,    'c':'Interval between two MR4 reads (for derating timing)'}}},
+                  'reg_ddrc_mr4_read_interval':            {'r':(31, 0),'d':0,    'c':'Interval between two MR4 reads (for derating timing)'}}},
     'lpddr_ctrl2':             {'OFFS': 0x2B0,'DFLT':0x003C0015,'RW':'RW','COMMENTS':'LPDDR2 control register 2','FIELDS':{ # 0x5125
                   'reg_ddrc_t_mrw':                        {'r':(12,21),'d':0x3C0,'c':'Wait for MR writes, typically required 5???'},  #0x5    
                   'reg_ddrc_idle_after_reset_x32':         {'r':( 4,11),'d':0x1,  'c':'Idle time after reset command, tINIT4 (in clockx32)'},  #0x12        
                   'reg_ddrc_min_stable_clock_x1':          {'r':( 0, 3),'d':0x5,  'c':'time to wait after first CKE high, tINIT2 in clock cycles. Typically required 5 (tCK)'}}}, # 0x5
     'lpddr_ctrl3':             {'OFFS': 0x2B4,'DFLT':0x00000601,'RW':'RW','COMMENTS':'LPDDR2 control register 3','FIELDS':{ # 0x12a8
-                  'reg_ddrc_dev_zqinit_x32':               {'r':( 8,17),'d':0x1,  'c':'tZQINIT - ZQ initial calibration (in clockx32). LPDDR@ typically require 1 microsecond'},      #0x1200
+                  'reg_ddrc_dev_zqinit_x32':               {'r':( 8,17),'d':0x1,  'c':'tZQINIT - ZQ initial calibration (in clockx32). LPDDR2 typically require 1 microsecond'},      #0x1200
                   'reg_ddrc_max_auto_init_x1024':          {'r':( 0, 7),'d':0x1,  'c':'tINIT5 - maximal duration of autoinitialization (in clockx1024). Typical 10 microseconds'}}} # #0xa8
 }

@@ -120,7 +120,7 @@ class EzynqDDR:
         ca_count=   self.features.get_par_value('COL_ADDR_COUNT')
         ba_map=     self.features.get_par_value('BANK_ADDR_MAP')
         try:
-            _=self._map_ddr_addresses (ca_count,ra_count,ba_count,ba_map,half_width)
+            _,_=self._map_ddr_addresses (ca_count,ra_count,ba_count,ba_map,half_width)
             return # all OK already
         except Exception, err:
             print "Specified value for the "+self.features.get_par_confname('BANK_ADDR_MAP')+'='+str(ba_map)+" is not valid:\n"+str(err)
@@ -128,7 +128,7 @@ class EzynqDDR:
         for bm in range(3,30):
             if (best_match==None) or (abs(bm-ba_map) < abs(bm-ba_map)):
                 try:
-                    _=self._map_ddr_addresses (ca_count,ra_count,ba_count,bm,half_width)
+                    _,_=self._map_ddr_addresses (ca_count,ra_count,ba_count,bm,half_width)
                     best_match=bm
                 except:
                     continue
@@ -224,7 +224,12 @@ class EzynqDDR:
                 next_ra+=1
             map_left-=1
 #            print 'i=',i,'type=',map_bit['TYPE'],'map_left=',map_left,'next_ca=',next_ca,'next_ra=',next_ra,'next_ba=',next_ba
-#        print map_axi     
+#        print map_axi
+        #ug585:837 - details for ddrc.page_mask register
+        page_mask=0
+        for i, map_bit in enumerate (map_axi[3:]): # skip 3 LSB to get "This mask applies to 64-bit address and not byte address.". ***** TODO: Verify it is really 64 (8-byte), not 32 (4-byte) word address
+            if map_bit['TYPE'] in 'BR': 
+                page_mask |= 1<<i
         #now validate mapping, raise exception if invalid
         address_mapping={}
         for name in map_capabilities:
@@ -240,25 +245,10 @@ class EzynqDDR:
             else:
                 value=map_field(name,capability[1])
             address_mapping[name]=value             
-        return address_mapping
-#    def set_max_value(self,name,value):
-#    def set_min_value(self,name,value):
-            
-# CONFIG_EZYNQ_DDR_T_RP = 13.1
-# CONFIG_EZYNQ_DDR_T_RCD = 13.1
-#CONFIG_EZYNQ_DDR_RRD = 4
-#CONFIG_EZYNQ_DDR_T_RRD = 10.0
-
-    
-#    def ddr_init_memory(self,current_reg_sets,force=False,warn=False,html_file, show_bit_fields=True, show_comments=True,filter_fields=True): # will program to sequence 'MAIN'
+        return (address_mapping,page_mask)
 
     def get_new_register_sets(self):
-#    def get_register_sets(self, sort_addr=True,apply_new=True):
         return self.ddrc_register_sets['MAIN'].get_register_sets(True,True)
-   
-#        regs1=self.ddriob_register_sets['MAIN'].get_register_sets(True,True)
-#        regs2=self.ddrc_register_sets['MAIN'].get_register_sets(True,True)
-#        return regs1+regs2
     
     def ddr_init_memory(self,current_reg_sets,force=False,warn=False): # will program to sequence 'MAIN'
 #        print 'ddr_init_memory, len(current_reg_sets)=',len(current_reg_sets),'\n'
@@ -266,7 +256,6 @@ class EzynqDDR:
             print 'DDR configuration is disabled'
             # do some stuff (write regs, output)
             return
-#        self.pre_validate() # already done
         
         ddriob_register_set=self.ddriob_register_sets['MAIN']
         ddrc_register_set=  self.ddrc_register_sets['MAIN']
@@ -277,39 +266,6 @@ class EzynqDDR:
         ddrc_register_set.set_initial_state(regs1, True)# add
         self.ddr_init_ddrc(force,warn) # will program to sequence 'MAIN'
         return ddrc_register_set.get_register_sets(True,True)
-        
-#        ddrc_register_set=  self.ddrc_register_sets['MAIN']
-
-
-#TODO make some of (possibly) derived, leave '_T_' for ns only!
-# CONFIG_EZYNQ_DDR_FREQ_MHZ = 533.333333 *
-# CONFIG_EZYNQ_DDR_CL = 7  *
-# CONFIG_EZYNQ_DDR_CWL = 6  *
-# CONFIG_EZYNQ_DDR_RCD = 7 (was CONFIG_EZYNQ_DDR_T_RCD = 7) *
-# CONFIG_EZYNQ_DDR_RP = 7 (was CONFIG_EZYNQ_DDR_T_RP = 7) *
-# CONFIG_EZYNQ_DDR_T_RC = 48.75 *
-# CONFIG_EZYNQ_DDR_T_RAS_MIN = 35.0 *
-# CONFIG_EZYNQ_DDR_T_RFC = 350.0
-# CONFIG_EZYNQ_DDR_T_FAW = 40.0 *
-# CONFIG_EZYNQ_DDR_AL = 0 *
-# CONFIG_EZYNQ_DDR_BANK_ADDR_COUNT = 3 *
-# CONFIG_EZYNQ_DDR_ROW_ADDR_COUNT = 15 *
-# CONFIG_EZYNQ_DDR_COL_ADDR_COUNT = 10 *
-
-# CONFIG_EZYNQ_DDR_ENABLE = 1          *
-# CONFIG_EZYNQ_DDR_MEMORY_TYPE = DDR3  *
-# CONFIG_EZYNQ_DDR_ECC = Disabled      *
-# CONFIG_EZYNQ_DDR_BUS_WIDTH = 32      *
-# CONFIG_EZYNQ_DDR_BL = 8              *   
-# CONFIG_EZYNQ_DDR_HIGH_TEMP = Normal  *
-# CONFIG_EZYNQ_DDR_PARTNO = MT41K256M16RE-125 *
-# CONFIG_EZYNQ_DDR_DRAM_WIDTH = 16     *
-# CONFIG_EZYNQ_DDR_SPEED_BIN = DDR3_1066F *
-# CONFIG_EZYNQ_DDR_TRAIN_WRITE_LEVEL = 0
-# CONFIG_EZYNQ_DDR_TRAIN_READ_GATE = 0
-# CONFIG_EZYNQ_DDR_TRAIN_DATA_EYE = 0
-# CONFIG_EZYNQ_DDR_CLOCK_STOP_EN = 0
-# CONFIG_EZYNQ_DDR_USE_INTERNAL_VREF = 0
 
     def ddr_init_ddrc(self,force=False,warn=False): # will program to sequence 'MAIN'
         ddrc_register_set=self.ddrc_register_sets['MAIN']
@@ -326,7 +282,11 @@ class EzynqDDR:
 #lock ddr
         ddrc_register_set.set_word('ddrc_ctrl',0x80,force) # active low soft reset
 #two rank, values  0x1081, 0x81081, 0x81081 (added reg_ddrc_wr_odt_block=1)
-        tREFI_c32=   int(tREFI/tCK/32)              
+        tREFI_c32=   int(tREFI/tCK/32)
+        use_rd_data_eye_level = (0,1)[self.features.get_par_value('TRAIN_DATA_EYE')] 
+        use_rd_dqs_gate_level = (0,1)[self.features.get_par_value('TRAIN_READ_GATE')] 
+        use_wr_level          = (0,1)[self.features.get_par_value('TRAIN_WRITE_LEVEL')] 
+                      
         ddrc_register_set.set_bitfields('two_rank_cfg',(('reg_ddrc_wr_odt_block',0),             # shown as 1/do not modify, but actual set value==0
                                                         ('reg_ddrc_addrmap_cs_bit0',0),
                                                         ('reg_ddrc_t_rfc_nom_x32',tREFI_c32),
@@ -351,11 +311,6 @@ class EzynqDDR:
         ddrc_register_set.set_bitfields('dram_param_reg0',(('reg_ddrc_post_selfref_gap_x32',tXSx32), # Default - OK, Micron tXSDLL=tDLLK=512 /32
                                                            ('reg_ddrc_t_rfc_min',           tRFCx1),
                                                            ('reg_ddrc_t_rc',                tRCx1)),force,warn)
-# reg DRAM_param_reg1, 0x44e458d2
-
-#CONFIG_EZYNQ_DDR_CKE =   3
-#CONFIG_EZYNQ_DDR_CKSRE =   5
-#CONFIG_EZYNQ_DDR_CKSRX =   5
 
         CKE=  self.features.get_par_value('CKE') # 4
         
@@ -407,10 +362,10 @@ class EzynqDDR:
         
         if is_LPDDR2:
             if WL<1:
-                raise Exception('Minimal Write Latency supported for LPDDR2 is 1, while CONFIG_EZYNQ_DDR_CWL='+str(WL))
+                raise Exception('Minimal Write Latency supported for LPDDR2 is 1, while '+self.features.get_par_confname('CWL')+'='+str(WL))
         else:
             if WL<3:
-                raise Exception('Minimal Write Latency supported for DDR2/DDR3 is 3, while CONFIG_EZYNQ_DDR_CWL='+str(WL))
+                raise Exception('Minimal Write Latency supported for DDR2/DDR3 is 3, while '+self.features.get_par_confname('CWL')+'='+str(WL))
         ddrc_register_set.set_bitfields('dram_param_reg2',(('reg_ddrc_t_rcd',           tRCDx1), # 0x7
                                                            ('reg_ddrc_rd2pre',          RD2PRE), # 0x4
                                                            ('reg_ddrc_pad_pd',          padPD), # 0x0
@@ -425,8 +380,6 @@ class EzynqDDR:
         ddrc_refresh_to_x32=      8 # start refresh after this inactivity (x32 cycles) if it is useful, but not yet required. Dynamic field
         RP=                       self.features.get_par_value('RP')
         refresh_margin=           2 # default, recommended not to be changed
-#CONFIG_EZYNQ_DDR_CCD = 4
-#CONFIG_EZYNQ_DDR_RRD = 4
         CCD=                      self.features.get_par_value('CCD')
         RRD=                      self.features.get_par_value('RRD')
 
@@ -449,8 +402,6 @@ class EzynqDDR:
         
         
 # reg DRAM_init_param,  0x2007 always (default)
-#        ddrc_register_set.set_word     ('dram_init_param',  0x2007, force)
-# CONFIG_EZYNQ_DDR_MRD = 4
         MRD = self.features.get_par_value('CCD')
         pre_ocd_x32=0 # ... may be set to zero ...
         final_wait_x32=0x7 # leaving default - time to start scheduler after dram init init
@@ -496,7 +447,7 @@ class EzynqDDR:
             elif AL==(CL-2):
                 emr_AL=2     
             else:
-                raise Exception ("Wrong value for additive latency (CONFIG_EZYNQ_DDR_AL): "+str(AL)+", only 0, CL-1, CL-2 are supported in DDR3 memory. CL is "+str(CL))
+                raise Exception ('Wrong value for additive latency ('+self.features.get_par_confname('AL')+': '+str(AL)+', only 0, CL-1, CL-2 are supported in DDR3 memory. CL is '+str(CL))
             emr_RTT=0
             if self.features.get_par_value('DDR3_RTT')[:2]=='60':
                 emr_RTT=1
@@ -521,7 +472,7 @@ class EzynqDDR:
             emr_driveStrength=0  #  0 -full, 1 - reduced
             emr_AL=AL
             if (AL<0) or (AL>6):
-                raise Exception ("Wrong value for additive latency (CONFIG_EZYNQ_DDR_AL): "+str(AL)+", only 0...6 are supported in DDR2 memory")
+                raise Exception ('Wrong value for additive latency ('+self.features.get_par_confname('AL')+': '+str(AL)+', only 0...6 are supported in DDR2 memory')
             emr_RTT=0
             if self.features.get_par_value('DDR2_RTT')[:2]=='75':
                 emr_RTT=1
@@ -669,8 +620,9 @@ class EzynqDDR:
         ra_count=   self.features.get_par_value('ROW_ADDR_COUNT')
         ca_count=   self.features.get_par_value('COL_ADDR_COUNT')
         ba_map=     self.features.get_par_value('BANK_ADDR_MAP')
-        addr_map =self._map_ddr_addresses (ca_count,ra_count,ba_count,ba_map,half_width)
-
+        addr_map,page_addr_mask =self._map_ddr_addresses (ca_count,ra_count,ba_count,ba_map,half_width)
+        if not self.features.get_par_value('ARB_PAGE_BANK'):
+            page_addr_mask=0 #default
         
 # reg DRAM_addr_map_bank,  0x777 always (default)
         ddrc_register_set.set_bitfields('dram_addr_map_bank',(('reg_ddrc_addrmap_col_b6',   addr_map['col_b6']),             # 0
@@ -851,8 +803,6 @@ class EzynqDDR:
                                                                                           ),force,warn)
 
 # reg  che_t_zq  dflt=0x10300802 act=0x10200802
-#CONFIG_EZYNQ_DDR_ZQCS = 64
-#CONFIG_EZYNQ_DDR_ZQCL = 512
         ZQCS=self.features.get_par_value('ZQCS')
         ZQCL=self.features.get_par_value('ZQCL')
         MOD= self.features.get_par_value('MOD')
@@ -913,40 +863,445 @@ class EzynqDDR:
                                                      ('reg_ddrc_dfi_t_ctrlup_min', dfi_t_ctrlup_min), # 0x3 Minimal number of clocks  ddrc_dfi_ctrlupd_req must be asserted
                                                      ('reg_ddrc_dfi_t_rddata_en',  dfi_t_rddata_en), # 0x6 LPDDR2 - RL, DDR2 and DDR3 - RL-1
                                                                                      ),force,warn)
+#ECC control, can probably be skipped?
+        programECC = True        
+        if programECC:
+# reg  che_ecc_control_reg_offset (offs=0xc4) : 0 - always, ==dflt
+            ddrc_register_set.set_bitfields('che_ecc_control_reg_offset',(
+                                                     ('clear_correctable_dram_ecc_error', 0), # 0 1 - clear correctable log (valid+counters)
+                                                     ('clear_uncorrectable_dram_ecc_error', 0), # 0  1 - clear uncorrectable log (valid+counters)
+                                                                                     ),force,warn)
 
+# reg che_corr_ecc_log_reg_offset (offs=0xc8): 0 - always, ==dflt
+            ddrc_register_set.set_bitfields('che_corr_ecc_log_reg_offset',(
+                                                     ('ecc_corrected_bit_num', 0), # 0 - encoded error bits for up to 72-bit data (clear on write)
+#                                                     ('corr_ecc_log_valid', 0), # 0 - READONLY corr_ecc_log_valid
+                                                                                     ),force,warn)
+
+# reg che_corr_ecc_addr_reg_offset: READONLY  
+#        ddrc_register_set.set_bitfields('che_corr_ecc_addr_reg_offset',(
+#                                                     ('corr_ecc_log_bank', 0), # 0
+#                                                     ('corr_ecc_log_row', 0), # 0
+#                                                     ('corr_ecc_log_col', 0), # 0
+#                                                                                     ),force,warn)
+
+# reg che_corr_ecc_data_31_0_reg_offset: READONLY                                                                                   
+#            ddrc_register_set.set_bitfields('che_corr_ecc_data_31_0_reg_offset',(('corr_ecc_dat_31_0', 0)),force,warn)
+
+# reg  che_corr_ecc_data_63_32_reg_offset: READONLY
+#            ddrc_register_set.set_bitfields('che_corr_ecc_data_63_32_reg_offset',(('corr_ecc_dat_63_32', 0)),force,warn) #0 bits[32:63] of the word with correctable ECC error. actually all are 0'
+
+# reg  che_corr_ecc_data_71_64_reg_offset: READONLY
+#            ddrc_register_set.set_bitfields('che_corr_ecc_data_71_64_reg_offset',(('corr_ecc_dat_71_64', 0)),force,warn) #0 bits[64:71] of the word with correctable ECC error. only lower 5 bits have data, the rest are 0
+
+# reg  che_uncorr_ecc_log_reg_offset (offset=0xdc): READONLY 
+#            ddrc_register_set.set_bitfields('che_uncorr_ecc_log_reg_offset',(('uncorr_ecc_log_valid', 0)),force,warn) # Set to 1 when uncorrectable error is capture (no more captured until cleared), cleared by che_ecc_control_reg_offset
+
+# reg che_uncorr_ecc_addr_reg_offset : READONLY
+#            ddrc_register_set.set_bitfields('che_uncorr_ecc_addr_reg_offset',(
+#                                                     ('uncorr_ecc_log_bank', 0), # 0
+#                                                     ('uncorr_ecc_log_row', 0), # 0
+#                                                     ('uncorr_ecc_log_col', 0)),force,warn) , # 0
+
+# reg uncorr_ecc_dat_31_0: READONLY       
+#            ddrc_register_set.set_bitfields('uncorr_ecc_dat_31_0',(('reserved1', 0)),force,warn) # bits[0:31] of the word with uncorrectable ECC error. actually only 0:7 have valid data, 8:31 are 0
+
+# reg  che_uncorr_ecc_data_63_32_reg_offset: READONLY
+#            ddrc_register_set.set_bitfields('che_uncorr_ecc_data_63_32_reg_offset',(('reserved1', 0)),force,warn) # bits[32:63] of the word with uncorrectable ECC error. actually all are 0
+
+# reg  che_uncorr_ecc_data_71_64_reg_offset: READONLY
+#            ddrc_register_set.set_bitfields('che_uncorr_ecc_data_71_64_reg_offset',(('reserved1', 0)),force,warn) # bits[64:71] of the word with uncorrectable ECC error. only lower 5 bits have data, the rest are 0
+
+# reg  che_ecc_stats_reg_offset (offset=0xf0): Clear on write
+#     'che_ecc_stats_reg_offset':{'OFFS': 0x0F0,'DFLT':0x00000000,'RW':'CW', 'FIELDS':{ # 0x0
+#                   'stat_num_corr_err':                {'r':( 8,15),'d':0,'m':'R','c':'Number of correctable ECC errors since 1 written to bit 1 of che_ecc_control_reg_offset (0xC4)'},       
+#                   'stat_num_uncorr_err':              {'r':( 0, 7),'d':0,'m':'R','c':'Number of uncorrectable ECC errors since 1 written to bit 0 of che_ecc_control_reg_offset (0xC4)'}}},
+            ddrc_register_set.set_bitfields('che_ecc_stats_reg_offset',(
+                                                     ('stat_num_corr_err', 0), # Number of correctable ECC errors since 1 written to bit 1 of che_ecc_control_reg_offset (0xC4)
+                                                     ('stat_num_uncorr_err', 0), # Number of uncorrectable ECC errors since 1 written to bit 0 of che_ecc_control_reg_offset (0xC4)
+                                                                                     ),force,warn)
+# reg  offs=0x0F8 che_ecc_corr_bit_mask_31_0_reg_offset : READONLY
+#            ddrc_register_set.set_bitfields('che_ecc_corr_bit_mask_31_0_reg_offset',(('ddrc_reg_ecc_corr_bit_mask', 0)),force,warn) # bits[0:31] of the mask of the corrected data (1 - corrected, 0 - uncorrected). Only 0:7 have valid data, 8:31 are 0
+
+# reg  offs=0x0FC che_ecc_corr_bit_mask_63_32_reg_offset : READONLY
+#            ddrc_register_set.set_bitfields('che_ecc_corr_bit_mask_63_32_reg_offset',(('ddrc_reg_ecc_corr_bit_mask', 0)),force,warn) #bits[32:63] of the mask of the corrected data (1 - corrected, 0 - uncorrected). all bits are 0
+# end of  if useECC:
+# reg  ecc_scrub, offs=0x0F4 dflt:0x8 actual:0x8 (apply even with ECC disabled?)
+#        
+        ecc_mode=(0,4)[self.features.get_par_value('ECC')]
+        ddrc_register_set.set_bitfields('ecc_scrub',(
+                                                     ('reg_ddrc_dis_scrub', 1), # 1 1 - disable ECC scrubs, 0 - enable ECC scrubs
+                                                     ('reg_ddrc_ecc_mode',  ecc_mode), # 0 DRAM ECC mode. Valid only 0(no ECC)  and 0x4 - "SEC/DED over 1-beat
+                                                                                     ),force,warn)
+# reg  phy_rcvr_enable, offs=0x114 dflt:0 actual:0
+#     'phy_rcvr_enable':         {'OFFS': 0x114,'DFLT':0x00000000,'RW':'RW','FIELDS':{ # 0x0
+#                   'reg_phy_dif_off':                  {'r':( 4, 7),'d':0,'c':'"Off" value of the drive of the receiver-enabled pins'},       
+#                   'reg_phy_dif_on':                   {'r':( 0, 3),'d':0,'c':'"On" value of the drive of the receiver-enabled pins'}}},
+        ddrc_register_set.set_bitfields('phy_rcvr_enable',(
+                                                     ('reg_phy_dif_off', 0), # 0 - "Off" value of the drive of the receiver-enabled pins
+                                                     ('reg_phy_dif_on', 0),  # 0 - "On" value of the drive of the receiver-enabled pins
+                                                                                     ),force,warn)
+#PHY configuration for each of 4 8-bit dta slices, I guess:
+        slice_in_use0=1
+        slice_in_use1=1
+        slice_in_use2=(1,0)[half_width]
+        slice_in_use3=(1,0)[half_width]
+
+# reg  phy_config0, offs=0x118 dflt:0x40000001 actual:0x40000001
+        ddrc_register_set.set_bitfields('phy_config0',( # PHY configuration for data slice 0
+                                                     ('reg_phy_dq_offset',    0x40),  # 0x40  Offset value of DQS to DQ during write leveling of data slice 0. Default is 0x40 for 90-degree shift 
+                                                     ('reg_phy_bist_err_clr',    0),  # 
+                                                     ('reg_phy_bist_shift_dq',   0),  # 
+                                                     ('reg_phy_board_lpbk_rx',   0),  # 
+                                                     ('reg_phy_board_lpbk_tx',   0),  # 
+                                                     ('reg_phy_wrlvl_inc_mode',  0),  # 
+                                                     ('reg_phy_gatelvl_inc_mode',0),  # 
+                                                     ('reg_phy_rdlvl_inc_mode',  0),  # 
+                                                     ('reg_phy_rdlvl_inc_mode',  0),  # 
+                                                     ('reg_phy_data_slice_in_use',slice_in_use0), # 1 Data bus width for read FIFO generation. 0 - read data responses are ignored, 1 - data slice 0 is valid (always 1)
+                                                                                     ),force,warn)
+
+# reg  phy_config1, offs=0x11c dflt:0x40000001 actual:0x40000001
+        ddrc_register_set.set_bitfields('phy_config1',( # PHY configuration for data slice 0
+                                                     ('reg_phy_dq_offset',    0x40),  # 0x40  Offset value of DQS to DQ during write leveling of data slice 1. Default is 0x40 for 90-degree shift 
+                                                     ('reg_phy_bist_err_clr',    0),  # 
+                                                     ('reg_phy_bist_shift_dq',   0),  # 
+                                                     ('reg_phy_board_lpbk_rx',   0),  # 
+                                                     ('reg_phy_board_lpbk_tx',   0),  # 
+                                                     ('reg_phy_wrlvl_inc_mode',  0),  # 
+                                                     ('reg_phy_gatelvl_inc_mode',0),  # 
+                                                     ('reg_phy_rdlvl_inc_mode',  0),  # 
+                                                     ('reg_phy_rdlvl_inc_mode',  0),  # 
+                                                     ('reg_phy_data_slice_in_use',slice_in_use1), # 1 Data bus width for read FIFO generation. 0 - read data responses are ignored, 1 - data slice 1 is valid (always 1)
+                                                                                     ),force,warn)
+# reg  phy_config2, offs=0x120 dflt:0x40000001 actual:0x40000001
+        ddrc_register_set.set_bitfields('phy_config2',( # PHY configuration for data slice 0
+                                                     ('reg_phy_dq_offset',    0x40),  # 0x40  Offset value of DQS to DQ during write leveling of data slice 2. Default is 0x40 for 90-degree shift 
+                                                     ('reg_phy_bist_err_clr',    0),  # 
+                                                     ('reg_phy_bist_shift_dq',   0),  # 
+                                                     ('reg_phy_board_lpbk_rx',   0),  # 
+                                                     ('reg_phy_board_lpbk_tx',   0),  # 
+                                                     ('reg_phy_wrlvl_inc_mode',  0),  # 
+                                                     ('reg_phy_gatelvl_inc_mode',0),  # 
+                                                     ('reg_phy_rdlvl_inc_mode',  0),  # 
+                                                     ('reg_phy_rdlvl_inc_mode',  0),  # 
+                                                     ('reg_phy_data_slice_in_use',slice_in_use2), # 1 Data bus width for read FIFO generation. 0 - read data responses are ignored, 1 - data slice 2 is valid (always 1)
+                                                                                     ),force,warn)
+# reg  phy_config3, offs=0x124 dflt:0x40000001 actual:0x40000001
+        ddrc_register_set.set_bitfields('phy_config3',( # PHY configuration for data slice 0
+                                                     ('reg_phy_dq_offset',    0x40),  # 0x40  Offset value of DQS to DQ during write leveling of data slice 3. Default is 0x40 for 90-degree shift 
+                                                     ('reg_phy_bist_err_clr',    0),  # 
+                                                     ('reg_phy_bist_shift_dq',   0),  # 
+                                                     ('reg_phy_board_lpbk_rx',   0),  # 
+                                                     ('reg_phy_board_lpbk_tx',   0),  # 
+                                                     ('reg_phy_wrlvl_inc_mode',  0),  # 
+                                                     ('reg_phy_gatelvl_inc_mode',0),  # 
+                                                     ('reg_phy_rdlvl_inc_mode',  0),  # 
+                                                     ('reg_phy_rdlvl_inc_mode',  0),  # 
+                                                     ('reg_phy_data_slice_in_use',slice_in_use3), # 1 Data bus width for read FIFO generation. 0 - read data responses are ignored, 1 - data slice 3 is valid (always 1)
+                                                                                     ),force,warn)
+# reg  phy_init_ratio0, offs=0x12C dflt:0x0 actual: 0x0
+        ddrc_register_set.set_bitfields('phy_init_ratio0',( # PHY init ratio register for data slice 0
+                                                     ('reg_phy_gatelvl_init_ratio',  0),  # 0 User-programmable init ratio used by Gate Leveling FSM, data slice 0
+                                                     ('reg_phy_wrlvl_init_ratio',    0),  # 0 User-programmable init ratio used by Write Leveling FSM, data slice 0
+                                                                                     ),force,warn)
+# reg  phy_init_ratio1, offs=0x130 dflt:0x0 actual: 0x0
+        ddrc_register_set.set_bitfields('phy_init_ratio1',( # PHY init ratio register for data slice 1
+                                                     ('reg_phy_gatelvl_init_ratio',  0),  # 0 User-programmable init ratio used by Gate Leveling FSM, data slice 1
+                                                     ('reg_phy_wrlvl_init_ratio',    0),  # 0 User-programmable init ratio used by Write Leveling FSM, data slice 1
+                                                                                     ),force,warn)
+# reg  phy_init_ratio2, offs=0x134 dflt:0x0 actual: 0x0
+        ddrc_register_set.set_bitfields('phy_init_ratio2',( # PHY init ratio register for data slice 2
+                                                     ('reg_phy_gatelvl_init_ratio',  0),  # 0 User-programmable init ratio used by Gate Leveling FSM, data slice 2
+                                                     ('reg_phy_wrlvl_init_ratio',    0),  # 0 User-programmable init ratio used by Write Leveling FSM, data slice 2
+                                                                                     ),force,warn)
+# reg  phy_init_ratio3, offs=0x138 dflt:0x0 actual: 0x0
+        ddrc_register_set.set_bitfields('phy_init_ratio3',( # PHY init ratio register for data slice 3
+                                                     ('reg_phy_gatelvl_init_ratio',  0),  # 0 User-programmable init ratio used by Gate Leveling FSM, data slice 3
+                                                     ('reg_phy_wrlvl_init_ratio',    0),  # 0 User-programmable init ratio used by Write Leveling FSM, data slice 3
+                                                                                     ),force,warn)
+        dqs_slave_ratio0=0x35 # default=40
+        dqs_slave_ratio1=0x35 # default=40
+        dqs_slave_ratio2=0x35 # default=40
+        dqs_slave_ratio3=0x35 # default=40
+# reg  phy_rd_dqs_cfg0, offs=0x140 dflt:0x40 actual: 0x35
+        ddrc_register_set.set_bitfields('phy_rd_dqs_cfg0',( # PHY read DQS configuration register for data slice 0
+                                                     ('reg_phy_rd_dqs_slave_delay',    0),  # 0 If reg_phy_rd_dqs_slave_force is 1, use this tap/delay value for read DQS slave DLL, data slice 0
+                                                     ('reg_phy_rd_dqs_slave_force',    0),  # 0 0 - use reg_phy_rd_dqs_slave_ratio  for the read DQS slave DLL, 1 - use provided in reg_phy_rd_dqs_slave_delay, data slice 0
+                                                     ('reg_phy_rd_dqs_slave_ratio', dqs_slave_ratio0),  # 0x35 Fraction of the clock cycle (256 = full period) for the read DQS slave DLL, data slice 0
+                                                                                     ),force,warn)
+# reg  phy_rd_dqs_cfg1, offs=0x144 dflt:0x40 actual: 0x35
+        ddrc_register_set.set_bitfields('phy_rd_dqs_cfg1',( # PHY read DQS configuration register for data slice 1
+                                                     ('reg_phy_rd_dqs_slave_delay',    0),  # 0 If reg_phy_rd_dqs_slave_force is 1, use this tap/delay value for read DQS slave DLL, data slice 1
+                                                     ('reg_phy_rd_dqs_slave_force',    0),  # 0 0 - use reg_phy_rd_dqs_slave_ratio  for the read DQS slave DLL, 1 - use provided in reg_phy_rd_dqs_slave_delay, data slice 1
+                                                     ('reg_phy_rd_dqs_slave_ratio', dqs_slave_ratio1),  # 0x35 Fraction of the clock cycle (256 = full period) for the read DQS slave DLL, data slice 1
+                                                                                     ),force,warn)
+# reg  phy_rd_dqs_cfg2, offs=0x148 dflt:0x40 actual: 0x35
+        ddrc_register_set.set_bitfields('phy_rd_dqs_cfg2',( # PHY read DQS configuration register for data slice 2
+                                                     ('reg_phy_rd_dqs_slave_delay',    0),  # 0 If reg_phy_rd_dqs_slave_force is 1, use this tap/delay value for read DQS slave DLL, data slice 2
+                                                     ('reg_phy_rd_dqs_slave_force',    0),  # 0 0 - use reg_phy_rd_dqs_slave_ratio  for the read DQS slave DLL, 1 - use provided in reg_phy_rd_dqs_slave_delay, data slice 2
+                                                     ('reg_phy_rd_dqs_slave_ratio', dqs_slave_ratio2),  # 0x35 Fraction of the clock cycle (256 = full period) for the read DQS slave DLL, data slice 2
+                                                                                     ),force,warn)
+# reg  phy_rd_dqs_cfg3, offs=0x14c dflt:0x40 actual: 0x35
+        ddrc_register_set.set_bitfields('phy_rd_dqs_cfg3',( # PHY read DQS configuration register for data slice 3
+                                                     ('reg_phy_rd_dqs_slave_delay',    0),  # 0 If reg_phy_rd_dqs_slave_force is 1, use this tap/delay value for read DQS slave DLL, data slice 3
+                                                     ('reg_phy_rd_dqs_slave_force',    0),  # 0 0 - use reg_phy_rd_dqs_slave_ratio  for the read DQS slave DLL, 1 - use provided in reg_phy_rd_dqs_slave_delay, data slice 3
+                                                     ('reg_phy_rd_dqs_slave_ratio', dqs_slave_ratio3),  # 0x35 Fraction of the clock cycle (256 = full period) for the read DQS slave DLL, data slice 3
+                                                                                     ),force,warn)
+# reg  phy_wr_dqs_cfg0, offs=0x154 dflt:0 actual: 0
+        ddrc_register_set.set_bitfields('phy_wr_dqs_cfg0',( # ,PHY write DQS configuration register for data slice 0
+                                                     ('reg_phy_wr_dqs_slave_delay',  0),  # 0 If reg_phy_wr_dqs_slave_force is 1, use this tap/delay value for write DQS slave DLL, data slice 0
+                                                     ('reg_phy_wr_dqs_slave_force',  0),  # 0 0 - use reg_phy_wr_dqs_slave_ratio  for the write DQS slave DLL, 1 - use provided in reg_phy_wr_dqs_slave_delay, data slice 0
+                                                     ('reg_phy_wr_dqs_slave_ratio',  0),  # 0 Fraction of the clock cycle (256 = full period) for the write DQS slave DLL, data slice 0. Program manual training ratio
+                                                                                     ),force,warn)
+# reg  phy_wr_dqs_cfg0, offs=0x158 dflt:0 actual: 0
+        ddrc_register_set.set_bitfields('phy_wr_dqs_cfg1',( # ,PHY write DQS configuration register for data slice 1
+                                                     ('reg_phy_wr_dqs_slave_delay',  0),  # 0 If reg_phy_wr_dqs_slave_force is 1, use this tap/delay value for write DQS slave DLL, data slice 1
+                                                     ('reg_phy_wr_dqs_slave_force',  0),  # 0 0 - use reg_phy_wr_dqs_slave_ratio  for the write DQS slave DLL, 1 - use provided in reg_phy_wr_dqs_slave_delay, data slice 1
+                                                     ('reg_phy_wr_dqs_slave_ratio',  0),  # 0 Fraction of the clock cycle (256 = full period) for the write DQS slave DLL, data slice 1. Program manual training ratio
+                                                                                     ),force,warn)
+# reg  phy_wr_dqs_cfg0, offs=0x15c dflt:0 actual: 0
+        ddrc_register_set.set_bitfields('phy_wr_dqs_cfg2',( # ,PHY write DQS configuration register for data slice 2
+                                                     ('reg_phy_wr_dqs_slave_delay',  0),  # 0 If reg_phy_wr_dqs_slave_force is 1, use this tap/delay value for write DQS slave DLL, data slice 2
+                                                     ('reg_phy_wr_dqs_slave_force',  0),  # 0 0 - use reg_phy_wr_dqs_slave_ratio  for the write DQS slave DLL, 1 - use provided in reg_phy_wr_dqs_slave_delay, data slice 2
+                                                     ('reg_phy_wr_dqs_slave_ratio',  0),  # 0 Fraction of the clock cycle (256 = full period) for the write DQS slave DLL, data slice 2. Program manual training ratio
+                                                                                     ),force,warn)
+# reg  phy_wr_dqs_cfg0, offs=0x160 dflt:0 actual: 0
+        ddrc_register_set.set_bitfields('phy_wr_dqs_cfg3',( # ,PHY write DQS configuration register for data slice 3
+                                                     ('reg_phy_wr_dqs_slave_delay',  0),  # 0 If reg_phy_wr_dqs_slave_force is 1, use this tap/delay value for write DQS slave DLL, data slice 3
+                                                     ('reg_phy_wr_dqs_slave_force',  0),  # 0 0 - use reg_phy_wr_dqs_slave_ratio  for the write DQS slave DLL, 1 - use provided in reg_phy_wr_dqs_slave_delay, data slice 3
+                                                     ('reg_phy_wr_dqs_slave_ratio',  0),  # 0 Fraction of the clock cycle (256 = full period) for the write DQS slave DLL, data slice 3. Program manual training ratio
+                                                                                     ),force,warn)
+        fifo_we_slave_ratio0=0x35 # default=40
+        fifo_we_slave_ratio1=0x35 # default=40
+        fifo_we_slave_ratio2=0x35 # default=40
+        fifo_we_slave_ratio3=0x35 # default=40
         
+# reg  phy_we_cfg0, offs=0x168 dflt:0x40 actual: 0x35
+        ddrc_register_set.set_bitfields('phy_we_cfg0',( # PHY FIFO write enable configuration register for data slice 0
+                                                     ('reg_phy_fifo_we_in_delay',  0),  # 0 If reg_phy_fifo_we_in_force is 1, use this tap/delay value for fifo_we_0 slave DLL, data slice 0
+                                                     ('reg_phy_fifo_we_in_force',  0),  # 0 0 - use reg_phy_fifo_we_slave_ratio for fifo_we_0 slave DLL, 1 - use provided in reg_phy_fifo_we_in_delay, data slice 0
+                                                     ('reg_phy_fifo_we_slave_ratio',fifo_we_slave_ratio0),  # 0x35 Fraction of the clock cycle (256 = full period) for fifo_we_0 slave DLL, data slice 0. Program manual training ratio
+                                                                                     ),force,warn)
+# reg  phy_we_cfg0, offs=0x16c dflt:0x40 actual: 0x35
+        ddrc_register_set.set_bitfields('phy_we_cfg1',( # PHY FIFO write enable configuration register for data slice 1
+                                                     ('reg_phy_fifo_we_in_delay',  0),  # 0 If reg_phy_fifo_we_in_force is 1, use this tap/delay value for fifo_we_0 slave DLL, data slice 1
+                                                     ('reg_phy_fifo_we_in_force',  0),  # 0 0 - use reg_phy_fifo_we_slave_ratio for fifo_we_0 slave DLL, 1 - use provided in reg_phy_fifo_we_in_delay, data slice 1
+                                                     ('reg_phy_fifo_we_slave_ratio',fifo_we_slave_ratio1),  # 0x35 Fraction of the clock cycle (256 = full period) for fifo_we_0 slave DLL, data slice 1. Program manual training ratio
+                                                                                     ),force,warn)
+# reg  phy_we_cfg0, offs=0x170 dflt:0x40 actual: 0x35
+        ddrc_register_set.set_bitfields('phy_we_cfg2',( # PHY FIFO write enable configuration register for data slice 2
+                                                     ('reg_phy_fifo_we_in_delay',  0),  # 0 If reg_phy_fifo_we_in_force is 1, use this tap/delay value for fifo_we_0 slave DLL, data slice 2
+                                                     ('reg_phy_fifo_we_in_force',  0),  # 0 0 - use reg_phy_fifo_we_slave_ratio for fifo_we_0 slave DLL, 1 - use provided in reg_phy_fifo_we_in_delay, data slice 2
+                                                     ('reg_phy_fifo_we_slave_ratio',fifo_we_slave_ratio2),  # 0x35 Fraction of the clock cycle (256 = full period) for fifo_we_0 slave DLL, data slice 2. Program manual training ratio
+                                                                                     ),force,warn)
+# reg  phy_we_cfg0, offs=0x174 dflt:0x40 actual: 0x35
+        ddrc_register_set.set_bitfields('phy_we_cfg3',( # PHY FIFO write enable configuration register for data slice 3
+                                                     ('reg_phy_fifo_we_in_delay',  0),  # 0 If reg_phy_fifo_we_in_force is 1, use this tap/delay value for fifo_we_0 slave DLL, data slice 3
+                                                     ('reg_phy_fifo_we_in_force',  0),  # 0 0 - use reg_phy_fifo_we_slave_ratio for fifo_we_0 slave DLL, 1 - use provided in reg_phy_fifo_we_in_delay, data slice 3
+                                                     ('reg_phy_fifo_we_slave_ratio',fifo_we_slave_ratio3),  # 0x35 Fraction of the clock cycle (256 = full period) for fifo_we_0 slave DLL, data slice 3. Program manual training ratio
+                                                                                     ),force,warn)
+        wr_data_slave_ratio0=0x40
+        wr_data_slave_ratio1=0x40
+        wr_data_slave_ratio2=0x40
+        wr_data_slave_ratio3=0x40
+# reg  wr_data_slv0, offs=0x17c dflt:0x80 actual: 0x40
+        ddrc_register_set.set_bitfields('wr_data_slv0',( # PHY write data slave ratio configuration register for data slice 0
+                                                     ('reg_phy_wr_data_slave_delay',  0),  # 0 If reg_phy_wr_dqs_slave_force is 1, use this tap/delay value for write data slave DLL, data slice 0
+                                                     ('reg_phy_wr_data_slave_force',  0),  # 0 0 - use reg_phy_wr_dqs_slave_ratio  for the write data slave DLL, 1 - use provided in reg_phy_wr_dqs_slave_delay, data slice 0
+                                                     ('reg_phy_wr_data_slave_ratio',wr_data_slave_ratio0),  # 0x40 Fraction of the clock cycle (256 = full period) for the write data slave DLL, data slice 0. Program manual training ratio
+                                                                                     ),force,warn)
+# reg  wr_data_slv1, offs=0x180 dflt:0x80 actual: 0x40
+        ddrc_register_set.set_bitfields('wr_data_slv1',( # PHY write data slave ratio configuration register for data slice 1
+                                                     ('reg_phy_wr_data_slave_delay',  0),  # 0 If reg_phy_wr_dqs_slave_force is 1, use this tap/delay value for write data slave DLL, data slice 1
+                                                     ('reg_phy_wr_data_slave_force',  0),  # 0 0 - use reg_phy_wr_dqs_slave_ratio  for the write data slave DLL, 1 - use provided in reg_phy_wr_dqs_slave_delay, data slice 1
+                                                     ('reg_phy_wr_data_slave_ratio',wr_data_slave_ratio1),  # 0x40 Fraction of the clock cycle (256 = full period) for the write data slave DLL, data slice 1. Program manual training ratio
+                                                                                     ),force,warn)
+# reg  wr_data_slv2, offs=0x184 dflt:0x80 actual: 0x40
+        ddrc_register_set.set_bitfields('wr_data_slv2',( # PHY write data slave ratio configuration register for data slice 2
+                                                     ('reg_phy_wr_data_slave_delay',  0),  # 0 If reg_phy_wr_dqs_slave_force is 1, use this tap/delay value for write data slave DLL, data slice 2
+                                                     ('reg_phy_wr_data_slave_force',  0),  # 0 0 - use reg_phy_wr_dqs_slave_ratio  for the write data slave DLL, 1 - use provided in reg_phy_wr_dqs_slave_delay, data slice 2
+                                                     ('reg_phy_wr_data_slave_ratio',wr_data_slave_ratio2),  # 0x40 Fraction of the clock cycle (256 = full period) for the write data slave DLL, data slice 2. Program manual training ratio
+                                                                                     ),force,warn)
+# reg  wr_data_slv3, offs=0x188 dflt:0x80 actual: 0x40
+        ddrc_register_set.set_bitfields('wr_data_slv3',( # PHY write data slave ratio configuration register for data slice 3
+                                                     ('reg_phy_wr_data_slave_delay',  0),  # 0 If reg_phy_wr_dqs_slave_force is 1, use this tap/delay value for write data slave DLL, data slice 3
+                                                     ('reg_phy_wr_data_slave_force',  0),  # 0 0 - use reg_phy_wr_dqs_slave_ratio  for the write data slave DLL, 1 - use provided in reg_phy_wr_dqs_slave_delay, data slice 3
+                                                     ('reg_phy_wr_data_slave_ratio',wr_data_slave_ratio3),  # 0x40 Fraction of the clock cycle (256 = full period) for the write data slave DLL, data slice 3. Program manual training ratio
+                                                                                     ),force,warn)
+# reg  reg_64, offs=0x190 dflt:0x10020000 actual:0x20000(first time)-0x10020000-0x10020000
+        use_rank0_delays = 1 # marked as reserved, but actually is first set to 0 - maybe not needed
+        phy_lpddr=       (0,1)[is_LPDDR2]
+        ctrl_slave_ratio=0x80 # defualt/actual
+        sel_logic       = 0 # Read leveling algorithm select - 0:algorithm 1, 1: algorithm 2 
+        ddrc_register_set.set_bitfields('reg_64',( # Training control 2
+                                                     ('reg_phy_int_lpbk',          0),  # reserved
+                                                     ('reg_phy_cmd_latency',       0),  # 1: Delay command to PHY by a FF
+                                                     ('reg_phy_lpddr',     phy_lpddr),  # 0: DDR2/DDR3, 1 - LPDDR2
+                                                     ('reg_phy_use_rank0_delays', use_rank0_delays),  # reserved
+                                                     ('reg_phy_ctrl_slave_delay',  0),  # when reg_phy_rd_dqs_slave_force==1 this value (combined with bits 18:19 of reg_65) set address/command slave DLL
+                                                     ('reg_phy_ctrl_slave_force',  0),  # 0:use reg_phy_ctrl_slave_ratio for addr/cmd slave DLL, 1 - overwrite with reg_phy_ctrl_slave_delay
+                                                     ('reg_phy_ctrl_slave_ratio',ctrl_slave_ratio), # address/command delay in clock/256
+                                                     ('reg_phy_sel_logic', sel_logic),  # Read leveling algorithm select - 0:algorithm 1, 1: algorithm 2
+                                                     ('reg_phy_all_dq_mpr_rd_resp',0),  # reserved
+                                                     ('reg_phy_invert_clkout',     0),  # 1 - invert clock polarity to DRAM
+                                                     ('reg_phy_bist_mode',         0),  # reserved
+                                                     ('reg_phy_bist_force_err',    0),  # reserved
+                                                     ('reg_phy_bist_enable',       0),  # reserved
+                                                     ('reg_phy_at_spd_atpg',       0),  # reserved
+                                                     ('reg_phy_bl2',               0),  # reserved
+                                                     ('reg_phy_loopback',          0),  # reserved
+                                                                                     ),force,warn)
+# reg  reg_65, offs=0x194 dflt:0 actual: 0x3c82
+        dll_lock_diff =         0xf #default/actual
+        rd_rl_delay   = max(RL-3,1) # 0x4
+        wr_rl_delay   = max(WL-4,1) # 0x2
         
-#CONFIG_EZYNQ_DDR_BANK_ADDR_COUNT = 3
-#CONFIG_EZYNQ_DDR_ROW_ADDR_COUNT = 15
-#CONFIG_EZYNQ_DDR_COL_ADDR_COUNT = 10 # not counting A10
-#CONFIG_EZYNQ_DDR_BANK_ADDR_MAP  = 10        
-# CONFIG_EZYNQ_DDR_XP = 4
-# CONFIG_EZYNQ_DDR_RCD = 7 (was CONFIG_EZYNQ_DDR_T_RCD = 7) *
-# CONFIG_EZYNQ_DDR_RP = 7 (was CONFIG_EZYNQ_DDR_T_RP = 7) *
-# CONFIG_EZYNQ_DDR_T_RC = 48.75 *
-# CONFIG_EZYNQ_DDR_T_RAS_MIN = 35.0 *
-# CONFIG_EZYNQ_DDR_T_RFC = 350.0
-# CONFIG_EZYNQ_DDR_T_FAW = 40.0 *
-# CONFIG_EZYNQ_DDR_RTP = 4
-# CONFIG_EZYNQ_DDR_T_RTP = 7.5
-# CONFIG_EZYNQ_DDR_WTR = 4
-# CONFIG_EZYNQ_DDR_T_WTR = 7.5
-
-# reg_ddrc_wr2pre    4:0    1f    12    12
-# reg_ddrc_powerdown_to_x32    9:5    3e0    6    c0
-# reg_ddrc_t_faw    15:10    fc00    16    5800
-# reg_ddrc_t_ras_max    21:16    3f0000    24    240000
-# reg_ddrc_t_ras_min    26:22    7c00000    13    4c00000
-# reg_ddrc_t_cke    31:28    f0000000    4    40000000
-# DRAM_param_reg1 @ 0XF8006018        f7ffffff        44e458d2
+# TODO: Maybe more changes are needed to use training, generate ps7* with training enabled and compare results
+        ddrc_register_set.set_bitfields('reg_65',( # Training control 3
+                                                     ('reg_phy_ctrl_slave_delay',                         0),  # when reg_phy_rd_dqs_slave_force==1 this value (combined with bits 21:27 of reg_64) set address/command slave DLL'},
+                                                     ('reg_phy_dis_calib_rst',                            0),  # disable dll_calib from resetting Read Capture FIFO
+                                                     ('reg_phy_use_rd_data_eye_level',use_rd_data_eye_level),  # Read Data Eye training control - 0 use fixed register data, 1 use data eye leveling data
+                                                     ('reg_phy_use_rd_dqs_gate_level',use_rd_dqs_gate_level),  # Read DQS Gate training control: 0 - used fixed data, 1 - use calculated data
+                                                     ('reg_phy_use_wr_level',                  use_wr_level),  # Write leveling control: 0 - used programmed register data, 1 - use calculated data
+                                                     ('reg_phy_dll_lock_diff',                dll_lock_diff),  # 0xf Maximal number of DLL taps before DLL deasserts lock
+                                                     ('reg_phy_rd_rl_delay',                    rd_rl_delay),  # 0x4
+                                                     ('reg_phy_wr_rl_delay',                    wr_rl_delay),  # 0x2
+                                                                                     ),force,warn)
 
 
 
 
+# reg  page_mask, offs=0x204 dflt:0 actual: 0
+#        page_addr_mask=0 # disable prioritization based on page/bank match 
+        ddrc_register_set.set_bitfields('page_mask',( # Arbiter Page Mask
+                                                     ('reg_arb_page_addr_mask',page_addr_mask),  # Arbiter page hit/miss: 0 - column address, 1 - row/bank address (applies to 64-bit address, not byte addr)
+                                                                                     ),force,warn)
 
+        arb_pri_wr_port0=0x3ff # lowest 
+        arb_pri_wr_port1=0x3ff # lowest 
+        arb_pri_wr_port2=0x3ff # lowest 
+        arb_pri_wr_port3=0x3ff # lowest 
+# reg  axi_priority_wr_port0, offs=0x208 dflt:0x803FF actual: 0x803ff
+        ddrc_register_set.set_bitfields('axi_priority_wr_port0',( # AXI priority control for write port 0
+                                                     ('reserved1',                     0x1),  # 0x1
+                                                     ('reg_arb_dis_page_match_wr_portn', 0),  # Disable page match feature
+                                                     ('reg_arb_disable_urgent_wr_portn', 0),  # Disable urgent for this Write Port
+                                                     ('reg_arb_disable_aging_wr_portn',  0),  # Disable aging for this Write Port
+                                                     ('reserved2',                       0),  #
+                                                     ('reg_arb_pri_wr_portn',arb_pri_wr_port0),  # 0x3ff Priority for this write port, >=4, lower value - higher priority
+                                                                                            ),force,warn)
 
+# reg  axi_priority_wr_port1, offs=0x20c dflt:0x803FF actual: 0x803ff
+        ddrc_register_set.set_bitfields('axi_priority_wr_port1',( # AXI priority control for write port 1
+                                                     ('reserved1', 0x1),  # 0x1
+                                                     ('reserved1',                     0x1),  # 0x1
+                                                     ('reg_arb_dis_page_match_wr_portn', 0),  # Disable page match feature
+                                                     ('reg_arb_disable_urgent_wr_portn', 0),  # Disable urgent for this Write Port
+                                                     ('reg_arb_disable_aging_wr_portn',  0),  # Disable aging for this Write Port
+                                                     ('reserved2',                       0),  #
+                                                     ('reg_arb_pri_wr_portn',arb_pri_wr_port1),  # 0x3ff Priority for this write port, >=4, lower value - higher priority
+                                                                                            ),force,warn)
+# reg  axi_priority_wr_port2, offs=0x210 dflt:0x803FF actual: 0x803ff
+        ddrc_register_set.set_bitfields('axi_priority_wr_port2',( # AXI priority control for write port 2
+                                                     ('reserved1',                     0x1),  # 0x1
+                                                     ('reg_arb_dis_page_match_wr_portn', 0),  # Disable page match feature
+                                                     ('reg_arb_disable_urgent_wr_portn', 0),  # Disable urgent for this Write Port
+                                                     ('reg_arb_disable_aging_wr_portn',  0),  # Disable aging for this Write Port
+                                                     ('reserved2',                       0),  #
+                                                     ('reg_arb_pri_wr_portn',arb_pri_wr_port2),  # 0x3ff Priority for this write port, >=4, lower value - higher priority
+                                                                                            ),force,warn)
+# reg  axi_priority_wr_port3, offs=0x214 dflt:0x803FF actual: 0x803ff
+        ddrc_register_set.set_bitfields('axi_priority_wr_port3',( # AXI priority control for write port 3
+                                                     ('reserved1',                     0x1),  # 0x1
+                                                     ('reg_arb_dis_page_match_wr_portn', 0),  # Disable page match feature
+                                                     ('reg_arb_disable_urgent_wr_portn', 0),  # Disable urgent for this Write Port
+                                                     ('reg_arb_disable_aging_wr_portn',  0),  # Disable aging for this Write Port
+                                                     ('reserved2',                       0),  #
+                                                     ('reg_arb_pri_wr_portn',arb_pri_wr_port3),  # 0x3ff Priority for this write port, >=4, lower value - higher priority
+                                                                                            ),force,warn)
+        arb_pri_rd_port0=0x3ff # lowest
+        arb_pri_rd_port1=0x3ff # lowest
+        arb_pri_rd_port2=0x3ff # lowest
+        arb_pri_rd_port3=0x3ff # lowest
+# reg  axi_priority_rd_port0, offs=0x218 dflt:0x3ff actual: 0x3ff
+        ddrc_register_set.set_bitfields('axi_priority_rd_port0',( # AXI priority control for read port 0
+                                                     ('reg_arb_set_hpr_rd_portn',        0),  # Enable reads to be HPR for this port
+                                                     ('reg_arb_dis_page_match_rd_portn', 0),  # Disable page match feature
+                                                     ('reg_arb_disable_urgent_rd_portn', 0),  # Disable urgent for this Read Port
+                                                     ('reg_arb_disable_aging_rd_portn',  0),  # Disable aging for this Read Port
+                                                     ('reserved1',                       0),  #
+                                                     ('reg_arb_pri_rd_portn',arb_pri_rd_port0),  # 0x3ff Priority for this Read port, lower value - higher priority
+                                                                                            ),force,warn)
+# reg  axi_priority_rd_port1, offs=0x21c dflt:0x3ff actual: 0x3ff
+        ddrc_register_set.set_bitfields('axi_priority_rd_port1',( # AXI priority control for read port 1
+                                                     ('reg_arb_set_hpr_rd_portn',        0),  # Enable reads to be HPR for this port
+                                                     ('reg_arb_dis_page_match_rd_portn', 0),  # Disable page match feature
+                                                     ('reg_arb_disable_urgent_rd_portn', 0),  # Disable urgent for this Read Port
+                                                     ('reg_arb_disable_aging_rd_portn',  0),  # Disable aging for this Read Port
+                                                     ('reserved1',                       0),  #
+                                                     ('reg_arb_pri_rd_portn',arb_pri_rd_port1),  # 0x3ff Priority for this Read port, lower value - higher priority
+                                                                                            ),force,warn)
+# reg  axi_priority_rd_port2, offs=0x220 dflt:0x3ff actual: 0x3ff
+        ddrc_register_set.set_bitfields('axi_priority_rd_port2',( # AXI priority control for read port 2
+                                                     ('reg_arb_set_hpr_rd_portn',        0),  # Enable reads to be HPR for this port
+                                                     ('reg_arb_dis_page_match_rd_portn', 0),  # Disable page match feature
+                                                     ('reg_arb_disable_urgent_rd_portn', 0),  # Disable urgent for this Read Port
+                                                     ('reg_arb_disable_aging_rd_portn',  0),  # Disable aging for this Read Port
+                                                     ('reserved1',                       0),  #
+                                                     ('reg_arb_pri_rd_portn',arb_pri_rd_port2),  # 0x3ff Priority for this Read port, lower value - higher priority
+                                                                                            ),force,warn)
+# reg  axi_priority_rd_port3, offs=0x224 dflt:0x3ff actual: 0x3ff
+        ddrc_register_set.set_bitfields('axi_priority_rd_port3',( # AXI priority control for read port 3
+                                                     ('reg_arb_set_hpr_rd_portn',        0),  # Enable reads to be HPR for this port
+                                                     ('reg_arb_dis_page_match_rd_portn', 0),  # Disable page match feature
+                                                     ('reg_arb_disable_urgent_rd_portn', 0),  # Disable urgent for this Read Port
+                                                     ('reg_arb_disable_aging_rd_portn',  0),  # Disable aging for this Read Port
+                                                     ('reserved1',                       0),  #
+                                                     ('reg_arb_pri_rd_portn',arb_pri_rd_port3),  # 0x3ff Priority for this Read port, lower value - higher priority
+                                                                                            ),force,warn)
+#Skipping several registers that are either obsolete or reserved 
+#     'trusted_mem_cfg':         {'OFFS': 0x290,'DFLT':0x00000000,'RW':'RW','COMMENTS':'Trusted Memory Configuration (obsolete)','FIELDS':{
+#     'excl_access_cfg0':        {'OFFS': 0x294,'DFLT':0x00000000,'RW':'RW','COMMENTS':'Exclusive access configuration for port 0','FIELDS':{
+#     'excl_access_cfg1':        {'OFFS': 0x298,'DFLT':0x00000000,'RW':'RW','COMMENTS':'Exclusive access configuration for port 1','FIELDS':{
+#     'excl_access_cfg2':        {'OFFS': 0x29C,'DFLT':0x00000000,'RW':'RW','COMMENTS':'Exclusive access configuration for port 2','FIELDS':{
+#     'excl_access_cfg3':        {'OFFS': 0x2A0,'DFLT':0x00000000,'RW':'RW','COMMENTS':'Exclusive access configuration for port 3','FIELDS':{
 
-
+#Mobile DRAM settings - probably can be skipped if not is_LPDDR2? ps7* has them still programmed
+# reg  lpddr_ctrl0, offs=0x2A8 dflt:0 actual: 0
+        lpddr2_derate_enable=0 # This feature may be only enabled after LPDDR2 initialization is completed
+        lpddr2=(0,1)[is_LPDDR2]
+        ddrc_register_set.set_bitfields('lpddr_ctrl0',( # LPDDR2 control register 0 
+                                                     ('reg_ddrc_mr4_margin',    0),  # unused
+                                                     ('reserved1',              0),  # reserved
+                                                     ('reg_ddrc_derate_enable', lpddr2_derate_enable),  # Timing parameter derating ENABLED using MR4 read data
+                                                     ('reserved2',              0),  # reserved
+                                                     ('reg_ddrc_lpddr2',   lpddr2),  # 0 - DDR2/DDR3 in use, 1 - LPDDR2 in use
+                                                                                     ),force,warn)
+# reg  lpddr_ctrl1, offs=0x2AC dflt:0 actual: 0
+        ddrc_register_set.set_bitfields('lpddr_ctrl1',( # LPDDR2 control register 1
+                                                     ('reg_ddrc_mr4_read_interval', 0),  #
+                                                                                     ),force,warn)
+# reg  lpddr_ctrl2, offs=0x2B0 dflt:0x3C0015 actual: 0x5125
+        t_mrw=                  5
+        idle_after_reset_x32=int(math.ceil(self.features.get_par_value('T_INIT4_US')*1000/tCK/32))   # 0x12
+        min_stable_clock_x1 =   self.features.get_par_value('INIT2')  #0x5
+        ddrc_register_set.set_bitfields('lpddr_ctrl2',( # LPDDR2 control register 2
+                                                     ('reg_ddrc_t_mrw',                              t_mrw),  # 0x5  Wait for MR writes, typically required 5???
+                                                     ('reg_ddrc_idle_after_reset_x32',idle_after_reset_x32),  # 0x12 Idle time after reset command, tINIT4 (in clockx32)
+                                                     ('reg_ddrc_min_stable_clock_x1',  min_stable_clock_x1),  # 0x5  Time to wait after first CKE high, tINIT2 in clock cycles. Typically required 5 (tCK)
+                                                                                     ),force,warn)
+# reg  lpddr_ctrl3, offs=0x2B4 dflt:0x601 actual: 0x12a8
+        #seems there is a BUG in ps7* calculation, the values are 32 times higher (as if max_auto_init_x1024 - is actually max_auto_init_x32)
+        #Default value seems closer to result
+        lpddr_ctrl3_BUG=1 #32 # change to 1 if confirmed
+        dev_zqinit_x32=int(math.ceil(self.features.get_par_value('T_ZQINIT_US')*1000/tCK/32))         # 0x12
+        max_auto_init_x1024=int(math.ceil(self.features.get_par_value('T_INIT5_US')*1000/tCK/1024*lpddr_ctrl3_BUG))   #0xa8
+        ddrc_register_set.set_bitfields('lpddr_ctrl3',( # LPDDR2 control register 3
+                                                     ('reg_ddrc_dev_zqinit_x32',          dev_zqinit_x32), # 0x1200 tZQINIT - ZQ initial calibration (in clockx32). LPDDR2 typically require 1 microsecond
+                                                     ('reg_ddrc_max_auto_init_x1024',max_auto_init_x1024), # 0xa8    tINIT5 - maximal duration of autoinitialization (in clockx1024). Typical 10 microseconds
+                                                                                     ),force,warn)
+##########################################
 
     def ddr_init_ddriob(self,force=False,warn=False): # will program to sequence 'MAIN'
 #        print 'ddr_init_ddriob\n'
@@ -999,7 +1354,7 @@ class EzynqDDR:
 
 # 8. Set DDRIOB_DATA1 and DDRIOB_DIFF1 registers to power down if only 16 bits of DQ DDR are
 #     used (including ECC bits).
-## TODO: find out - what "power down" means - bit 0? or other bits that are already set according tu bus width
+## TODO: find out - what "power down" means - bit 0? or other bits that are already set according to bus width
 # 9. For DDR2 and DDR3 – DCI only affects termination strength, so address and clock outputs do not
 #     use DCI.
 # 10. For LPDDR2 – DCI affects drive strength, so all I/Os use DCI.
@@ -1097,8 +1452,3 @@ class EzynqDDR:
                 reg_set.print_html_registers(html_file, show_bit_fields, show_comments,filter_fields)
                 html_file.write('<br/>\n')
                  
-               
-#ddr=Ezynq_DDR()
-#print ddr.DDRC_DEFS
-#    def __init__(self,defines,channel=0,permit_undefined_bits=False):
-#    def parse_options_set(self,raw_configs,prefix,postfix,qualifier_char,force=True,warn=True): #force - readonly/undefined fields, warn: data does not fit in the bit field

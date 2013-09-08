@@ -59,6 +59,9 @@ DDR_CFG_DEFS=[
                 'DESCRIPTION':'Number of DDR banks'},              
     {'NAME':'BANK_ADDR_MAP',  'CONF_NAME':'CONFIG_EZYNQ_DDR_BANK_ADDR_MAP','TYPE':'I','MANDATORY':True,'DERIVED':False,'DEFAULT':10,
                 'DESCRIPTION':'DRAM address mapping: number of combined column and row addresses lower than BA0'},              
+
+    {'NAME':'ARB_PAGE_BANK',  'CONF_NAME':'CONFIG_EZYNQ_DDR_ARB_PAGE_BANK','TYPE':'B','MANDATORY':False,'DERIVED':False,'DEFAULT':False,
+                'DESCRIPTION':'Enable Arbiter prioritization based on page/bank match'},              
               
     {'NAME':'ECC',             'CONF_NAME':'CONFIG_EZYNQ_DDR_ECC','TYPE':'B','MANDATORY':False,'DERIVED':False,'DEFAULT':False,
                 'DESCRIPTION':'Enable ECC for the DDR memory'},
@@ -160,7 +163,19 @@ DDR_CFG_DEFS=[
     {'NAME':'ZQCL',             'CONF_NAME':'CONFIG_EZYNQ_DDR_ZQCL','TYPE':'I','MANDATORY':False,'DERIVED':False,'DEFAULT':512,
                 'DESCRIPTION':'ZQCL command: long calibration time, including init (in tCK)'},
 
-                            
+    {'NAME':'INIT2',             'CONF_NAME':'CONFIG_EZYNQ_DDR_INIT2','TYPE':'I','MANDATORY':False,'DERIVED':False,'DEFAULT':5,
+                'DESCRIPTION':'LPDDR2 only: tINIT2 (in tCK): clock stable before CKE high'},
+    {'NAME':'T_INIT4_US',        'CONF_NAME':'CONFIG_EZYNQ_DDR_T_INIT4_US','TYPE':'F','MANDATORY':False,'DERIVED':False,'DEFAULT':1.0,
+                'DESCRIPTION':'LPDDR2 only: tINIT4 (in us)- minimal idle time after RESET command.'},   
+    {'NAME':'T_INIT5_US',        'CONF_NAME':'CONFIG_EZYNQ_DDR_T_INIT5_US','TYPE':'F','MANDATORY':False,'DERIVED':False,'DEFAULT':10.0,
+                'DESCRIPTION':'LPDDR2 only: tINIT5 (in us)- maximal duration of device auto initialization.'},   
+    {'NAME':'T_ZQINIT_US',       'CONF_NAME':'CONFIG_EZYNQ_DDR_T_ZQINIT_US','TYPE':'F','MANDATORY':False,'DERIVED':False,'DEFAULT':1.0,
+                'DESCRIPTION':'LPDDR2 only: tZQINIT (in us)- ZQ initial calibration time.'},   
+
+# CONFIG_EZYNQ_DDR_T_INIT4_US =  1.0 #(us) LPDDR2 ONLY
+# CONFIG_EZYNQ_DDR_T_INIT5_US =  10.0 #(us) LPDDR2 ONLY
+# CONFIG_EZYNQ_DDR_T_ZQINIT_US = 1.0 #(us) LPDDR2 ONLY
+
                  
 ]
 # CONFIG_EZYNQ_DDR3_RTT = 60 # DISABLED, 60,120,40 - only used for DDR3              
@@ -193,6 +208,13 @@ DDR_CFG_DEFS=[
 #CONFIG_EZYNQ_DDR_ZQCS = 64
 #CONFIG_EZYNQ_DDR_ZQCL = 512
 
+# CONFIG_EZYNQ_DDR_INIT2 = 5 #LPDDR2 ONLY
+# CONFIG_EZYNQ_DDR_T_INIT4_US =  1.0 #(us) LPDDR2 ONLY
+# CONFIG_EZYNQ_DDR_T_INIT5_US =  10.0 #(us) LPDDR2 ONLY
+# CONFIG_EZYNQ_DDR_T_ZQINIT_US = 1.0 #(us) LPDDR2 ONLY
+
+
+
 
 #TODO make some of (possibly) derived, leave '_T_' for ns only!
 # CONFIG_EZYNQ_DDR_FREQ_MHZ = 533.333333 *
@@ -216,6 +238,7 @@ DDR_CFG_DEFS=[
 # CONFIG_EZYNQ_DDR_ROW_ADDR_COUNT = 15 *
 # CONFIG_EZYNQ_DDR_COL_ADDR_COUNT = 10 *
 # CONFIG_EZYNQ_DDR_BANK_ADDR_MAP  = 10
+# CONFIG_EZYNQ_DDR_ARB_PAGE_BANK  = Y
 
 # CONFIG_EZYNQ_DDR_ENABLE = 1          *
 # CONFIG_EZYNQ_DDR_MEMORY_TYPE = DDR3  *

@@ -119,11 +119,15 @@ CONFIG_EZYNQ_DDR_ZQCL = 512
 CONFIG_EZYNQ_DDR_T_MOD = 15.0
 CONFIG_EZYNQ_DDR_MOD =   12
 
+CONFIG_EZYNQ_DDR_INIT2 = 5 #(tCK)LPDDR2 ONLY
+CONFIG_EZYNQ_DDR_T_INIT4_US =  1.0 #(us) LPDDR2 ONLY
+CONFIG_EZYNQ_DDR_T_INIT5_US =  10.0 #(us) LPDDR2 ONLY
+CONFIG_EZYNQ_DDR_T_ZQINIT_US = 1.0 #(us) LPDDR2 ONLY
 
 
 
 
-CONFIG_EZYNQ_DDR_PARTNO = MT41K256M16RE-125
+CONFIG_EZYNQ_DDR_PARTNO = MT41K256M16RE125
 CONFIG_EZYNQ_DDR_DRAM_WIDTH = 16
 #CONFIG_EZYNQ_DDR_DEVICE_CAPACITY_MBITS = 4096 - can be calculated
 CONFIG_EZYNQ_DDR_SPEED_BIN = DDR3_1066F
@@ -148,6 +152,11 @@ CONFIG_EZYNQ_DDR_BANK_ADDR_COUNT = 3
 CONFIG_EZYNQ_DDR_ROW_ADDR_COUNT = 15
 CONFIG_EZYNQ_DDR_COL_ADDR_COUNT = 10
 CONFIG_EZYNQ_DDR_BANK_ADDR_MAP  = 10 # number of combine CA and RA lower than BA0
+
+CONFIG_EZYNQ_DDR_ARB_PAGE_BANK  = N # Y # default N, testing
+
+
+
 CONFIG_EZYNQ_DDR_CL = 7
 CONFIG_EZYNQ_DDR_CWL = 6
 #CONFIG_EZYNQ_DDR_T_RCD = 7
@@ -248,19 +257,4 @@ CONFIG_EZYNQ_DDR_SETREG_ctrl_reg1__reg_ddrc_lpr_num_entries_PRE = 5
 
 CONFIG_EZYNQ_DDR_SETREG_phy_wr_dqs_cfg0_PRE = 0xAAAAA
 CONFIG_EZYNQ_DDR_SETREG_phy_wr_dqs_cfg0__reg_phy_wr_dqs_slave_delay_PRE = 0x77
-
-
-#                  'reg_ddrc_selfref_en':              {'r':(12,12),'d':0,'c':'Dynamic - 1 - go to Self Refresh when transaction store is empty'},   
-#                  'reserved1':                        {'r':(11,11),'d':0,'m':'R','c':'reserved'},      
-#                  'reg_ddrc_dis_collision_page_opt':  {'r':(10,10),'d':0,'c':'Disable autoprecharge for collisions (write+write or read+write to the same address) when  reg_ddrc_dis_wc==1'},     
-#                  'reg_ddrc_dis_wc':                  {'r':( 9, 9),'d':0,'c':'1 - disable write combine, 0 - enable'},      
-#                  'reg_ddrc_refresh_update_level':    {'r':( 8, 8),'d':0,'c':'Dynamic: toggle to indicate refressh register(s) update'},    
-#                  'reg_ddrc_auto_pre_en':             {'r':( 7, 7),'d':0,'c':'1 - most R/W will be with autoprecharge'},      
-#                  'reg_ddrc_lpr_num_entries':         {'r':( 1, 6),'d':0x1F,'c':'(bit 6 ignored) (Size of low priority transaction store+1). HPR - 32 - this value'},      
-#                  'reg_ddrc_pageclose':               {'r':( 0, 0),'d':0,'c':'1 - close bank if no transactions in the store for it, 0 - keep open until not needed by other'}}}, 
-
-#    'phy_wr_dqs_cfg0':         {'OFFS': 0x154,'DFLT':0x00000000,'RW':'RW','FIELDS':{
-#                  'reg_phy_wr_dqs_slave_delay':       {'r':(11,19),'d':0,'c':'If reg_phy_wr_dqs_slave_force is 1, use this tap/delay value for write DQS slave DLL, data slice 0'},       
-#                  'reg_phy_wr_dqs_slave_force':       {'r':(10,10),'d':0,'c':'0 - use reg_phy_wr_dqs_slave_ratio  for the write DQS slave DLL, 1 - use provided in reg_phy_wr_dqs_slave_delay, data slice 0'},       
-#                  'reg_phy_wr_dqs_slave_ratio':       {'r':( 0, 9),'d':0,'c':'Fraction of the clock cycle (256 = full period) for the write DQS slave DLL, data slice 0. Program manual training ratio'}}},
 
