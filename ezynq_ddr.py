@@ -69,6 +69,8 @@ class EzynqDDR:
 #TODO: just testing on a few pars, migrate more of them
         try:
             tCK=1000.0/self.features.get_par_value('FREQ_MHZ')
+#            print 'FREQ_MHZ=',self.features.get_par_value('FREQ_MHZ')
+
             try:
                 self.features.set_max_value('RP', int(math.ceil(self.features.get_par_value('T_RP')/tCK)))
             except:
@@ -320,6 +322,23 @@ class EzynqDDR:
         tFAWx1=int(math.ceil(self.features.get_par_value('T_FAW')/tCK))
         inactiveToPDx32=6 # cycles 'Power down after this many clocks of NOP/DESELECT (if enabled in mcr). Make configurable?
         WR=int(math.ceil(tWR/tCK))
+#        print 'tWR=',tWR,'tCK=',tCK
+        wr_options_ddr3=(16,5,6,7,8,10,12,14)
+        # some values are not valid for DDR3 when writing to MR0 register, trying to fix WR (in tCK) to be valid
+        if is_DDR3 and (not WR in wr_options_ddr3):
+            print 'Calculated value for Write recovery (WR): '+str(WR)+ ' (as defined by tWR), is not valid for DDR3 MR0, it only supports '+str(sorted(wr_options_ddr3))
+            print 'trying to adjust WR:'
+            cheat_down=0.1 # reduce calculated WR if before rounding up it did not exceed integer value by more than 'cheat'
+            WR1=int(math.ceil(tWR/tCK-cheat_down))
+            if WR1 in wr_options_ddr3:
+                print 'Using WR='+str(WR1)+' instead of '+str(WR)+' (cheating down), before rounding the value was '+str(tWR/tCK)
+                WR=WR1
+            elif (WR+1) in wr_options_ddr3:
+                print 'Using WR='+str(WR+1)+' instead of '+str(WR)+' (to much to cheat down, increasing to next valid), before rounding the value was '+str(tWR/tCK)
+                WR=WR+1
+            else:
+                raise Exception('Could not fix the value of WR, please check frequency ('+self.features.get_par_confname('FREQ_MHZ')+
+                                ') and write recovery (ns) '+ self.features.get_par_confname('T_WR'))    
         WL=self.features.get_par_value('CWL')
         BL=self.features.get_par_value('BL')
         wr2pre=WL+BL/2+WR
@@ -515,11 +534,11 @@ class EzynqDDR:
             except:
                 raise Exception('Wrong value for CAS latency: '+str(CL)+ ' - only CL=5..14 are supported by DDR3')
             mr_dll_reset=1 # Seems to be always set (including dflt)?
-            wr_options=(16,5,6,7,8,10,12,14)
+            wr_options_ddr3=(16,5,6,7,8,10,12,14)
             try:
-                mr_write_recovery=wr_options.index(WR)
+                mr_write_recovery=wr_options_ddr3.index(WR)
             except:
-                raise Exception('Wrong value for Write recovery (WR): '+str(WR)+ ' (may be defined by tWR), DDR3 only supports '+str(wr_options))
+                raise Exception('Wrong value for Write recovery (WR): '+str(WR)+ ' (may be defined by tWR), DDR3 only supports '+str(sorted(wr_options_ddr3)))
             mr_PD = 0 # 0 - DLL off during PD (slow exit), 1 - DLL on during PD (fast exit)            
             mr=set_random_bits(mr,  mr_bl,            (0,1))
             mr=set_random_bits(mr,  mr_bt,            (3, ))

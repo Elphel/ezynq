@@ -75,116 +75,116 @@ CONFIG_EZYNQ_MIO_UART_1=48 #  8+4*N
 #CONFIG_EZYNQ_MIO_GPIO_OUT_02=       0 # Set selected GPIO output to 0/1
 #CONFIG_EZYNQ_MIO_GPIO_OUT_15=       1 # Set selected GPIO output to 0/1
 ## Boot image parameters
+
+
+#RBL header parameters
 CONFIG_EZYNQ_BOOT_USERDEF=           0x1234567 # will be saved in the file header
 CONFIG_EZYNQ_BOOT_OCM_OFFSET=        0x8C0   # start of OCM data relative to the flash image start >=0x8C0, 63-bytes aligned
 CONFIG_EZYNQ_BOOT_OCM_IMAGE_LENGTH=  0#0x30000 # number of bytes to load to the OCM memory, <= 0x30000 
 CONFIG_EZYNQ_START_EXEC=             0x00 # start of execution address 
 
 
- CONFIG_EZYNQ_DDR_PERIPHERAL_CLKSRC = DDR PLL
+
+
+ 
+#just software testing - remove later
+#CONFIG_EZYNQ_DDR_SETREG_ctrl_reg1__reg_ddrc_selfref_en_PRE = 1
+#CONFIG_EZYNQ_DDR_SETREG_ctrl_reg1__reg_ddrc_lpr_num_entries_PRE = 5
+#CONFIG_EZYNQ_DDR_SETREG_phy_wr_dqs_cfg0_PRE = 0xAAAAA
+#CONFIG_EZYNQ_DDR_SETREG_phy_wr_dqs_cfg0__reg_phy_wr_dqs_slave_delay_PRE = 0x77
+#CONFIG_EZYNQ_DDR_ARB_PAGE_BANK  = N # Y # default N, testing
+
+
+
+
+
+
+
+
+# not yet processed
+CONFIG_EZYNQ_DCI_PERIPHERAL_FREQMHZ = 10.158731 # Taking available CLK and divisors into account?
+CONFIG_EZYNQ_DDR_PERIPHERAL_CLKSRC = DDR PLL
 CONFIG_EZYNQ_DDR_RAM_BASEADDR = 0x00100000
 CONFIG_EZYNQ_DDR_RAM_HIGHADDR = 0x3FFFFFFF
-CONFIG_EZYNQ_DDR_TARGET_FREQ_MHZ = 533.3333 # New added
-CONFIG_EZYNQ_DDR_FREQ_MHZ = 533.333374          # Taking available CLK and divisors into account?
-CONFIG_EZYNQ_DCI_PERIPHERAL_FREQMHZ = 10.158731 # Taking available CLK and divisors into account?
 
+##### DDR independent ######
 
+CONFIG_EZYNQ_DDR_ENABLE =           Y        # Enable DDR memory'},              
+CONFIG_EZYNQ_DDR_TARGET_FREQ_MHZ =  533.3333 # Target DDR clock frequency in MHz (actual frequency will depend on the clock/clock muxes)              
+#CONFIG_EZYNQ_DDR_FREQ_MHZ =         545.0     # Actual DDR clock frequency in MHz, may be derived form CONFIG_EZYNQ_DDR_TARGET_FREQ_MHZ and clock multiplexer settings. Causes tWR to go higher
+#CONFIG_EZYNQ_DDR_FREQ_MHZ =         533.333374 # Actual DDR clock frequency in MHz, may be derived form CONFIG_EZYNQ_DDR_TARGET_FREQ_MHZ and clock multiplexer settings. Causes tWR to go higher
+CONFIG_EZYNQ_DDR_FREQ_MHZ =         533.3333 # Actual DDR clock frequency in MHz, may be derived form CONFIG_EZYNQ_DDR_TARGET_FREQ_MHZ and clock multiplexer settings
+CONFIG_EZYNQ_DDR_BANK_ADDR_MAP =    10       # DRAM address mapping: number of combined column and row addresses lower than BA0              
+CONFIG_EZYNQ_DDR_ARB_PAGE_BANK =    N        # Enable Arbiter prioritization based on page/bank match              
+CONFIG_EZYNQ_DDR_ECC =              Disabled # Enable ECC for the DDR memory
+CONFIG_EZYNQ_DDR_BUS_WIDTH =        32       # SoC DDR bus width
+CONFIG_EZYNQ_DDR_TRAIN_WRITE_LEVEL =0        # Automatically train write leveling during initialization
+CONFIG_EZYNQ_DDR_TRAIN_READ_GATE =  0        # Automatically train read gate timing during initialization
+CONFIG_EZYNQ_DDR_TRAIN_DATA_EYE =   0        # Automatically train data eye during initialization
+CONFIG_EZYNQ_DDR_CLOCK_STOP_EN =    0        # Enable clock stop
+CONFIG_EZYNQ_DDR_USE_INTERNAL_VREF =0        # Use internal Vref
 
-CONFIG_EZYNQ_DDR_ENABLE = 1
-CONFIG_EZYNQ_DDR_MEMORY_TYPE = DDR3
-CONFIG_EZYNQ_DDR_ECC = Disabled
-CONFIG_EZYNQ_DDR_BUS_WIDTH = 32
-CONFIG_EZYNQ_DDR_BL = 8
-CONFIG_EZYNQ_DDR_HIGH_TEMP = False # Normal
-CONFIG_EZYNQ_DDR_T_REFI_US = 7.8
-CONFIG_EZYNQ_DDR_T_RFC     = 300 # 350.0
-CONFIG_EZYNQ_DDR_T_WR = 15.0 # Write recovery time
+###### DDR Dependent ######
+CONFIG_EZYNQ_DDR_CL =                      7 # CAS read latency (in tCK)
+CONFIG_EZYNQ_DDR_CWL =                     6 # CAS write latency (in tCK)              
+CONFIG_EZYNQ_DDR_AL =                      0 # Posted CAS additive latency (in tCK)
+CONFIG_EZYNQ_DDR_BL =                      8 # Burst length, 16 is only supported for LPDDR2
+CONFIG_EZYNQ_DDR_HIGH_TEMP =           False # Normal # High temperature (influences refresh)
+CONFIG_EZYNQ_DDR_SPEED_BIN =      DDR3_1066F # Memory speed bin (currently not used - derive timing later)
+CONFIG_EZYNQ_DDR_DDR2_RTT =               75 # DDR2 on-chip termination, Ohm ('DISABLED','75','150','50'              
+CONFIG_EZYNQ_DDR_DDR3_RTT =               60 # DDR3 on-chip termination, Ohm ('DISABLED','60','120','40')# Does not include 20 & 30 - not clear if DDRC can use them with auto write leveling               
+CONFIG_EZYNQ_DDR_OUT_SLEW_NEG =           26 # Slew rate negative for DDR address/clock outputs
+CONFIG_EZYNQ_DDR_OUT_SLEW_POS =           26 # Slew rate positive for DDR address/clock outputs
+CONFIG_EZYNQ_DDR_OUT_DRIVE_NEG =          12 # Drive strength negative for DDR address/clock outputs
+CONFIG_EZYNQ_DDR_OUT_DRIVE_POS =          28 # Drive strength positive for DDR address/clock outputs
+CONFIG_EZYNQ_DDR_BIDIR_SLEW_NEG =         31 # Slew rate negative for driving DDR DQ/DQS signals
+CONFIG_EZYNQ_DDR_BIDIR_SLEW_POS =          6 # Drive strength positive for driving DDR DQ/DQS signals
+CONFIG_EZYNQ_DDR_BIDIR_DRIVE_NEG =        12 # Drive strength negative for driving DDR DQ/DQS signals
+CONFIG_EZYNQ_DDR_BIDIR_DRIVE_POS =        28 # Slew rate positive for driving DDR DQ/DQS signals
+###### DDR Datasheet (can be in include file) #######
+CONFIG_EZYNQ_DDR_DS_PARTNO = MT41K256M16RE125 # Memory part number  (currently not used - derive some parameters later)
+CONFIG_EZYNQ_DDR_DS_MEMORY_TYPE =  DDR3L  # DDR memory type: DDR3 (1.5V), DDR3L (1.35V), DDR2 (1.8V), LPDDR2 (1.2V)
+CONFIG_EZYNQ_DDR_DS_BANK_ADDR_COUNT =  3  # Number of DDR banks              
+CONFIG_EZYNQ_DDR_DS_ROW_ADDR_COUNT  = 15  # Number of DDR Row Address bits              
+CONFIG_EZYNQ_DDR_DS_COL_ADDR_COUNT  = 10  # Number of DDR Column address bits              
+CONFIG_EZYNQ_DDR_DS_DRAM_WIDTH =      16  # Memory chip bus width (not yet used)
+CONFIG_EZYNQ_DDR_DS_RCD =             7   # DESCRIPTION':'RAS to CAS delay (in tCK) 
+CONFIG_EZYNQ_DDR_DS_T_RCD =          13.1 # Activate to internal Read or Write (ns). May be used to calculate CONFIG_EZYNQ_DDR_DS_RCD automatically   
+CONFIG_EZYNQ_DDR_DS_RP =              7   # Row Precharge time (in tCK)              
+CONFIG_EZYNQ_DDR_DS_T_RP =           13.1 # Precharge command period (ns).  May be used to calculate CONFIG_EZYNQ_DDR_DS_RP automatically,   
+CONFIG_EZYNQ_DDR_DS_T_RC =           48.75# Activate to Activate or Refresh command period (ns)              
+CONFIG_EZYNQ_DDR_DS_T_RAS_MIN =      35.0 # Minimal Row Active time (ns)              
+CONFIG_EZYNQ_DDR_DS_T_FAW =          40.0 # Minimal running window for 4 page activates (ns)   
+CONFIG_EZYNQ_DDR_DS_T_RFC =         300.0 # Minimal Refresh-to-Activate or Refresh command period (ns)   
+CONFIG_EZYNQ_DDR_DS_T_WR =           15.0 # Write recovery time (ns)   
+CONFIG_EZYNQ_DDR_DS_T_REFI_US =       7.8 # Maximal average periodic refresh, microseconds. Will be automatically reduced if high temperature option is selected              
+CONFIG_EZYNQ_DDR_DS_RTP =             4 # Minimal Read-to-Precharge time (in tCK). Will use max of this and CONFIG_EZYNQ_DDR_DS_T_RTP/tCK              
+CONFIG_EZYNQ_DDR_DS_T_RTP =           7.5 # Minimal Read-to-Precharge time  (ns). Will use max of this divided by tCK and CONFIG_EZYNQ_DDR_DS_RTP   
+CONFIG_EZYNQ_DDR_DS_WTR =             4   # Minimal Write-to-Read time (in tCK). Will use max of this and CONFIG_EZYNQ_DDR_DS_T_WTR/tCK              
+CONFIG_EZYNQ_DDR_DS_T_WTR =           7.5 # Minimal Write-to-Read time  (ns). Will use max of this divided by tCK and CONFIG_EZYNQ_DDR_DS_WTR   
+CONFIG_EZYNQ_DDR_DS_XP =              4   # Minimal time from power down (DLL on) to any operation (in tCK)              
+CONFIG_EZYNQ_DDR_DS_T_DQSCK_MAX =     5.5 # LPDDR2 only. DQS output access time from CK (ns). Used for LPDDR2   
+CONFIG_EZYNQ_DDR_DS_CCD =             5   # DESCRIPTION':'CAS-to-CAS command delay (in tCK) (4 in Micron DS)              
+CONFIG_EZYNQ_DDR_DS_RRD =             6   # ACTIVATE-to-ACTIVATE minimal command period (in tCK)              
+CONFIG_EZYNQ_DDR_DS_T_RRD            10.0 # ACTIVATE-to-ACTIVATE minimal command period (ns). May be used to calculate CONFIG_EZYNQ_DDR_DS_RRD automatically   
+CONFIG_EZYNQ_DDR_DS_MRD =             4   # MODE REGISTER SET command period (in tCK)
+CONFIG_EZYNQ_DDR_DS_MOD =            12   # MODE REGISTER SET update delay (in tCK)              
+CONFIG_EZYNQ_DDR_DS_T_MOD =          15.0 # MODE REGISTER SET update delay  (ns).   
+CONFIG_EZYNQ_DDR_DS_T_WLMRD =        40.0 # Write leveling : time to the first DQS rising edge (ns).
+CONFIG_EZYNQ_DDR_DS_CKE =             3   # CKE min pulse width (in tCK)              
+CONFIG_EZYNQ_DDR_DS_T_CKE =           7.5 # CKE min pulse width (ns). # 5.625   
+CONFIG_EZYNQ_DDR_DS_CKSRE =           5   # Keep valid clock after self refresh/power down entry (in tCK)              
+CONFIG_EZYNQ_DDR_DS_T_CKSRE =        10.0 # Keep valid clock after self refresh/power down entry (ns).   
+CONFIG_EZYNQ_DDR_DS_CKSRX =           5   # Valid clock before self refresh, power down or reset exit (in tCK)              
+CONFIG_EZYNQ_DDR_DS_T_CKSRX =        10.0 # Valid clock before self refresh, power down or reset exit (ns).   
+CONFIG_EZYNQ_DDR_DS_ZQCS =           64   # ZQCS command: short calibration time (in tCK)              
+CONFIG_EZYNQ_DDR_DS_ZQCL =          512   # ZQCL command: long calibration time, including init (in tCK)
+CONFIG_EZYNQ_DDR_DS_INIT2 =           5   # LPDDR2 only: tINIT2 (in tCK): clock stable before CKE high
+CONFIG_EZYNQ_DDR_DS_T_INIT4_US =      1.0 # LPDDR2 only: tINIT4 (in us)- minimal idle time after RESET command.   
+CONFIG_EZYNQ_DDR_DS_T_INIT5_US =     10.0 # LPDDR2 only: tINIT5 (in us)- maximal duration of device auto initialization.   
+CONFIG_EZYNQ_DDR_DS_T_ZQINIT_US =     1.0 # LPDDR2 only: tZQINIT (in us)- ZQ initial calibration time.   
 
-CONFIG_EZYNQ_DDR_RTP = 4
-CONFIG_EZYNQ_DDR_T_RTP = 7.5
-CONFIG_EZYNQ_DDR_WTR = 4
-CONFIG_EZYNQ_DDR_T_WTR = 7.5
-CONFIG_EZYNQ_DDR_XP = 4 # power down (DLL on) to any operation, cycles
-CONFIG_EZYNQ_DDR_T_DQSCK_MAX = 5.5 # (LPDDR2 only)
-CONFIG_EZYNQ_DDR_T_WLMRD = 40.0 # Write leveling : time to the first DQS rising edge (ns)
-CONFIG_EZYNQ_DDR_T_CKE = 7.5 # 5.625
-CONFIG_EZYNQ_DDR_CKE =   3
-CONFIG_EZYNQ_DDR_T_CKSRE = 10.0
-CONFIG_EZYNQ_DDR_CKSRE =   5
-CONFIG_EZYNQ_DDR_T_CKSRX = 10.0
-CONFIG_EZYNQ_DDR_CKSRX =   5
-
-CONFIG_EZYNQ_DDR_ZQCS = 64
-CONFIG_EZYNQ_DDR_ZQCL = 512
-CONFIG_EZYNQ_DDR_T_MOD = 15.0
-CONFIG_EZYNQ_DDR_MOD =   12
-
-CONFIG_EZYNQ_DDR_INIT2 = 5 #(tCK)LPDDR2 ONLY
-CONFIG_EZYNQ_DDR_T_INIT4_US =  1.0 #(us) LPDDR2 ONLY
-CONFIG_EZYNQ_DDR_T_INIT5_US =  10.0 #(us) LPDDR2 ONLY
-CONFIG_EZYNQ_DDR_T_ZQINIT_US = 1.0 #(us) LPDDR2 ONLY
-
-
-
-
-CONFIG_EZYNQ_DDR_PARTNO = MT41K256M16RE125
-CONFIG_EZYNQ_DDR_DRAM_WIDTH = 16
-#CONFIG_EZYNQ_DDR_DEVICE_CAPACITY_MBITS = 4096 - can be calculated
-CONFIG_EZYNQ_DDR_SPEED_BIN = DDR3_1066F
-CONFIG_EZYNQ_DDR_TRAIN_WRITE_LEVEL = 0
-CONFIG_EZYNQ_DDR_TRAIN_READ_GATE = 0
-CONFIG_EZYNQ_DDR_TRAIN_DATA_EYE = 0
-CONFIG_EZYNQ_DDR_CLOCK_STOP_EN = 0
-CONFIG_EZYNQ_DDR_USE_INTERNAL_VREF = 0
-
-# undisclosed algorithm, get values from ps7*
-CONFIG_EZYNQ_DDR_OUT_SLEW_NEG = 26
-CONFIG_EZYNQ_DDR_OUT_SLEW_POS = 26
-CONFIG_EZYNQ_DDR_OUT_DRIVE_NEG = 12
-CONFIG_EZYNQ_DDR_OUT_DRIVE_POS = 28
-CONFIG_EZYNQ_DDR_BIDIR_SLEW_NEG = 31
-CONFIG_EZYNQ_DDR_BIDIR_SLEW_POS = 6
-CONFIG_EZYNQ_DDR_BIDIR_DRIVE_NEG = 12
-CONFIG_EZYNQ_DDR_BIDIR_DRIVE_POS = 28
-
-CONFIG_EZYNQ_DDR_FREQ_MHZ = 533.333333
-CONFIG_EZYNQ_DDR_BANK_ADDR_COUNT = 3
-CONFIG_EZYNQ_DDR_ROW_ADDR_COUNT = 15
-CONFIG_EZYNQ_DDR_COL_ADDR_COUNT = 10
-CONFIG_EZYNQ_DDR_BANK_ADDR_MAP  = 10 # number of combine CA and RA lower than BA0
-
-CONFIG_EZYNQ_DDR_ARB_PAGE_BANK  = N # Y # default N, testing
-
-
-
-CONFIG_EZYNQ_DDR_CL = 7
-CONFIG_EZYNQ_DDR_CWL = 6
-#CONFIG_EZYNQ_DDR_T_RCD = 7
-#CONFIG_EZYNQ_DDR_T_RP = 7
-
-#testing calculation of derivative parameters
-#CONFIG_EZYNQ_DDR_RCD = 7
-#CONFIG_EZYNQ_DDR_RP = 7
-CONFIG_EZYNQ_DDR_T_RP = 13.1
-CONFIG_EZYNQ_DDR_T_RCD = 13.1
-
-CONFIG_EZYNQ_DDR_CCD = 5 # 4 in Micron specs
-
-#will use max of two
-CONFIG_EZYNQ_DDR_RRD = 6 # 4 in Micron specs
-CONFIG_EZYNQ_DDR_T_RRD = 10.0
-
-CONFIG_EZYNQ_DDR_MRD = 4
-CONFIG_EZYNQ_DDR2_RTT = 75 # DISABLED, 75,150,50 - only used for DDR2              
-CONFIG_EZYNQ_DDR3_RTT = 60 # DISABLED, 60,120,40 - only used for DDR3              
-
-
-
-CONFIG_EZYNQ_DDR_T_RC = 48.75
-CONFIG_EZYNQ_DDR_T_RAS_MIN = 35.0
-CONFIG_EZYNQ_DDR_T_FAW = 40.0
-CONFIG_EZYNQ_DDR_AL = 0
-
+# Board/Soc  parameters to set phases manually (or as a starting point for automatic) Not yet processed
 CONFIG_EZYNQ_DDR_DQS_TO_CLK_DELAY_0 = 0.0
 CONFIG_EZYNQ_DDR_DQS_TO_CLK_DELAY_1 = 0.0
 CONFIG_EZYNQ_DDR_DQS_TO_CLK_DELAY_2 = 0.0
@@ -239,22 +239,3 @@ CONFIG_EZYNQ_DDR_CLOCK_0_PROPOGATION_DELAY = 160
 CONFIG_EZYNQ_DDR_CLOCK_1_PROPOGATION_DELAY = 160
 CONFIG_EZYNQ_DDR_CLOCK_2_PROPOGATION_DELAY = 160
 CONFIG_EZYNQ_DDR_CLOCK_3_PROPOGATION_DELAY = 160
-
-# PCW_PACKAGE_DDR_DQS_TO_CLK_DELAY_0 = -0.005
-# PCW_PACKAGE_DDR_DQS_TO_CLK_DELAY_1 = -0.004
-# PCW_PACKAGE_DDR_DQS_TO_CLK_DELAY_2 = -0.008
-# PCW_PACKAGE_DDR_DQS_TO_CLK_DELAY_3 = -0.058
-
-# PCW_PACKAGE_DDR_BOARD_DELAY0 = 0.075
-# PCW_PACKAGE_DDR_BOARD_DELAY1 = 0.076
-# PCW_PACKAGE_DDR_BOARD_DELAY2 = 0.082
-# PCW_PACKAGE_DDR_BOARD_DELAY3 = 0.100
- 
-#just software testing - remove later
-CONFIG_EZYNQ_DDR_SETREG_ctrl_reg1__reg_ddrc_selfref_en_PRE = 1
- 
-CONFIG_EZYNQ_DDR_SETREG_ctrl_reg1__reg_ddrc_lpr_num_entries_PRE = 5
-
-CONFIG_EZYNQ_DDR_SETREG_phy_wr_dqs_cfg0_PRE = 0xAAAAA
-CONFIG_EZYNQ_DDR_SETREG_phy_wr_dqs_cfg0__reg_phy_wr_dqs_slave_delay_PRE = 0x77
-
