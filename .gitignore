@@ -1,1 +1,7 @@
 *.pyc
+*.hex
+*.bin
+*.gz
+*.html
+*.log
+*~

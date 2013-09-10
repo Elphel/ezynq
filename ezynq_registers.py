@@ -24,6 +24,8 @@ __status__ = "Development"
 # new_sets.append((addr,data,mask,self.module_name,register_name,self.registers[register_name]))
 
 def print_html_reg_header(html_file, title='',show_bit_fields=True, show_comments=True,filter_fields=True):
+    if not html_file:
+        return
     if title:
         html_file.write('<h2>'+title+'</h2>\n')
     html_file.write('<table border="1">\n')
@@ -35,9 +37,14 @@ def print_html_reg_header(html_file, title='',show_bit_fields=True, show_comment
         html_file.write('<th>Comments</th>')
     html_file.write('</tr>')
 def print_html_reg_footer(html_file):
+    if not html_file:
+        return
     html_file.write('</table>\n')
 
 def print_html_registers(html_file, reg_sets, show_bit_fields=True, show_comments=True,filter_fields=True):
+    if not html_file:
+        return
+
 #            new_sets.append((addr,data,mask,self.module_name,register_name,self.registers[register_name]))
     current_reg_state={} #address: (data,mask)
     for addr, data, mask, module_name, register_name, r_def in reg_sets:

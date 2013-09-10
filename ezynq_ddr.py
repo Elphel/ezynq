@@ -41,28 +41,34 @@ class EzynqDDR:
         self.DDRC_DEFS=  ezynq_ddrc_defs.DDRC_DEFS
         self.DDRIOB_DEFS=ezynq_ddriob_def.DDRIOB_DEFS
         self.DDR_CFG_DEFS=ezynq_ddrcfg_defs.DDR_CFG_DEFS
-        self.ddrc_register_sets= {'PRE': ezynq_registers.EzynqRegisters(self.DDRC_DEFS,0,regs_masked,permit_undefined_bits), # all now start from the same registers
-                                  'MAIN':ezynq_registers.EzynqRegisters(self.DDRC_DEFS,0,regs_masked,permit_undefined_bits),
-                                  'POST':ezynq_registers.EzynqRegisters(self.DDRC_DEFS,0,regs_masked,permit_undefined_bits)}
-        self.ddriob_register_sets= {'PRE': ezynq_registers.EzynqRegisters(self.DDRIOB_DEFS,0,regs_masked,permit_undefined_bits), # all now start from the same registers
-                                    'MAIN':ezynq_registers.EzynqRegisters(self.DDRIOB_DEFS,0,regs_masked,permit_undefined_bits),
-                                    'POST':ezynq_registers.EzynqRegisters(self.DDRIOB_DEFS,0,regs_masked,permit_undefined_bits)}
-#        self.set_names=('PRE','MAIN','POST')
-        self.set_ddrc_attribs=(
-                          {'NAME':'PRE','POSTFIX':'_PRE','PREFIX':'CONFIG_EZYNQ_DDR_SETREG_','TITLE':"DDR Controller Register Pre-Set"},
-                          {'NAME':'MAIN','POSTFIX':'','PREFIX':'CONFIG_EZYNQ_DDR_SETREG_','TITLE':"DDR Controller Register Set"},
-                          {'NAME':'POST','POSTFIX':'_POST','PREFIX':'CONFIG_EZYNQ_DDR_SETREG_','TITLE':"DDR Controller Register Post-Set"})
-        self.set_ddiob_attribs=(
-                          {'NAME':'PRE','POSTFIX':'_PRE','PREFIX':'CONFIG_EZYNQ_DDRIOB_SETREG_','TITLE':"DDR I/O Buffer Register Pre-Set"},
-                          {'NAME':'MAIN','POSTFIX':'','PREFIX':'CONFIG_EZYNQ_DDRIOB_SETREG_','TITLE':"DDR I/O Buffer Register Set"},
-                          {'NAME':'POST','POSTFIX':'_POST','PREFIX':'CONFIG_EZYNQ_DDRIOB_SETREG_','TITLE':"DDR I/O Buffer Register Post-Set"})
-        self.postfixes=[attrib['POSTFIX'] for attrib in self.set_ddrc_attribs]
+#         self.ddrc_register_sets= {'PRE': ezynq_registers.EzynqRegisters(self.DDRC_DEFS,0,regs_masked,permit_undefined_bits), # all now start from the same registers
+#                                   'MAIN':ezynq_registers.EzynqRegisters(self.DDRC_DEFS,0,regs_masked,permit_undefined_bits),
+#                                   'POST':ezynq_registers.EzynqRegisters(self.DDRC_DEFS,0,regs_masked,permit_undefined_bits)}
+#         self.ddriob_register_sets= {'PRE': ezynq_registers.EzynqRegisters(self.DDRIOB_DEFS,0,regs_masked,permit_undefined_bits), # all now start from the same registers
+#                                     'MAIN':ezynq_registers.EzynqRegisters(self.DDRIOB_DEFS,0,regs_masked,permit_undefined_bits),
+#                                     'POST':ezynq_registers.EzynqRegisters(self.DDRIOB_DEFS,0,regs_masked,permit_undefined_bits)}
+#         self.set_ddrc_attribs=(
+#                           {'NAME':'PRE','POSTFIX':'_PRE','PREFIX':'CONFIG_EZYNQ_DDR_SETREG_','TITLE':"DDR Controller Register Pre-Set"},
+#                           {'NAME':'MAIN','POSTFIX':'','PREFIX':'CONFIG_EZYNQ_DDR_SETREG_','TITLE':"DDR Controller Register Set"},
+#                           {'NAME':'POST','POSTFIX':'_POST','PREFIX':'CONFIG_EZYNQ_DDR_SETREG_','TITLE':"DDR Controller Register Post-Set"})
+#         self.set_ddiob_attribs=(
+#                           {'NAME':'PRE','POSTFIX':'_PRE','PREFIX':'CONFIG_EZYNQ_DDRIOB_SETREG_','TITLE':"DDR I/O Buffer Register Pre-Set"},
+#                           {'NAME':'MAIN','POSTFIX':'','PREFIX':'CONFIG_EZYNQ_DDRIOB_SETREG_','TITLE':"DDR I/O Buffer Register Set"},
+#                           {'NAME':'POST','POSTFIX':'_POST','PREFIX':'CONFIG_EZYNQ_DDRIOB_SETREG_','TITLE':"DDR I/O Buffer Register Post-Set"})
+#         self.postfixes=[attrib['POSTFIX'] for attrib in self.set_ddrc_attribs]
+
         self.features=ezynq_feature_config.EzynqFeatures(self.DDR_CFG_DEFS,0) #DDR_CFG_DEFS
+        self.ddrc_register_set=  ezynq_registers.EzynqRegisters(self.DDRC_DEFS,0,regs_masked,permit_undefined_bits)
+        self.ddriob_register_set=ezynq_registers.EzynqRegisters(self.DDRIOB_DEFS,0,regs_masked,permit_undefined_bits)
+        
+        
     def parse_parameters(self,raw_configs):
         self.features.parse_features(raw_configs)
     def check_missing_features(self):
         self.features.check_missing_features()
     def html_list_features(self,html_file):
+        if not html_file:
+            return
         html_file.write('<h2>DDR memory configuration parameters</h2>\n')
         self.features.html_list_features(html_file)
     def calculate_dependent_pars(self):
@@ -250,17 +256,20 @@ class EzynqDDR:
         return (address_mapping,page_mask)
 
     def get_new_register_sets(self):
-        return self.ddrc_register_sets['MAIN'].get_register_sets(True,True)
+#        return self.ddrc_register_sets['MAIN'].get_register_sets(True,True)
+        return self.ddrc_register_set.get_register_sets(True,True)
     
-    def ddr_init_memory(self,current_reg_sets,force=False,warn=False): # will program to sequence 'MAIN'
+    def ddr_init_memory(self,current_reg_sets,force=False,warn=False):
 #        print 'ddr_init_memory, len(current_reg_sets)=',len(current_reg_sets),'\n'
         if not self.features.get_par_value('ENABLE'):
             print 'DDR configuration is disabled'
             # do some stuff (write regs, output)
             return
         
-        ddriob_register_set=self.ddriob_register_sets['MAIN']
-        ddrc_register_set=  self.ddrc_register_sets['MAIN']
+#        ddriob_register_set=self.ddriob_register_sets['MAIN']
+#        ddrc_register_set=  self.ddrc_register_sets['MAIN']
+        ddriob_register_set=self.ddriob_register_set
+        ddrc_register_set=  self.ddrc_register_set
         ddriob_register_set.set_initial_state(current_reg_sets, True)# start from the current registers state
         
         self.ddr_init_ddriob(force,warn) # will program to sequence 'MAIN'
@@ -270,7 +279,8 @@ class EzynqDDR:
         return ddrc_register_set.get_register_sets(True,True)
 
     def ddr_init_ddrc(self,force=False,warn=False): # will program to sequence 'MAIN'
-        ddrc_register_set=self.ddrc_register_sets['MAIN']
+#        ddrc_register_set=self.ddrc_register_sets['MAIN']
+        ddrc_register_set=self.ddrc_register_set
         is_LPDDR2=   (self.features.get_par_value('MEMORY_TYPE')=='LPDDR2')
         is_DDR3L=    (self.features.get_par_value('MEMORY_TYPE')=='DDR3L')
         is_DDR3_15=  (self.features.get_par_value('MEMORY_TYPE')=='DDR3')
@@ -1324,7 +1334,8 @@ class EzynqDDR:
 
     def ddr_init_ddriob(self,force=False,warn=False): # will program to sequence 'MAIN'
 #        print 'ddr_init_ddriob\n'
-        ddriob_register_set=self.ddriob_register_sets['MAIN']
+#        ddriob_register_set=self.ddriob_register_sets['MAIN']
+        ddriob_register_set=self.ddriob_register_set
 # DDRIOB configuration UG585.268
         is_LPDDR2=   (self.features.get_par_value('MEMORY_TYPE')=='LPDDR2')
         is_DDR3L=    (self.features.get_par_value('MEMORY_TYPE')=='DDR3L')
@@ -1437,6 +1448,8 @@ class EzynqDDR:
                                                               ('nref_opt4',1),
                                                               ('pref_opt2',0),
                                                               ('update_control',0)),force,warn)        
+  
+ #TODO: Remove? 
             
     def parse_ddrc_raw_register_set(self,raw_configs,qualifier_char,force=True,warn=True):
 #        for i,attribs in enumerate(self.set_attribs):
@@ -1455,6 +1468,8 @@ class EzynqDDR:
             postfix= attribs['POSTFIX']
             reg_set.parse_options_set(raw_configs,prefix,postfix,self.postfixes,qualifier_char,force,warn) #force - readonly/undefined fields, warn: data does not fit in the bit field
     def print_ddrc_html_registers(self, html_file, show_bit_fields=True, show_comments=True,filter_fields=True):
+        if not html_file:
+            return
         for attribs in self.set_ddrc_attribs:
             reg_set_name=attribs['NAME']
             reg_set= self.ddrc_register_sets[reg_set_name]
@@ -1463,6 +1478,8 @@ class EzynqDDR:
                 reg_set.print_html_registers(html_file, show_bit_fields, show_comments,filter_fields)
                 html_file.write('<br/>\n')
     def print_ddriob_html_registers(self, html_file, show_bit_fields=True, show_comments=True,filter_fields=True):
+        if not html_file:
+            return
         for attribs in self.set_ddrc_attribs:
             reg_set_name=attribs['NAME']
             reg_set= self.ddrc_register_sets[reg_set_name]

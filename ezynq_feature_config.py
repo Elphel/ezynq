@@ -206,6 +206,8 @@ class EzynqFeatures:
             
                                
     def html_list_features(self,html_file):
+        if not html_file:
+            return
         html_file.write('<table border="1">\n')
         html_file.write('<tr><th>Configuration name</th><th>Value</th><th>Type/<br/>Choices</th><th>Mandatory</th><th>Origin</th><th>Default</th><th>Description</th></tr>\n')
 #        print  self.get_par_names()

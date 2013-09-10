@@ -25,8 +25,7 @@ __status__ = "Development"
 SLCR_CLK_DEFS={ #not all fields are defined currently
     'BASE_ADDR':(0xF8000000,), # SLCR
     'MODULE_NAME':('slcr',),
-
-      'scl':                      {'OFFS': 0x000,'DFLT':0x0,'RW':'RW,
+      'scl':                      {'OFFS': 0x000,'DFLT':0x0,'RW':'RW',
                                    'COMMENTS':'Secure configurqation lock (no way to unlock until POR)',
                                    'FIELDS':{
                   'lock':                     {'r':(0,0),'d':0,  'c':'1 - lock (locker on R) write to scl,pss_rst,apu_ctrl,wdt_clk_sel'}}},
@@ -95,7 +94,7 @@ SLCR_CLK_DEFS={ #not all fields are defined currently
                                    'FIELDS':{
                   'reserved1':                {'r':(22,31),'d':0,     'c':'reserved'},
                   'lock_cnt':                 {'r':(12,21),'d':0x177, 'c':'Lock status bit delay (in clock cycles)'}, # reference or output clock cycles? 0xfa
-                  'pll_cp':                   {'r':( 8:11),'d':0xe,   'c':'PLL charge pump control'},          # 0x2
+                  'pll_cp':                   {'r':( 8,11),'d':0xe,   'c':'PLL charge pump control'},          # 0x2
                   'pll_res':                  {'r':( 4, 7),'d':0xa,   'c':'PLL loop filter resistor control'}, # 0x2
                   'reserved2':                {'r':( 0, 3),'d':0,     'c':'reserved'}}},
     
@@ -104,7 +103,7 @@ SLCR_CLK_DEFS={ #not all fields are defined currently
                                    'FIELDS':{
                   'reserved1':                {'r':(22,31),'d':0,     'c':'reserved'},
                   'lock_cnt':                 {'r':(12,21),'d':0x177, 'c':'Lock status bit delay (in clock cycles)'}, # reference or output clock cycles? 0x12c
-                  'pll_cp':                   {'r':( 8:11),'d':0xe,   'c':'PLL charge pump control'},          # 0x2
+                  'pll_cp':                   {'r':( 8,11),'d':0xe,   'c':'PLL charge pump control'},          # 0x2
                   'pll_res':                  {'r':( 4, 7),'d':0xa,   'c':'PLL loop filter resistor control'}, # 0x2
                   'reserved2':                {'r':( 0, 3),'d':0,     'c':'reserved'}}},
 
@@ -113,7 +112,7 @@ SLCR_CLK_DEFS={ #not all fields are defined currently
                                    'FIELDS':{
                   'reserved1':                {'r':(22,31),'d':0,     'c':'reserved'},
                   'lock_cnt':                 {'r':(12,21),'d':0x177, 'c':'Lock status bit delay (in clock cycles)'}, # reference or output clock cycles? 0x145
-                  'pll_cp':                   {'r':( 8:11),'d':0xe,   'c':'PLL charge pump control'},                 # 0x2
+                  'pll_cp':                   {'r':( 8,11),'d':0xe,   'c':'PLL charge pump control'},                 # 0x2
                   'pll_res':                  {'r':( 4, 7),'d':0xa,   'c':'PLL loop filter resistor control'},        # 0xc
                   'reserved2':                {'r':( 0, 3),'d':0,     'c':'reserved'}}},
 
@@ -600,7 +599,167 @@ SLCR_CLK_DEFS={ #not all fields are defined currently
                                    'FIELDS':{
                   'reserved':                 {'r':( 1,31),'d':0, 'c':'reserved'},
                   'OCM_rst':                  {'r':( 0, 0),'d':0, 'c':'OCM subsystem reset: 0 - normal, 1 - reset'}}},
-#next register set is OFFS=0x240 
-  
+      'fpga_rst_ctrl':            {'OFFS': 0x240,'DFLT':0x01f33f0f,'RW':'RW', #0xffffffff->0x0
+                                   'COMMENTS':'FPGA software reset control',
+                                   'FIELDS':{
+                  'reserved_3':               {'r':(25,31),'d':0,   'c':'reserved'}, #0x7f->0x0
+                  'fpga_acp_rst':             {'r':(24,24),'d':0x1, 'c':'reserved'}, #0x1 ->0x0
+                  'fpga_axds3_rst':           {'r':(23,23),'d':0x1, 'c':'reserved'}, #0x1 ->0x0
+                  'fpga_axds2_rst':           {'r':(22,22),'d':0x1, 'c':'reserved'}, #0x1 ->0x0
+                  'fpga_axds1_rst':           {'r':(21,21),'d':0x1, 'c':'reserved'}, #0x1 ->0x0
+                  'fpga_axds0_rst':           {'r':(20,20),'d':0x1, 'c':'reserved'}, #0x1 ->0x0
+                  'reserved_2':               {'r':(18,19),'d':0,   'c':'reserved'}, #0x3 ->0x0
+                  'fssw1_fpga_rst':           {'r':(17,17),'d':0x1, 'c':'reserved'}, #0x1 ->0x0
+                  'fssw0_fpga_rst':           {'r':(16,16),'d':0x1, 'c':'reserved'}, #0x1 ->0x0
+                  'reserved_1':               {'r':(14,15),'d':0,   'c':'reserved'}, #0x3 ->0x0
+                  'fpga_fmsw1_rst':           {'r':(13,13),'d':0x1, 'c':'reserved'}, #0x1 ->0x0
+                  'fpga_fmsw0_rst':           {'r':(12,12),'d':0x1, 'c':'reserved'}, #0x1 ->0x0
+                  'fpga_dma3_rst':            {'r':(11,11),'d':0x1, 'c':'reserved'}, #0x1 ->0x0
+                  'fpga_dma2_rst':            {'r':(10,10),'d':0x1, 'c':'reserved'}, #0x1 ->0x0
+                  'fpga_dma1_rst':            {'r':( 9, 9),'d':0x1, 'c':'reserved'}, #0x1 ->0x0
+                  'fpga_dma0_rst':            {'r':( 8, 8),'d':0x1, 'c':'reserved'}, #0x1 ->0x0
+                  'reserved':                 {'r':( 4, 7),'d':0,   'c':'reserved'}, #0xf ->0x0
+                  'fpga3_out_rst':            {'r':( 3, 3),'d':0x1, 'c':'PL reset3 (FCLKRESETN3): 0 - deassert (logic high state), 1 - assert (logic low state)'}, #0x1 ->0x0
+                  'fpga2_out_rst':            {'r':( 2, 2),'d':0x1, 'c':'PL reset2 (FCLKRESETN2): 0 - deassert (logic high state), 1 - assert (logic low state)'}, #0x1 ->0x0
+                  'fpga1_out_rst':            {'r':( 1, 1),'d':0x1, 'c':'PL reset1 (FCLKRESETN1): 0 - deassert (logic high state), 1 - assert (logic low state)'}, #0x1 ->0x0
+                  'fpga0_out_rst':            {'r':( 0, 0),'d':0x1, 'c':'PL reset0 (FCLKRESETN0): 0 - deassert (logic high state), 1 - assert (logic low state)'}}}, #0x1 ->0x0
+
+      'a9_cpu_rst_ctrl':             {'OFFS': 0x244,'DFLT':0,'RW':'RW', #  Never set
+                                   'COMMENTS':'CPU reset and clock control',
+                                   'FIELDS':{
+                  'reserved1':                {'r':( 9,31),'d':0, 'c':'reserved'},
+                  'peri_rst':                 {'r':( 8, 8),'d':0, 'c':'CPU peripheral soft reset (0 normal, 1 - hold in reset)'},
+                  'reserved2':                {'r':( 6, 7),'d':0, 'c':'reserved'},
+                  'a9_clkstop1':              {'r':( 5, 5),'d':0, 'c':'CPU 1 clock stop control: 0 - run, 1 - stop'},
+                  'a9_clkstop0':              {'r':( 4, 4),'d':0, 'c':'CPU 0 clock stop control: 0 - run, 1 - stop'},
+                  'reserved3':                {'r':( 3, 2),'d':0, 'c':'reserved'},
+                  'a9_rst1':                  {'r':( 1, 1),'d':0, 'c':'CPU 1 software reset control: 0 - no reset, 1 - hold in reset'},
+                  'a9_rst0':                  {'r':( 0, 0),'d':0, 'c':'CPU 0 software reset control: 0 - no reset, 1 - hold in reset'}}},
+
+      'ps_awdt_ctrl':             {'OFFS': 0x24c,'DFLT':0,'RW':'RW', #  Never set
+                                   'COMMENTS':'CPU reset and clock control',
+                                   'FIELDS':{
+                  'reserved':                 {'r':( 2,31),'d':0, 'c':'reserved'},
+                  'ctrl1':                    {'r':( 1, 1),'d':0, 'c':'Select target for APU watchdog timer 1: 0 - same as PS_SRST_B, 1 - CPU associated with this WDT'},
+                  'ctrl0':                    {'r':( 0, 0),'d':0, 'c':'Select target for APU watchdog timer 0: 0 - same as PS_SRST_B, 1 - CPU associated with this WDT'}}},
+      'reboot_status':            {'OFFS': 0x258,'DFLT':0x00400000,'RW':'RW', #  Never set
+                                   'COMMENTS':'Reboot status, persistent through reboots (but POR)',
+                                   'FIELDS':{
+                  'reboot_state':             {'r':(24,31),'d':0, 'c':'1 byte data that is preserved through all resets but POR. RBL puts last known reset reason here'},
+                  'reserved':                 {'r':(23,23),'d':0, 'c':'reserved'},
+                  'por':                      {'r':(22,22),'d':0x1, 'c':'Last reset was POR (written by RBL)'}, 
+                  'srst_b':                   {'r':(21,21),'d':0, 'c':'Last reset was SRST_B  (written by RBL)'},
+                  'dbg_rst':                  {'r':(20,20),'d':0, 'c':'Last reset was by debug system  (written by RBL)'},
+                  'slc_rst':                  {'r':(19,19),'d':0, 'c':'Last reset was SLC soft reset (written by RBL)'},
+                  'awdt1_rst':                {'r':(18,18),'d':0, 'c':'Last reset was by APU watchdog timer1 (written by RBL)'},
+                  'awdt0_rst':                {'r':(17,17),'d':0, 'c':'Last reset was by APU watchdog timer0 (written by RBL)'},
+                  'swdt_rst':                 {'r':(16,16),'d':0, 'c':'Last reset was by system watchdog timeout (written by RBL)'},
+                  'bootrom_error_code':       {'r':( 0,15),'d':0, 'c':'RBL error code (written by RBL)'}}},
+      'boot_mode':                {'OFFS': 0x25c,'RW':'M', #
+                                   'COMMENTS':'Boot mode strapping pins state',
+                                   'FIELDS':{
+                  'reserved':                 {'r':( 5,31),'d':0,          'c':'reserved'},
+                  'pll_bypass':               {'r':( 4, 4),'d':0, 'm':'R', 'c':'1 PLL is enabled, outputs routed to clock generators, 0 - PLLs are diusabled and bypassed'}, 
+                  'boot_mode':                {'r':( 0, 3),       'm':'R', 'c':'boot mode pins as sampled'}}},
+      'apu_ctrl':                 {'OFFS': 0x300,'DFLT':0,'RW':'RW', #  Never set
+                                   'COMMENTS':'APU control',
+                                   'FIELDS':{
+                  'reserved':                 {'r':( 3,31),'d':0, 'c':'reserved'},
+                  'cfgsdisable':              {'r':( 2, 2),'d':0, 'c':'Disable write to some system control processor registers and some GIC registers. Reset by POR only'},
+                  'cp15sdiasble':             {'r':( 0, 1),'d':0, 'c':'Disable write to some system control processor (CP15) registers in each processor. Reset by POR only'}}},
+
+      'wdt_clk_sel':              {'OFFS': 0x304,'DFLT':0,'RW':'RW', #  Never set
+                                   'COMMENTS':'SWDT source clock select',
+                                   'FIELDS':{
+                  'reserved':                 {'r':( 1,31),'d':0, 'c':'reserved'},
+                  'sel':                      {'r':( 0, 1),'d':0, 'c':'SWDT clock select: 0 - internal CPU_1x, 1 - PL via EMIO or MIO pin'}}},
     
+      'ddr_urgent':               {'OFFS': 0x600, 'DFLT':0,'RW':'RW',
+                                   'COMMENTS':'DDR Urgent Control',
+                                   'FIELDS':{
+                  'reserved':                 {'r':( 8,31),'d':0, 'c':'reserved'},
+                  's3_arurgent':              {'r':( 7, 7),'d':0, 'c':'Read port 3 - set high priority'},
+                  's2_arurgent':              {'r':( 6, 6),'d':0, 'c':'Read port 2 - set high priority'},
+                  's3_arurgent':              {'r':( 5, 5),'d':0, 'c':'Read port 1 - set high priority'},
+                  's0_arurgent':              {'r':( 4, 4),'d':0, 'c':'Read port 0 - set high priority'},
+                  's3_awurgent':              {'r':( 3, 3),'d':0, 'c':'Write port 3 - set high priority'},
+                  's2_awurgent':              {'r':( 2, 2),'d':0, 'c':'Write port 2 - set high priority'},
+                  's1_awurgent':              {'r':( 1, 1),'d':0, 'c':'Write port 1 - set high priority'},
+                  's0_awurgent':              {'r':( 0, 0),'d':0, 'c':'Write port 0 - set high priority'}}},
+                  
+      'ddr_cal_start':            {'OFFS': 0x60c,'DFLT':0,'RW':'RW',
+                                   'COMMENTS':'DDR Calibration start',
+                                   'FIELDS':{
+                  'reserved':                 {'r':( 2,31),'d':0, 'c':'reserved'},
+                  'start_cal_dll':            {'r':( 1, 1),'d':0, 'c':'1 - Start DLL calibration command (self-clearing). Only needed if auto calibration is disabled in reg_ddrc_dis_dll_calib'},
+                  'start_cal_short':          {'r':( 0, 0),'d':0, 'c':'1 - Start ZQ calibration short command (self-clearing). Only needed if auto calibration is disabled in reg_ddrc_dis_auto_dq'}}},
+                  
+      'ddr_ref_start':            {'OFFS': 0x614,'DFLT':0,'RW':'RW',
+                                   'COMMENTS':'DDR Refresh start',
+                                   'FIELDS':{
+                  'reserved':                 {'r':( 1,31),'d':0, 'c':'reserved'},
+                  'start_ref':                {'r':( 0, 0),'d':0, 'c':'1 - Start Refresh (self-clearing). Only needed if auto refresh is disabled in reg_ddrc_dis_auto_refresh'}}},
+      'ddr_cmd_sta':              {'OFFS': 0x618,'DFLT':0,'RO':'RW',
+                                   'COMMENTS':'DDR Command queue state',
+                                   'FIELDS':{
+                  'reserved':                 {'r':( 1,31),'d':0, 'c':'reserved'},
+                  'vmd_q_empty':              {'r':( 0, 0),'d':0, 'm':'R', 'c':'0 - no commands fro DDRC are queued, 1 - commands pending'}}},
+      'ddr_urgent_sel':           {'OFFS': 0x61c,'DFLT':0,'RW':'RW',
+                                   'COMMENTS':'DDR Urgent select',
+                                   'FIELDS':{
+                  'reserved':                 {'r':(16,31),'d':0, 'c':'reserved'},
+                  's3_ar_qos_mode':           {'r':(14,15),'d':0, 'c':'Select DDRC s3_arurgent source: 0 - ddr_urgent_val reg. bit, 1 - s3_arqos bit, 2 - fabric ddr_arb[3]'},
+                  's2_ar_qos_mode':           {'r':(12,13),'d':0, 'c':'Select DDRC s2_arurgent source: 0 - ddr_urgent_val reg. bit, 1 - s2_arqos bit, 2 - fabric ddr_arb[2]'},
+                  's1_ar_qos_mode':           {'r':(10,11),'d':0, 'c':'Select DDRC s1_arurgent source: 0 - ddr_urgent_val reg. bit, 1 - s1_arqos bit, 2 - fabric ddr_arb[1]'},
+                  's0_ar_qos_mode':           {'r':( 8, 9),'d':0, 'c':'Select DDRC s0_arurgent source: 0 - ddr_urgent_val reg. bit,                   2 - fabric ddr_arb[0]'},
+                  's3_aw_qos_mode':           {'r':( 6, 7),'d':0, 'c':'Select DDRC s3_awurgent source: 0 - ddr_urgent_val reg. bit, 1 - s3_awqos bit, 2 - fabric ddr_arb[3]'},
+                  's2_aw_qos_mode':           {'r':( 4, 5),'d':0, 'c':'Select DDRC s2_awurgent source: 0 - ddr_urgent_val reg. bit, 1 - s3_awqos bit, 2 - fabric ddr_arb[2]'},
+                  's1_aw_qos_mode':           {'r':( 2, 3),'d':0, 'c':'Select DDRC s1_awurgent source: 0 - ddr_urgent_val reg. bit, 1 - s3_awqos bit, 2 - fabric ddr_arb[1]'},
+                  's0_aw_qos_mode':           {'r':( 0, 1),'d':0, 'c':'Select DDRC s0_awurgent source: 0 - ddr_urgent_val reg. bit,                   2 - fabric ddr_arb[0]'}}},
+      'ddr_dfi_status':           {'OFFS': 0x620,'RW':'M', #
+                                   'COMMENTS':'DDR DFI status',
+                                   'FIELDS':{
+                  'reserved':                 {'r':( 1,31),'d':0,         'c':'reserved'},
+                  'dfi_cal_st':               {'r':( 0, 3),'d':0,'m':'R', 'c':'Not clear'}}},
+                  
     }
+MIO_PINS_DEFS={'mio_pin_%02i'%i:{'OFFS': 0x700+4*i,
+                             'DFLT':0x1601,
+                             'RW':'RW',
+                             'COMMENTS':'MIO pin %i control'%i,
+                             'FIELDS':{
+                  'reserved':                 {'r':(14,31),'d':0,   'c':'reserved'},
+                  'disable_rcv':              {'r':(13,13),'d':0,   'c':'disable HSTL input buffer'},
+                  'pullup':                   {'r':(12,12),'d':0x1, 'c':'1 - enable pullup, 0 - disable'},
+                  'io_type':                  {'r':( 9,11),'d':0x3, 'c':'1 - LVCMOS18,2 - LVCMOS25,3 -LVCMOS33, 4 - HSTL'},
+                  'fast':                     {'r':( 8, 8),'d':0,   'c':'Output driver edge rate:1 - fast, 0 - slow'},
+                  'l3_sel':                   {'r':( 5, 7),'d':0,   'c':'level 3 mux select'},
+                  'l2_sel':                   {'r':( 3, 4),'d':0,   'c':'level 2 mux select'},
+                  'l1_sel':                   {'r':( 2, 2),'d':0,   'c':'level 1 mux select'},
+                  'l0_sel':                   {'r':( 1, 1),'d':0,   'c':'level 0 mux select'},
+                  'tri_enable':               {'r':( 0, 0),'d':1,   'c':'1 - enable tri-state, 0 - disable'}}}
+                               for i in range (54)}   
+MIO_PINS_DEFS['BASE_ADDR']=(0xF8000000,) # SLCR
+MIO_PINS_DEFS['MODULE_NAME']=('slcr',)
+    
+#UG585: table 25-6: multiplier (PLL_FDIV), PLL_CP, PLL_RES, LOCK_CNT
+PLL_PARS=(( 13,    2,6,750),
+          ( 14,    2,6,700),
+          ( 15,    2,6,650),
+          ( 16,    2,10,625),
+          ( 17,    2,10,575),
+          ( 18,    2,10,550),
+          ( 19,    2,10,525),
+          ( 20,    2,12,500),
+          ( 21,    2,12,475),
+          ( 22,    2,12,450),
+          ( 23,    2,12,425),
+          ((24,25),2,12,400),
+          ( 26,    2,12,375),
+          ((27,28),2,12,350),
+          ((29,30),2,12,325),
+          ((31,33),2,12,300),
+          ((34,36),2,12,275),
+          ((37,40),2,12,250),
+          ((41,47),3,12,250),
+          ((48,66),3,12,250))
