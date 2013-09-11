@@ -166,6 +166,15 @@ MIO_TEMPLATES = {
       ((10, 14, 18, 22, 26, 30, 34, 38, 42, 46, 50), (9, 13, 17, 21, 25, 29, 33, 37, 41, 45, 49, 53))},
      {'NAME':'TX', 'TRISTATE':False, 'FAST':False, 'PULLUP':False, 'L0':0, 'L1':0, 'L2':0, 'L3':1, 'PINS':
       ((11, 15, 19, 23, 27, 31, 35, 39, 43, 47, 51), (8, 12, 16, 20, 24, 28, 32, 36, 40, 44, 48, 52))}),
+
+  
+  'CAN_ECLK':( # Docs say that any MIO pin can be used, but 7,8 are out only, so probably they can not be assigned
+     {'NAME':'ECLK', 'TRISTATE':True,  'FAST':False, 'PULLUP':True,   'L0':0, 'L1':0, 'L2':0, 'L3':0, 'PINS':(
+       (0,1,2,3,4,5,6,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,
+        31,32,33,34,35,36,37.38,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53),
+       (0,1,2,3,4,5,6,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,
+        31,32,33,34,35,36,37.38,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53))},),    
+                 
   'UART':(
      {'NAME':'RX', 'TRISTATE':True,  'FAST':False, 'PULLUP':False, 'L0':0, 'L1':0, 'L2':0, 'L3':7, 'PINS':
       ((10, 14, 18, 22, 26, 30, 34, 38, 42, 46, 50), (9, 13, 17, 21, 25, 29, 33, 37, 41, 45, 49, 53))},
@@ -211,7 +220,7 @@ MIO_TEMPLATES = {
 MIO_INTERFACES=[
     {'CONFIG_NAME':'CONFIG_EZYNQ_QUADSPI_0',     'IFACE':'QUADSPI',      'CHANNEL':0},
     {'CONFIG_NAME':'CONFIG_EZYNQ_QUADSPI_1',     'IFACE':'QUADSPI_FBCLK','CHANNEL':1},
-    {'CONFIG_NAME':'CONFIG_EZYNQ_QUADSPI_FBCLK', 'IFACE':'ETH',          'CHANNEL':0},
+    {'CONFIG_NAME':'CONFIG_EZYNQ_QUADSPI_FBCLK', 'IFACE':'QUADSPI_FBCLK','CHANNEL':0},
     {'CONFIG_NAME':'CONFIG_EZYNQ_MIO_ETH_0',     'IFACE':'ETH',          'CHANNEL':0},                
     {'CONFIG_NAME':'CONFIG_EZYNQ_MIO_ETH_1',     'IFACE':'ETH',          'CHANNEL':1},                
     {'CONFIG_NAME':'CONFIG_EZYNQ_MIO_ETH_MDIO',  'IFACE':'MDIO',         'CHANNEL':0},
@@ -726,7 +735,15 @@ class EzynqMIO:
             print '\n===== mio === '
             for i, mio_pin in enumerate(self.mio):
                 print i, mio_pin
-            print mio_dflts  
+            print mio_dflts
+              
+    def get_used_interfaces(self):
+#        return self.mio_interfaces # all data
+#        for iface in self.mio_interfaces:
+#            print iface
+#        return {iface['NAME']:iface['CHANNEL'] for iface in self.mio_interfaces}
+        return [{'NAME':iface['NAME'],'CHANNEL':iface['CHANNEL'],'PIN':iface['IFACE'].items()[0][1]['PIN']} for iface in self.mio_interfaces]
+
 
 ###### not used as they are prohibited by RBL
 # def output_gpio_out(registers,f,MIO_HTML_MASK):

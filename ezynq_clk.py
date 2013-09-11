@@ -28,7 +28,7 @@ import ezynq_registers
 import ezynq_clkcfg_defs
 import ezynq_feature_config
 class EzynqClk:
-    def __init__(self,regs_masked,ddr_type,permit_undefined_bits=False,force=False,warn=False):
+    def __init__(self,regs_masked,ddr_type,used_mio_interfaces,permit_undefined_bits=False,force=False,warn=False):
         self.SLCR_CLK_DEFS=  ezynq_slcr_clk_def.SLCR_CLK_DEFS
         self.CLK_CFG_DEFS =  ezynq_clkcfg_defs.CLK_CFG_DEFS
         self.features=ezynq_feature_config.EzynqFeatures(self.CLK_CFG_DEFS,0) #CLK_CFG_DEFS
@@ -45,6 +45,9 @@ class EzynqClk:
             for div in r:
                 self.pll_pars[div]={'PLL_CP':pll_line[1],'PLL_RES':pll_line[2],'LOCK_CNT':pll_line[3]}         
 #        for f in self.pll_pars: print f,    self.pll_pars[f]
+        self.used_mio_interfaces=used_mio_interfaces
+
+
     def parse_parameters(self,raw_configs):
         self.features.parse_features(raw_configs)
     def check_missing_features(self):
@@ -187,10 +190,12 @@ class EzynqClk:
         arm_valid_fdiv=self.get_valid_pll_fdiv() 
         ddr_valid_fdiv=self.get_valid_pll_fdiv()
         io_valid_fdiv=self.get_valid_pll_fdiv()
+        # sorted() is not really needed here, maybe will be needed later
+        arm_valid_div6=   sorted({x for x in range (1,64) if (x != 1) and (x != 3)})
+        ddr_3x_valid_div6=sorted({x for x in range (1,64) if (x & 1) == 0})
+        other_valid_div6= sorted({x for x in range (1,64)})
+        valid_div6x6=     sorted({x*y for x in range(1,64) for y in range(1,64)})
         
-        arm_valid_div6=  [x for x in range (1,64) if (x != 1) and (x != 3)]
-        ddr_3x_valid_div6=[x for x in range (1,64) if (x & 1) ==0]
-        other_valid_div6= [x for x in range (1,64)]
 #        print arm_valid_fdiv
         
         # arm_6x4x:
@@ -221,10 +226,88 @@ class EzynqClk:
         self.features.set_calculated_value('ARM_MHZ',  self.f_in*self.arm_pll_fdiv/self.arm_6x3x_div6, True)
         self.features.set_calculated_value('DDR_MHZ',  self.f_in*self.ddr_pll_fdiv/self.ddr_3x_div6, True)
         self.features.set_calculated_value('DDR2X_MHZ',self.f_in*self.ddr_pll_fdiv/self.ddr_2x_div6, True)
+        
+        
+        
+        for ifc in self.used_mio_interfaces:
+            print ifc
+
+        
     def get_ddr_mhz(self):
         return self.f_in*self.ddr_pll_fdiv/self.ddr_3x_div6    
+# temporary, just for reference
+# for CAN_ECLK use ['PIN'] to disable from considering (if all used CAN has same channel CAN_ECLK) and set it's clock mux
        
-         
+    CLK_TEMPLATE=[
+        {'NAME':'ARM',     'VALUE':'ARM_MHZ',     'SOURCE':'ARM_SRC',     'DIV2':False,'USED':True,                'WEIGHT':1.0},          
+        {'NAME':'DDR',     'VALUE':'DDR_MHZ',     'SOURCE':'DDR_SRC',     'DIV2':False,'USED':True,                'WEIGHT':1.0},          
+        {'NAME':'DDR2X',   'VALUE':'DDR2X_MHZ',   'SOURCE':'DDR_SRC',     'DIV2':False,'USED':True,                'WEIGHT':1.0},          
+        {'NAME':'DDR_DCI', 'VALUE':'DDR_DCI_MHZ', 'SOURCE':'DDR_DCI_SRC', 'DIV2':False,'USED':True,                'WEIGHT':0.1},          
+        {'NAME':'SMC',     'VALUE':'SMC_MHZ',     'SOURCE':'SMC_SRC',     'DIV2':False,'USED':(('NAND',),('NOR',)),'WEIGHT':1.0},          
+        {'NAME':'QSPI',    'VALUE':'QSPI_MHZ',    'SOURCE':'QSPI_SRC',    'DIV2':False,'USED':(('QSPI',),),        'WEIGHT':1.0},          
+        {'NAME':'GIGE0',   'VALUE':'GIGE0_MHZ',   'SOURCE':'GIGE0_SRC',   'DIV2':True, 'USED':(('ETH',0),),        'WEIGHT':1.0},          
+        {'NAME':'GIGE1',   'VALUE':'GIGE1_MHZ',   'SOURCE':'GIGE1_SRC',   'DIV2':True, 'USED':(('ETH',1),),        'WEIGHT':1.0},          
+        {'NAME':'SDIO',    'VALUE':'SDIO_MHZ',    'SOURCE':'SDIO_SRC',    'DIV2':False,'USED':(('SDIO',),),        'WEIGHT':1.0},          
+        {'NAME':'UART',    'VALUE':'UART_MHZ',    'SOURCE':'UART_SRC',    'DIV2':False,'USED':(('UART',),),        'WEIGHT':1.0},          
+        {'NAME':'SPI',     'VALUE':'SPI_MHZ',     'SOURCE':'SPI_SRC',     'DIV2':False,'USED':(('SPI',),),         'WEIGHT':1.0},          
+        {'NAME':'CAN',     'VALUE':'CAN_MHZ',     'SOURCE':'CAN_SRC',     'DIV2':True, 'USED':(('CAN',),),         'WEIGHT':1.0},          
+        {'NAME':'PCAP',    'VALUE':'PCAP_MHZ',    'SOURCE':'PCAP_SRC',    'DIV2':False,'USED':True,                'WEIGHT':1.0},          
+        {'NAME':'TRACE',   'VALUE':'TRACE_MHZ',   'SOURCE':'TRACE_SRC',   'DIV2':False,'USED':True,                'WEIGHT':1.0},          
+        {'NAME':'FPGA0',   'VALUE':'FPGA0_MHZ',   'SOURCE':'FPGA0_SRC',   'DIV2':True, 'USED':True,                'WEIGHT':1.0}, # source can be set to None         
+        {'NAME':'FPGA1',   'VALUE':'FPGA1_MHZ',   'SOURCE':'FPGA1_SRC',   'DIV2':True, 'USED':True,                'WEIGHT':1.0}, # source can be set to None         
+        {'NAME':'FPGA2',   'VALUE':'FPGA2_MHZ',   'SOURCE':'FPGA2_SRC',   'DIV2':True, 'USED':True,                'WEIGHT':1.0}, # source can be set to None         
+        {'NAME':'FPGA3',   'VALUE':'FPGA3_MHZ',   'SOURCE':'FPGA3_SRC',   'DIV2':True, 'USED':True,                'WEIGHT':1.0}, # source can be set to None         
+                  ]
+    def get_clk_requirements(self,mio):
+        clock_reqs=[]
+        for template in self.CLK_TEMPLATE:
+            name=   template['NAME']
+            value=  self.features.get_par_value_or_default(template['VALUE'])
+            source= self.features.get_par_value_or_default(template['SOURCE'])
+############# Main clock settings #############
+#CONFIG_EZYNQ_CLK_PS_MHZ =   33.333333 # PS_CLK System clock input frequency (MHz)   
+#CONFIG_EZYNQ_CLK_DDR_MHZ = 533.333333 # DDR clock frequency - DDR_3X (MHz)
+#CONFIG_EZYNQ_CLK_ARM_MHZ = 667        # ARM CPU clock frequency cpu_6x4x (MHz)
+#CONFIG_EZYNQ_CLK_CPU_MODE = 6_2_1     # CPU clocks set 6:2:1 (6:3:2:1) or 4:2:1 (4:2:2:1)
+
+#CONFIG_EZYNQ_CLK_FPGA0 =        50.0 # FPGA 0 clock frequency (MHz)
+#CONFIG_EZYNQ_CLK_FPGA1 =        50.0 # FPGA 1 clock frequency (MHz)
+#CONFIG_EZYNQ_CLK_FPGA2 =        50.0 # FPGA 2 clock frequency (MHz)
+#CONFIG_EZYNQ_CLK_FPGA3 =        50.0 # FPGA 3 clock frequency (MHz)
+
+#CONFIG_EZYNQ_CLK_FPGA0_SRC =      IO # FPGA 0 clock source
+#CONFIG_EZYNQ_CLK_FPGA1_SRC =      IO # FPGA 1 clock source
+#CONFIG_EZYNQ_CLK_FPGA2_SRC =      IO # FPGA 2 clock source
+#CONFIG_EZYNQ_CLK_FPGA3_SRC =      IO # FPGA 3 clock source
+
+############# Normally do not need to be modified #############
+#CONFIG_EZYNQ_CLK_DDR_DCI_MHZ = 10.0   # DDR DCI clock frequency (MHz). Normally 10 Mhz'},
+#CONFIG_EZYNQ_CLK_DDR2X_MHZ = 355.556 # DDR2X clock frequency (MHz). Does not need to be exactly 2/3 of DDR3X clock'},
+#CONFIG_EZYNQ_CLK_DDR_DCI_MHZ=   10.0 # DDR DCI clock frequency (MHz). Normally 10Mhz
+#CONFIG_EZYNQ_CLK_SMC_MHZ =     100.0 # Static memory controller clock frequency (MHz). Normally 100 Mhz
+#CONFIG_EZYNQ_CLK_QSPI_MHZ =    200.0 # Quad SPI memory controller clock frequency (MHz). Normally 200 Mhz
+#CONFIG_EZYNQ_CLK_GIGE0_MHZ =   125.0 # GigE 0 Ethernet controller reference clock frequency (MHz). Normally 125 Mhz
+#CONFIG_EZYNQ_CLK_GIGE1_MHZ =   125.0 # GigE 1 Ethernet controller reference clock frequency (MHz). Normally 125 Mhz
+#CONFIG_EZYNQ_CLK_SDIO_MHZ =    100.0 # SDIO controller reference clock frequency (MHz). Normally 100 Mhz
+#CONFIG_EZYNQ_CLK_UART_MHZ =     25.0 # UART controller reference clock frequency (MHz). Normally 25 Mhz
+#CONFIG_EZYNQ_CLK_SPI_MHZ =     200.0 # SPI controller reference clock frequency (MHz). Normally 200 Mhz
+#CONFIG_EZYNQ_CLK_CAN_MHZ =     100.0 # CAN controller reference clock frequency (MHz). Normally 100 Mhz
+#CONFIG_EZYNQ_CLK_PCAP_MHZ =    200.0 # PCAP clock frequency (MHz). Normally 200 Mhz
+#CONFIG_EZYNQ_CLK_TRACE_MHZ =   100.0 # Trace Port clock frequency (MHz). Normally 100 Mhz
+#CONFIG_EZYNQ_CLK_ARM_SRC =       ARM # ARM CPU clock source (normally ARM PLL)
+#CONFIG_EZYNQ_CLK_DDR_SRC =       DDR # DDR (DDR2x, DDR3x) clock source (normally DDR PLL)
+#CONFIG_EZYNQ_CLK_DCI_SRC =       DDR # DDR DCI clock source (normally DDR PLL)
+#CONFIG_EZYNQ_CLK_SMC_SRC =        IO # Static memory controller clock source (normally IO PLL)
+#CONFIG_EZYNQ_CLK_QSPI_SRC =       IO # Quad SPI memory controller clock source (normally IO PLL)
+#CONFIG_EZYNQ_CLK_GIGE0_SRC =      IO # GigE 0 Ethernet controller clock source (normally IO PLL, can be EMIO)
+#CONFIG_EZYNQ_CLK_GIGE1_SRC =      IO # GigE 1 Ethernet controller clock source (normally IO PLL, can be EMIO)
+#CONFIG_EZYNQ_CLK_SDIO_SRC =       IO # SDIO controller clock source (normally IO PLL)
+#CONFIG_EZYNQ_CLK_UART_SRC =       IO # UART controller clock source (normally IO PLL)
+#CONFIG_EZYNQ_CLK_SPI_SRC =        IO # SPI controller clock source (normally IO PLL)
+#CONFIG_EZYNQ_CLK_CAN_SRC =        IO # CAN controller clock source (normally IO PLL)
+#CONFIG_EZYNQ_CLK_PCAP_SRC =       IO # PCAP controller clock source (normally IO PLL)
+#CONFIG_EZYNQ_CLK_TRACE_SRC =      IO # Trace Port clock source (normally IO PLL)
+        
         
         
         
@@ -257,40 +340,4 @@ class EzynqClk:
 #CONFIG_EZYNQ_CLK_DS_DDR_2X_MAX_1_MHZ = 355.0 # Maximal DDR_2X clock frequency (MHz) for speed grade 1'},
 #CONFIG_EZYNQ_CLK_DS_DDR_2X_MAX_2_MHZ = 408.0 # Maximal DDR_2X clock frequency (MHz) for speed grade 2'},
 #CONFIG_EZYNQ_CLK_DS_DDR_2X_MAX_3_MHZ = 444.0 # Maximal DDR_2X clock frequency (MHz) for speed grade 3'},
-        
-        pass
-#    def get_par_value_or_default(name):
-############# Main clock settings #############
-#CONFIG_EZYNQ_CLK_PS_MHZ =   33.333333 # PS_CLK System clock input frequency (MHz)   
-#CONFIG_EZYNQ_CLK_DDR_MHZ = 533.333333 # DDR clock frequency - DDR_3X (MHz)
-#CONFIG_EZYNQ_CLK_ARM_MHZ = 667        # ARM CPU clock frequency cpu_6x4x (MHz)
-#CONFIG_EZYNQ_CLK_CPU_MODE = 6_2_1     # CPU clocks set 6:2:1 (6:3:2:1) or 4:2:1 (4:2:2:1)
-
-############# Normally do not need to be modified #############
-#CONFIG_EZYNQ_CLK_DDR_DCI_MHZ = 10.0   # DDR DCI clock frequency (MHz). Normally 10 Mhz'},
-#CONFIG_EZYNQ_CLK_DDR2X_MHZ = 355.556 # DDR2X clock frequency (MHz). Does not need to be exactly 2/3 of DDR3X clock'},
-#CONFIG_EZYNQ_CLK_DDR_DCI_MHZ=   10.0 # DDR DCI clock frequency (MHz). Normally 10Mhz
-#CONFIG_EZYNQ_CLK_SMC_MHZ =     100.0 # Static memory controller clock frequency (MHz). Normally 100 Mhz
-#CONFIG_EZYNQ_CLK_QSPI_MHZ =    200.0 # Quad SPI memory controller clock frequency (MHz). Normally 200 Mhz
-#CONFIG_EZYNQ_CLK_GIGE_MHZ =    125.0 # GigE Ethernet controller reference clock frequency (MHz). Normally 125 Mhz
-#CONFIG_EZYNQ_CLK_SDIO_MHZ =    100.0 # SDIO controller reference clock frequency (MHz). Normally 100 Mhz
-#CONFIG_EZYNQ_CLK_UART_MHZ =     25.0 # UART controller reference clock frequency (MHz). Normally 25 Mhz
-#CONFIG_EZYNQ_CLK_SPI_MHZ =     200.0 # SPI controller reference clock frequency (MHz). Normally 200 Mhz
-#CONFIG_EZYNQ_CLK_CAN_MHZ =     100.0 # CAN controller reference clock frequency (MHz). Normally 100 Mhz
-#CONFIG_EZYNQ_CLK_PCAP_MHZ =    200.0 # PCAP clock frequency (MHz). Normally 200 Mhz
-#CONFIG_EZYNQ_CLK_TRACE_MHZ =   100.0 # Trace Port clock frequency (MHz). Normally 100 Mhz
-#CONFIG_EZYNQ_CLK_PLL_FCLK_MHZ = 50.0 # PLL DCLK clock frequency (MHz). Normally 50 Mhz
-#CONFIG_EZYNQ_CLK_ARM_SRC =       ARM # ARM CPU clock source (normally ARM PLL)'},
-#CONFIG_EZYNQ_CLK_DDR_SRC =       DDR # DDR (DDR2x, DDR3x) clock source (normally DDR PLL)'},
-#CONFIG_EZYNQ_CLK_DCI_SRC =       DDR # DDR DCI clock source (normally DDR PLL)'},
-#CONFIG_EZYNQ_CLK_SMC_SRC =        IO # Static memory controller clock source (normally IO PLL)'},
-#CONFIG_EZYNQ_CLK_QSPI_SRC =       IO # Quad SPI memory controller clock source (normally IO PLL)'},
-#CONFIG_EZYNQ_CLK_GIGE_SRC =       IO # GigE Ethernet controller clock source (normally IO PLL)'},
-#CONFIG_EZYNQ_CLK_SDIO_SRC =       IO # SDIO controller clock source (normally IO PLL)'},
-#CONFIG_EZYNQ_CLK_UART_SRC =       IO # UART controller clock source (normally IO PLL)'},
-#CONFIG_EZYNQ_CLK_SPI_SRC =        IO # SPI controller clock source (normally IO PLL)'},
-#CONFIG_EZYNQ_CLK_CAN_SRC =        IO # CAN controller clock source (normally IO PLL)'},
-#CONFIG_EZYNQ_CLK_PCAP_SRC =       IO # PCAP controller clock source (normally IO PLL)'},
-#CONFIG_EZYNQ_CLK_TRACE_SRC =      IO # Trace Port clock source (normally IO PLL)'},
-#CONFIG_EZYNQ_CLK_PLL_FCLK_SRC =   IO # PLL FCLK clock source (normally IO PLL)'},
 

@@ -292,8 +292,10 @@ ddr=ezynq_ddr.EzynqDDR([],permit_undefined_bits, force, warn_notfit) #regs_maske
 ddr.parse_parameters(raw_configs)
 ddr_type=ddr.get_ddr_type()
 
+used_mio_interfaces=mio_regs.get_used_interfaces()
+
 #clk=ezynq_clk.EzynqClk(regs_masked,ddr_type,permit_undefined_bits=False,force=False,warn=False)
-clk=ezynq_clk.EzynqClk([],ddr_type,permit_undefined_bits,force,warn_notfit) # will it verify memory type is set?
+clk=ezynq_clk.EzynqClk([],ddr_type,used_mio_interfaces,permit_undefined_bits,force,warn_notfit) # will it verify memory type is set?
 clk.parse_parameters(raw_configs)
 
 clk.calculate_dependent_pars() # will calculate DDR clock, needed for ddr.calculate_dependent_pars()
