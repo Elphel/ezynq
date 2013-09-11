@@ -25,10 +25,8 @@ __status__ = "Development"
 DDR_CFG_DEFS=[
     {'NAME':'ENABLE',          'CONF_NAME':'CONFIG_EZYNQ_DDR_ENABLE','TYPE':'B','MANDATORY':True,'DERIVED':False,'DEFAULT':True,
                 'DESCRIPTION':'Enable DDR memory'},              
-    {'NAME':'TARGET_FREQ_MHZ', 'CONF_NAME':'CONFIG_EZYNQ_DDR_TARGET_FREQ_MHZ','TYPE':'F','MANDATORY':True,'DERIVED':True,'DEFAULT':533.333333,
-                'DESCRIPTION':'Target DDR clock frequency in MHz (actual frequency will depend on the clock/clock muxes)'},              
     {'NAME':'FREQ_MHZ',        'CONF_NAME':'CONFIG_EZYNQ_DDR_FREQ_MHZ','TYPE':'F','MANDATORY':True,'DERIVED':True,'DEFAULT':533.333333,
-                'DESCRIPTION':'Actual DDR clock frequency in MHz, may be derived form CONFIG_EZYNQ_DDR_TARGET_FREQ_MHZ and clock multiplexer settings'},
+                'DESCRIPTION':'DDR clock frequency in MHz, this value overwrites the one calculated by the PLL/clock setup'},
     {'NAME':'BANK_ADDR_MAP',  'CONF_NAME':'CONFIG_EZYNQ_DDR_BANK_ADDR_MAP','TYPE':'I','MANDATORY':True,'DERIVED':False,'DEFAULT':10,
                 'DESCRIPTION':'DRAM address mapping: number of combined column and row addresses lower than BA0'},              
     {'NAME':'ARB_PAGE_BANK',  'CONF_NAME':'CONFIG_EZYNQ_DDR_ARB_PAGE_BANK','TYPE':'B','MANDATORY':False,'DERIVED':False,'DEFAULT':False,
@@ -210,7 +208,8 @@ DDR_CFG_DEFS=[
 
 
 #TODO make some of (possibly) derived, leave '_T_' for ns only!
-# CONFIG_EZYNQ_DDR_FREQ_MHZ = 533.333333 *
+# CONFIG_EZYNQ_DDR_FREQ_MHZ = 533.333333 # DDR clock frequency in MHz, this value overwrites the one calculated by the PLL/clock setup
+
 # CONFIG_EZYNQ_DDR_CL = 7  *
 # CONFIG_EZYNQ_DDR_CWL = 6  *
 # CONFIG_EZYNQ_DDR_DS_RCD = 7 (was CONFIG_EZYNQ_DDR_DS_T_RCD = 7) *

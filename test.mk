@@ -109,11 +109,10 @@ CONFIG_EZYNQ_DDR_RAM_HIGHADDR = 0x3FFFFFFF
 
 ##### DDR independent ######
 
-CONFIG_EZYNQ_DDR_ENABLE =           Y        # Enable DDR memory'},              
-CONFIG_EZYNQ_DDR_TARGET_FREQ_MHZ =  533.3333 # Target DDR clock frequency in MHz (actual frequency will depend on the clock/clock muxes)              
-#CONFIG_EZYNQ_DDR_FREQ_MHZ =         545.0     # Actual DDR clock frequency in MHz, may be derived form CONFIG_EZYNQ_DDR_TARGET_FREQ_MHZ and clock multiplexer settings. Causes tWR to go higher
-#CONFIG_EZYNQ_DDR_FREQ_MHZ =         533.333374 # Actual DDR clock frequency in MHz, may be derived form CONFIG_EZYNQ_DDR_TARGET_FREQ_MHZ and clock multiplexer settings. Causes tWR to go higher
-CONFIG_EZYNQ_DDR_FREQ_MHZ =         533.3333 # Actual DDR clock frequency in MHz, may be derived form CONFIG_EZYNQ_DDR_TARGET_FREQ_MHZ and clock multiplexer settings
+CONFIG_EZYNQ_DDR_ENABLE =           Y        # Enable DDR memory'},
+# CONFIG_EZYNQ_DDR_FREQ_MHZ = 533.333374 # DDR clock frequency in MHz, this value overwrites the one calculated by the PLL/clock setup
+# CONFIG_EZYNQ_DDR_FREQ_MHZ = 533.333333 # DDR clock frequency in MHz, this value overwrites the one calculated by the PLL/clock setup
+
 CONFIG_EZYNQ_DDR_BANK_ADDR_MAP =    10       # DRAM address mapping: number of combined column and row addresses lower than BA0              
 CONFIG_EZYNQ_DDR_ARB_PAGE_BANK =    N        # Enable Arbiter prioritization based on page/bank match              
 CONFIG_EZYNQ_DDR_ECC =              Disabled # Enable ECC for the DDR memory
@@ -143,7 +142,8 @@ CONFIG_EZYNQ_DDR_BIDIR_DRIVE_NEG =        12 # Drive strength negative for drivi
 CONFIG_EZYNQ_DDR_BIDIR_DRIVE_POS =        28 # Slew rate positive for driving DDR DQ/DQS signals
 ###### DDR Datasheet (can be in include file) #######
 CONFIG_EZYNQ_DDR_DS_PARTNO = MT41K256M16RE125 # Memory part number  (currently not used - derive some parameters later)
-CONFIG_EZYNQ_DDR_DS_MEMORY_TYPE =  DDR3L  # DDR memory type: DDR3 (1.5V), DDR3L (1.35V), DDR2 (1.8V), LPDDR2 (1.2V)
+#CONFIG_EZYNQ_DDR_DS_MEMORY_TYPE =  DDR3L  # DDR memory type: DDR3 (1.5V), DDR3L (1.35V), DDR2 (1.8V), LPDDR2 (1.2V)
+
 CONFIG_EZYNQ_DDR_DS_BANK_ADDR_COUNT =  3  # Number of DDR banks              
 CONFIG_EZYNQ_DDR_DS_ROW_ADDR_COUNT  = 15  # Number of DDR Row Address bits              
 CONFIG_EZYNQ_DDR_DS_COL_ADDR_COUNT  = 10  # Number of DDR Column address bits              
@@ -239,3 +239,68 @@ CONFIG_EZYNQ_DDR_CLOCK_0_PROPOGATION_DELAY = 160
 CONFIG_EZYNQ_DDR_CLOCK_1_PROPOGATION_DELAY = 160
 CONFIG_EZYNQ_DDR_CLOCK_2_PROPOGATION_DELAY = 160
 CONFIG_EZYNQ_DDR_CLOCK_3_PROPOGATION_DELAY = 160
+
+############# Main clock settings #############
+CONFIG_EZYNQ_CLK_PS_MHZ =   33.333333 # PS_CLK System clock input frequency (MHz)   
+CONFIG_EZYNQ_CLK_DDR_MHZ = 533.333333 # DDR clock frequency - DDR_3X (MHz)
+CONFIG_EZYNQ_CLK_ARM_MHZ = 640#667        # ARM CPU clock frequency cpu_6x4x (MHz)
+CONFIG_EZYNQ_CLK_CPU_MODE = 6_2_1     # CPU clocks set 6:2:1 (6:3:2:1) or 4:2:1 (4:2:2:1)
+
+############# Normally do not need to be modified #############
+CONFIG_EZYNQ_CLK_DDR_DCI_MHZ = 10.0   # DDR DCI clock frequency (MHz). Normally 10 Mhz'},
+CONFIG_EZYNQ_CLK_DDR2X_MHZ = 355.556 # DDR2X clock frequency (MHz). Does not need to be exactly 2/3 of DDR3X clock'},
+CONFIG_EZYNQ_CLK_DDR_DCI_MHZ=   10.0 # DDR DCI clock frequency (MHz). Normally 10Mhz
+CONFIG_EZYNQ_CLK_SMC_MHZ =     100.0 # Static memory controller clock frequency (MHz). Normally 100 Mhz
+CONFIG_EZYNQ_CLK_QSPI_MHZ =    200.0 # Quad SPI memory controller clock frequency (MHz). Normally 200 Mhz
+CONFIG_EZYNQ_CLK_GIGE_MHZ =    125.0 # GigE Ethernet controller reference clock frequency (MHz). Normally 125 Mhz
+CONFIG_EZYNQ_CLK_SDIO_MHZ =    100.0 # SDIO controller reference clock frequency (MHz). Normally 100 Mhz
+CONFIG_EZYNQ_CLK_UART_MHZ =     25.0 # UART controller reference clock frequency (MHz). Normally 25 Mhz
+CONFIG_EZYNQ_CLK_SPI_MHZ =     200.0 # SPI controller reference clock frequency (MHz). Normally 200 Mhz
+CONFIG_EZYNQ_CLK_CAN_MHZ =     100.0 # CAN controller reference clock frequency (MHz). Normally 100 Mhz
+CONFIG_EZYNQ_CLK_PCAP_MHZ =    200.0 # PCAP clock frequency (MHz). Normally 200 Mhz
+CONFIG_EZYNQ_CLK_TRACE_MHZ =   100.0 # Trace Port clock frequency (MHz). Normally 100 Mhz
+CONFIG_EZYNQ_CLK_PLL_FCLK_MHZ = 50.0 # PLL DCLK clock frequency (MHz). Normally 50 Mhz
+CONFIG_EZYNQ_CLK_ARM_SRC =       ARM # ARM CPU clock source (normally ARM PLL)'},
+CONFIG_EZYNQ_CLK_DDR_SRC =       DDR # DDR (DDR2x, DDR3x) clock source (normally DDR PLL)'},
+CONFIG_EZYNQ_CLK_DCI_SRC =       DDR # DDR DCI clock source (normally DDR PLL)'},
+CONFIG_EZYNQ_CLK_SMC_SRC =        IO # Static memory controller clock source (normally IO PLL)'},
+CONFIG_EZYNQ_CLK_QSPI_SRC =       IO # Quad SPI memory controller clock source (normally IO PLL)'},
+CONFIG_EZYNQ_CLK_GIGE_SRC =       IO # GigE Ethernet controller clock source (normally IO PLL)'},
+CONFIG_EZYNQ_CLK_SDIO_SRC =       IO # SDIO controller clock source (normally IO PLL)'},
+CONFIG_EZYNQ_CLK_UART_SRC =       IO # UART controller clock source (normally IO PLL)'},
+CONFIG_EZYNQ_CLK_SPI_SRC =        IO # SPI controller clock source (normally IO PLL)'},
+CONFIG_EZYNQ_CLK_CAN_SRC =        IO # CAN controller clock source (normally IO PLL)'},
+CONFIG_EZYNQ_CLK_PCAP_SRC =       IO # PCAP controller clock source (normally IO PLL)'},
+CONFIG_EZYNQ_CLK_TRACE_SRC =      IO # Trace Port clock source (normally IO PLL)'},
+CONFIG_EZYNQ_CLK_PLL_FCLK_SRC =   IO # PLL FCLK clock source (normally IO PLL)'},
+
+CONFIG_EZYNQ_DDR_DS_MEMORY_TYPE =  DDR3  # DDR memory type: DDR3 (1.5V), DDR3L (1.35V), DDR2 (1.8V), LPDDR2 (1.2V)
+##### performance data, final values (overwrite calculated) #####              
+CONFIG_EZYNQ_CLK_SPEED_GRADE =        3   # Device speed grade
+#CONFIG_EZYNQ_CLK_PLL_MAX_MHZ =     1800.0 # Maximal PLL clock frequency, MHz. Overwrites default for selected speed grade: (Speed grade -1:1600, -2:1800, -3:2000)'},
+#CONFIG_EZYNQ_CLK_PLL_MIN_MHZ =      780.0 # Minimal PLL clock frequency, all speed grades (MHz)'},
+#CONFIG_EZYNQ_CLK_ARM621_MAX_MHZ =   733.0 # Maximal ARM clk_6x4x in 621 mode, MHz. Overwrites default for selected speed grade: (Speed grade -1:667, -2:733, -3:1000)'},
+#CONFIG_EZYNQ_CLK_ARM421_MAX_MHZ =   600.0 # Maximal ARM clk_6x4x in 421 mode, MHz. Overwrites default for selected speed grade: (Speed grade -1:533, -2:600, -3:710)'},
+#CONFIG_EZYNQ_CLK_DDR_3X_MAX_MHZ =   533.0 # Maximal DDR clk_3x clock frequency (MHz). Overwrites DDR-type/speed grade specific'},
+#CONFIG_EZYNQ_CLK_DDR_2X_MAX_MHZ =   408.0 # Maximal DDR_2X clock frequency (MHz). Overwrites speed grade specific'},
+
+##### datasheet data for specific speed grades #####
+CONFIG_EZYNQ_CLK_DS_PLL_MAX_1_MHZ =   1600.0 # Maximal PLL clock frequency for speed grade 1 (MHz)'},
+CONFIG_EZYNQ_CLK_DS_PLL_MAX_2_MHZ =   1800.0 # Maximal PLL clock frequency for speed grade 2 (MHz)'},
+CONFIG_EZYNQ_CLK_DS_PLL_MAX_3_MHZ =   2000.0 # Maximal PLL clock frequency for speed grade 3 (MHz)'},
+CONFIG_EZYNQ_CLK_DS_ARM621_MAX_1_MHZ = 667.0 # Maximal ARM clk_6x4x in 621 mode for speed grade 1, MHz'},
+CONFIG_EZYNQ_CLK_DS_ARM621_MAX_2_MHZ = 733.0 #Maximal ARM clk_6x4x in 621 mode for speed grade 2, MHz'},
+CONFIG_EZYNQ_CLK_DS_ARM621_MAX_3_MHZ =1000.0 #Maximal ARM clk_6x4x in 621 mode for speed grade 3, MHz'},
+CONFIG_EZYNQ_CLK_DS_ARM421_MAX_1_MHZ = 533.0 # Maximal ARM clk_6x4x in 421 mode for speed grade 1, MHz'},
+CONFIG_EZYNQ_CLK_DS_ARM421_MAX_2_MHZ = 600.0 # Maximal ARM clk_6x4x in 421 mode for speed grade 2, MHz'},
+CONFIG_EZYNQ_CLK_DS_ARM421_MAX_3_MHZ = 710.0 # Maximal ARM clk_6x4x in 421 mode for speed grade 3, MHz'},
+CONFIG_EZYNQ_CLK_DS_DDR3_MAX_1_MBPS = 1066.0 # Maximal DDR3 performance in Mb/s - twice clock frequency (MHz). Speed grade 1'},
+CONFIG_EZYNQ_CLK_DS_DDR3_MAX_2_MBPS = 1066.0 # Maximal DDR3 performance in Mb/s - twice clock frequency (MHz). Speed grade 2'},
+CONFIG_EZYNQ_CLK_DS_DDR3_MAX_3_MBPS = 1333.0 # Maximal DDR3 performance in Mb/s - twice clock frequency (MHz). Speed grade 3'},
+CONFIG_EZYNQ_CLK_DS_DDRX_MAX_X_MBPS =  800.0 # Maximal DDR3L, DDR2, LPDDR2 performance in Mb/s - twice clock frequency (MHz). All speed grades'},
+CONFIG_EZYNQ_CLK_DS_DDR_2X_MAX_1_MHZ = 355.0 # Maximal DDR_2X clock frequency (MHz) for speed grade 1'},
+CONFIG_EZYNQ_CLK_DS_DDR_2X_MAX_2_MHZ = 408.0 # Maximal DDR_2X clock frequency (MHz) for speed grade 2'},
+CONFIG_EZYNQ_CLK_DS_DDR_2X_MAX_3_MHZ = 444.0 # Maximal DDR_2X clock frequency (MHz) for speed grade 3'},
+
+CONFIG_EZYNQ_CLK_COMPLIANCE_PERCENT =  5.0 # Allow exceeding maximal limits by this margin (percent'},
+

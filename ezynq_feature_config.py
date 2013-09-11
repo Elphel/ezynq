@@ -74,6 +74,7 @@ class EzynqFeatures:
             self.defs[feature['NAME']]['INDEX']=i
         self.channel=channel
         self.pars={}
+        self.target={} # target values (as specified)
         self.config_names={}
         self.defined=set()
         self.calculated=set()
@@ -130,6 +131,7 @@ class EzynqFeatures:
                 pass #keep string value
             self.pars[name]=value
             self.defined.add(name)
+            self.target[name]=value
     #check after calculating derivative parameters                    
     def check_missing_features(self):
         all_set=True
@@ -173,6 +175,32 @@ class EzynqFeatures:
             except:    
                 raise Exception (name+' not found in self.defs') # should not happen with wrong data, program bug
             raise Exception (config_name+' is not defined, nor calculated')
+
+    def get_par_value_or_default(self,name):
+        try:
+            return self.pars[name]
+        except:
+#            print 'name=',name
+#            print self.pars
+            try: 
+                config_name=self.defs[name]['CONF_NAME']
+            except:    
+                raise Exception (name+' not found in self.defs') # should not happen with wrong data, program bug
+            try:
+                return self.defs[name]['DEFAULT']
+            except:
+                raise Exception (config_name+' is not defined, nor calculated and no default is provided')
+        
+    def get_par_target(self,name):
+        try:
+            return self.target[name]
+        except:
+            try: 
+                config_name=self.defs[name]['CONF_NAME']
+            except:    
+                raise Exception (name+' not found in self.defs') # should not happen with wrong data, program bug
+            raise Exception ('Target value for '+config_name+' is not defined')
+    
     def is_known(self,name): # specified or calculated
         return (name in self.defined) or (name in self.calculated)
 
@@ -209,7 +237,8 @@ class EzynqFeatures:
         if not html_file:
             return
         html_file.write('<table border="1">\n')
-        html_file.write('<tr><th>Configuration name</th><th>Value</th><th>Type/<br/>Choices</th><th>Mandatory</th><th>Origin</th><th>Default</th><th>Description</th></tr>\n')
+#        html_file.write('<tr><th>Configuration name</th><th>Value<br/>(Target)</th><th>Type/<br/>Choices</th><th>Mandatory</th><th>Origin</th><th>Default</th><th>Description</th></tr>\n')
+        html_file.write('<tr><th>Configuration name</th><th>Value (Target)</th><th>Type/<br/>Choices</th><th>Mandatory</th><th>Origin</th><th>Default</th><th>Description</th></tr>\n')
 #        print  self.get_par_names()
 #        for name in self.pars:
         for name in self.get_par_names():
@@ -221,13 +250,24 @@ class EzynqFeatures:
                     value=hex(value)
                 else:
                     value=str(value)
+            try:
+                target_value=self.get_par_target(name)
+                if isinstance(target_value,int):
+                    if (feature['TYPE']=='H'):
+                        target_value=hex(target_value)
+                    else:
+                        target_value=str(target_value)
+                if value != target_value:  # Do not show target_value if it is the same as actual
+#                    value+='<br/>('+str(target_value)+')'
+                    value='<b>'+str(value)+'</b> ('+str(target_value)+')'
+            except: # target_value is not set
+                pass
             if name in self.defined:
                 origin="Defined"
             elif name in self.calculated:
                 origin="Calculated"
             else:    
                 origin="Default"
-            
             if isinstance (feature['TYPE'],tuple):
                 par_type='<select>\n'
                 for t in feature['TYPE']:

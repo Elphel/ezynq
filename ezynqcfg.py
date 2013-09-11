@@ -22,11 +22,12 @@ __maintainer__ = "Andrey Filippov"
 __email__ = "andrey@elphel.com"
 __status__ = "Development"
 import struct
+import argparse # http://docs.python.org/2/howto/argparse.html
+
 import ezynq_ddr
 import ezynq_registers
 import ezynq_mio
-# http://docs.python.org/2/howto/argparse.html
-import argparse
+import ezynq_clk
 parser = argparse.ArgumentParser()
 parser.add_argument('-v', '--verbosity', action='count', help='increase output verbosity')
 parser.add_argument('-c', '--configs',   help='Configuration file (such as autoconf.mk)')
@@ -289,6 +290,18 @@ mio_regs.process_mio(raw_configs,WARN)      # does not use regs_masked
 
 ddr=ezynq_ddr.EzynqDDR([],permit_undefined_bits, force, warn_notfit) #regs_masked are  just []
 ddr.parse_parameters(raw_configs)
+ddr_type=ddr.get_ddr_type()
+
+#clk=ezynq_clk.EzynqClk(regs_masked,ddr_type,permit_undefined_bits=False,force=False,warn=False)
+clk=ezynq_clk.EzynqClk([],ddr_type,permit_undefined_bits,force,warn_notfit) # will it verify memory type is set?
+clk.parse_parameters(raw_configs)
+
+clk.calculate_dependent_pars() # will calculate DDR clock, needed for ddr.calculate_dependent_pars()
+clk.check_missing_features() #and apply default values
+clk.check_ds_compliance()
+clk.setup_clocks()
+
+ddr_mhz=clk.get_ddr_mhz()
 
 if MIO_HTML:
     f=open(MIO_HTML,'w')
@@ -302,11 +315,14 @@ mio_regs.output_mio(f,MIO_HTML_MASK)
 #  setregs_mio(self,current_reg_sets,force=True):
     
 #output_mio(registers,f,mio,MIO_HTML_MASK)
-ddr.calculate_dependent_pars()
+ddr.calculate_dependent_pars(ddr_mhz)
 ddr.pre_validate() # before applying default values (some timings should be undefined, not defaults)
 ddr.check_missing_features() #and apply default values
 ddr.html_list_features(f) #verify /fix values after defaults are applied
 #ddr.ddr_init_memory(current_reg_sets,force=False,warn=False): # will program to sequence 'MAIN'
+
+#clk.calculate_dependent_pars()
+clk.html_list_features(f)
 
 reg_sets=[]
 reg_sets=mio_regs.setregs_mio(reg_sets,force) # reg Sets include now MIO
