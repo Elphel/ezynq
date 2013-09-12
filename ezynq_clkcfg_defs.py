@@ -41,13 +41,13 @@ CLK_CFG_DEFS=[
     {'NAME':'FPGA3_MHZ',     'CONF_NAME':'CONFIG_EZYNQ_CLK_FPGA3_MHZ','TYPE':'F','MANDATORY':False,'DERIVED':False,'DEFAULT':50.0,
                 'DESCRIPTION':'FPGA 3 clock frequency (MHz).'},
               
-    {'NAME':'FPGA0_SRC',      'CONF_NAME':'CONFIG_EZYNQ_CLK_PLL_FPGA0_SRC','TYPE':('ARM','DDR','IO','NONE'),'MANDATORY':False,'DERIVED':False,'DEFAULT':'IO',
+    {'NAME':'FPGA0_SRC',      'CONF_NAME':'CONFIG_EZYNQ_CLK_FPGA0_SRC','TYPE':('ARM','DDR','IO','NONE'),'MANDATORY':False,'DERIVED':False,'DEFAULT':'IO',
                 'DESCRIPTION':'FPGA 0 clock source'},
-    {'NAME':'FPGA1_SRC',      'CONF_NAME':'CONFIG_EZYNQ_CLK_PLL_FPGA1_SRC','TYPE':('ARM','DDR','IO','NONE'),'MANDATORY':False,'DERIVED':False,'DEFAULT':'IO',
+    {'NAME':'FPGA1_SRC',      'CONF_NAME':'CONFIG_EZYNQ_CLK_FPGA1_SRC','TYPE':('ARM','DDR','IO','NONE'),'MANDATORY':False,'DERIVED':False,'DEFAULT':'IO',
                 'DESCRIPTION':'FPGA 1 clock source'},
-    {'NAME':'FPGA2_SRC',      'CONF_NAME':'CONFIG_EZYNQ_CLK_PLL_FPGA2_SRC','TYPE':('ARM','DDR','IO','NONE'),'MANDATORY':False,'DERIVED':False,'DEFAULT':'IO',
+    {'NAME':'FPGA2_SRC',      'CONF_NAME':'CONFIG_EZYNQ_CLK_FPGA2_SRC','TYPE':('ARM','DDR','IO','NONE'),'MANDATORY':False,'DERIVED':False,'DEFAULT':'IO',
                 'DESCRIPTION':'FPGA 2 clock source'},
-    {'NAME':'FPGA3_SRC',      'CONF_NAME':'CONFIG_EZYNQ_CLK_PLL_FPGA3_SRC','TYPE':('ARM','DDR','IO','NONE'),'MANDATORY':False,'DERIVED':False,'DEFAULT':'IO',
+    {'NAME':'FPGA3_SRC',      'CONF_NAME':'CONFIG_EZYNQ_CLK_FPGA3_SRC','TYPE':('ARM','DDR','IO','NONE'),'MANDATORY':False,'DERIVED':False,'DEFAULT':'IO',
                 'DESCRIPTION':'FPGA 3 clock source'},
 
     {'NAME':'DDR2X_MHZ',     'CONF_NAME':'CONFIG_EZYNQ_CLK_DDR2X_MHZ','TYPE':'F','MANDATORY':False,'DERIVED':False,'DEFAULT':355.556,
@@ -79,7 +79,7 @@ CLK_CFG_DEFS=[
                 'DESCRIPTION':'ARM CPU clock source (normally ARM PLL)'},
     {'NAME':'DDR_SRC',       'CONF_NAME':'CONFIG_EZYNQ_CLK_DDR_SRC','TYPE':('ARM','DDR','IO'),'MANDATORY':False,'DERIVED':False,'DEFAULT':'DDR',
                 'DESCRIPTION':'DDR (DDR2x, DDR3x) clock source (normally DDR PLL)'},
-    {'NAME':'DCI_SRC',       'CONF_NAME':'CONFIG_EZYNQ_CLK_DCI_SRC','TYPE':('ARM','DDR','IO'),'MANDATORY':False,'DERIVED':False,'DEFAULT':'DDR',
+    {'NAME':'DDR_DCI_SRC',   'CONF_NAME':'CONFIG_EZYNQ_CLK_DDR_DCI_SRC','TYPE':('ARM','DDR','IO'),'MANDATORY':False,'DERIVED':False,'DEFAULT':'DDR',
                 'DESCRIPTION':'DDR DCI clock source (normally DDR PLL)'},
     {'NAME':'SMC_SRC',       'CONF_NAME':'CONFIG_EZYNQ_CLK_SMC_SRC','TYPE':('ARM','DDR','IO'),'MANDATORY':False,'DERIVED':False,'DEFAULT':'IO',
                 'DESCRIPTION':'Static memory controller clock source (normally IO PLL)'},
@@ -95,7 +95,7 @@ CLK_CFG_DEFS=[
                 'DESCRIPTION':'UART controller clock source (normally IO PLL)'},
     {'NAME':'SPI_SRC',        'CONF_NAME':'CONFIG_EZYNQ_CLK_SPI_SRC', 'TYPE':('ARM','DDR','IO'),'MANDATORY':False,'DERIVED':False,'DEFAULT':'IO',
                 'DESCRIPTION':'SPI controller clock source (normally IO PLL)'},
-    {'NAME':'CAM_SRC',        'CONF_NAME':'CONFIG_EZYNQ_CLK_CAN_SRC', 'TYPE':('ARM','DDR','IO'),'MANDATORY':False,'DERIVED':False,'DEFAULT':'IO',
+    {'NAME':'CAN_SRC',        'CONF_NAME':'CONFIG_EZYNQ_CLK_CAN_SRC', 'TYPE':('ARM','DDR','IO'),'MANDATORY':False,'DERIVED':False,'DEFAULT':'IO',
                 'DESCRIPTION':'CAN controller clock source (normally IO PLL)'},
     {'NAME':'PCAP_SRC',       'CONF_NAME':'CONFIG_EZYNQ_CLK_PCAP_SRC','TYPE':('ARM','DDR','IO'),'MANDATORY':False,'DERIVED':False,'DEFAULT':'IO',
                 'DESCRIPTION':'PCAP controller clock source (normally IO PLL)'},
@@ -164,10 +164,10 @@ CLK_CFG_DEFS=[
 #CONFIG_EZYNQ_CLK_DDR_MHZ = 533.333333 # DDR clock frequency - DDR_3X (MHz)
 #CONFIG_EZYNQ_CLK_ARM_MHZ = 667        # ARM CPU clock frequency cpu_6x4x (MHz)
 #CONFIG_EZYNQ_CLK_CPU_MODE = 6_2_1     # CPU clocks set 6:2:1 (6:3:2:1) or 4:2:1 (4:2:2:1)
-#CONFIG_EZYNQ_CLK_FPGA0 =        50.0 # FPGA 0 clock frequency (MHz)
-#CONFIG_EZYNQ_CLK_FPGA1 =        50.0 # FPGA 1 clock frequency (MHz)
-#CONFIG_EZYNQ_CLK_FPGA2 =        50.0 # FPGA 2 clock frequency (MHz)
-#CONFIG_EZYNQ_CLK_FPGA3 =        50.0 # FPGA 3 clock frequency (MHz)
+#CONFIG_EZYNQ_CLK_FPGA0_MHZ =    50.0 # FPGA 0 clock frequency (MHz)
+#CONFIG_EZYNQ_CLK_FPGA1_MHZ =    50.0 # FPGA 1 clock frequency (MHz)
+#CONFIG_EZYNQ_CLK_FPGA2_MHZ =    50.0 # FPGA 2 clock frequency (MHz)
+#CONFIG_EZYNQ_CLK_FPGA3_MHZ =    50.0 # FPGA 3 clock frequency (MHz)
 #CONFIG_EZYNQ_CLK_FPGA0_SRC =      IO # FPGA 0 clock source
 #CONFIG_EZYNQ_CLK_FPGA1_SRC =      IO # FPGA 1 clock source
 #CONFIG_EZYNQ_CLK_FPGA2_SRC =      IO # FPGA 2 clock source
@@ -189,7 +189,7 @@ CLK_CFG_DEFS=[
 #CONFIG_EZYNQ_CLK_TRACE_MHZ =   100.0 # Trace Port clock frequency (MHz). Normally 100 Mhz
 #CONFIG_EZYNQ_CLK_ARM_SRC =       ARM # ARM CPU clock source (normally ARM PLL)
 #CONFIG_EZYNQ_CLK_DDR_SRC =       DDR # DDR (DDR2x, DDR3x) clock source (normally DDR PLL)
-#CONFIG_EZYNQ_CLK_DCI_SRC =       DDR # DDR DCI clock source (normally DDR PLL)
+#CONFIG_EZYNQ_CLK_DDR_DCI_SRC =   DDR # DDR DCI clock source (normally DDR PLL)
 #CONFIG_EZYNQ_CLK_SMC_SRC =        IO # Static memory controller clock source (normally IO PLL)
 #CONFIG_EZYNQ_CLK_QSPI_SRC =       IO # Quad SPI memory controller clock source (normally IO PLL)
 #CONFIG_EZYNQ_CLK_GIGE0_SRC =      IO # GigE 0 Ethernet controller clock source (normally IO PLL, can be EMIO)

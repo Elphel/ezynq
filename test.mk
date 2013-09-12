@@ -246,13 +246,13 @@ CONFIG_EZYNQ_CLK_PS_MHZ =   33.333333 # PS_CLK System clock input frequency (MHz
 CONFIG_EZYNQ_CLK_DDR_MHZ = 533.333333 # DDR clock frequency - DDR_3X (MHz)
 CONFIG_EZYNQ_CLK_ARM_MHZ = 667        # ARM CPU clock frequency cpu_6x4x (MHz)
 CONFIG_EZYNQ_CLK_CPU_MODE = 6_2_1     # CPU clocks set 6:2:1 (6:3:2:1) or 4:2:1 (4:2:2:1)
-CONFIG_EZYNQ_CLK_FPGA0 =        50.0 # FPGA 0 clock frequency (MHz)
-CONFIG_EZYNQ_CLK_FPGA1 =        50.0 # FPGA 1 clock frequency (MHz)
-CONFIG_EZYNQ_CLK_FPGA2 =        50.0 # FPGA 2 clock frequency (MHz)
-CONFIG_EZYNQ_CLK_FPGA3 =        50.0 # FPGA 3 clock frequency (MHz)
+CONFIG_EZYNQ_CLK_FPGA0_MHZ =    50.0 # FPGA 0 clock frequency (MHz)
+CONFIG_EZYNQ_CLK_FPGA1_MHZ =    50.0 # FPGA 1 clock frequency (MHz)
+CONFIG_EZYNQ_CLK_FPGA2_MHZ =    50.0 # FPGA 2 clock frequency (MHz)
+CONFIG_EZYNQ_CLK_FPGA3_MHZ =     0.0 # FPGA 3 clock frequency (MHz)
 CONFIG_EZYNQ_CLK_FPGA0_SRC =      IO # FPGA 0 clock source
 CONFIG_EZYNQ_CLK_FPGA1_SRC =      IO # FPGA 1 clock source
-CONFIG_EZYNQ_CLK_FPGA2_SRC =      IO # FPGA 2 clock source
+CONFIG_EZYNQ_CLK_FPGA2_SRC =    None # FPGA 2 clock source
 CONFIG_EZYNQ_CLK_FPGA3_SRC =      IO # FPGA 3 clock source
 
 ############# Normally do not need to be modified #############
@@ -269,9 +269,10 @@ CONFIG_EZYNQ_CLK_SPI_MHZ =     200.0 # SPI controller reference clock frequency 
 CONFIG_EZYNQ_CLK_CAN_MHZ =     100.0 # CAN controller reference clock frequency (MHz). Normally 100 Mhz
 CONFIG_EZYNQ_CLK_PCAP_MHZ =    200.0 # PCAP clock frequency (MHz). Normally 200 Mhz
 CONFIG_EZYNQ_CLK_TRACE_MHZ =   100.0 # Trace Port clock frequency (MHz). Normally 100 Mhz
+
 CONFIG_EZYNQ_CLK_ARM_SRC =       ARM # ARM CPU clock source (normally ARM PLL)
 CONFIG_EZYNQ_CLK_DDR_SRC =       DDR # DDR (DDR2x, DDR3x) clock source (normally DDR PLL)
-CONFIG_EZYNQ_CLK_DCI_SRC =       DDR # DDR DCI clock source (normally DDR PLL)
+CONFIG_EZYNQ_CLK_DDR_DCI_SRC =   DDR # DDR DCI clock source (normally DDR PLL)
 CONFIG_EZYNQ_CLK_SMC_SRC =        IO # Static memory controller clock source (normally IO PLL)
 CONFIG_EZYNQ_CLK_QSPI_SRC =       IO # Quad SPI memory controller clock source (normally IO PLL)
 CONFIG_EZYNQ_CLK_GIGE0_SRC =      IO # GigE 0 Ethernet controller clock source (normally IO PLL, can be EMIO)

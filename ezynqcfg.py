@@ -315,6 +315,9 @@ mio_regs.output_mio(f,MIO_HTML_MASK)
 #  def process_mio(self,raw_configs,warn):
 #  def output_mio(self,f,MIO_HTML_MASK)
 #  setregs_mio(self,current_reg_sets,force=True):
+
+clk.html_list_clocks(f)
+
     
 #output_mio(registers,f,mio,MIO_HTML_MASK)
 ddr.calculate_dependent_pars(ddr_mhz)

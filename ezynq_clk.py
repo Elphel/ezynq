@@ -27,6 +27,26 @@ import ezynq_slcr_clk_def
 import ezynq_registers
 import ezynq_clkcfg_defs
 import ezynq_feature_config
+CLK_TEMPLATE=[
+        {'NAME':'ARM',     'VALUE':'ARM_MHZ',     'SOURCE':'ARM_SRC',     'DIV2':False,'USED':True,                'WEIGHT':1.0},          
+        {'NAME':'DDR',     'VALUE':'DDR_MHZ',     'SOURCE':'DDR_SRC',     'DIV2':False,'USED':True,                'WEIGHT':1.0},          
+        {'NAME':'DDR2X',   'VALUE':'DDR2X_MHZ',   'SOURCE':'DDR_SRC',     'DIV2':False,'USED':True,                'WEIGHT':1.0},          
+        {'NAME':'DDR_DCI', 'VALUE':'DDR_DCI_MHZ', 'SOURCE':'DDR_DCI_SRC', 'DIV2':True, 'USED':True,                'WEIGHT':0.1},          
+        {'NAME':'SMC',     'VALUE':'SMC_MHZ',     'SOURCE':'SMC_SRC',     'DIV2':False,'USED':(('NAND',),('NOR',)),'WEIGHT':1.0},          
+        {'NAME':'QSPI',    'VALUE':'QSPI_MHZ',    'SOURCE':'QSPI_SRC',    'DIV2':False,'USED':(('QUADSPI',),),     'WEIGHT':1.0},          
+        {'NAME':'GIGE0',   'VALUE':'GIGE0_MHZ',   'SOURCE':'GIGE0_SRC',   'DIV2':True, 'USED':(('ETH',0),),        'WEIGHT':1.0},          
+        {'NAME':'GIGE1',   'VALUE':'GIGE1_MHZ',   'SOURCE':'GIGE1_SRC',   'DIV2':True, 'USED':(('ETH',1),),        'WEIGHT':1.0},          
+        {'NAME':'SDIO',    'VALUE':'SDIO_MHZ',    'SOURCE':'SDIO_SRC',    'DIV2':False,'USED':(('SDIO',),),        'WEIGHT':1.0},          
+        {'NAME':'UART',    'VALUE':'UART_MHZ',    'SOURCE':'UART_SRC',    'DIV2':False,'USED':(('UART',),),        'WEIGHT':1.0},          
+        {'NAME':'SPI',     'VALUE':'SPI_MHZ',     'SOURCE':'SPI_SRC',     'DIV2':False,'USED':(('SPI',),),         'WEIGHT':1.0},          
+        {'NAME':'CAN',     'VALUE':'CAN_MHZ',     'SOURCE':'CAN_SRC',     'DIV2':True, 'USED':(('CAN',),),         'WEIGHT':1.0},          
+        {'NAME':'PCAP',    'VALUE':'PCAP_MHZ',    'SOURCE':'PCAP_SRC',    'DIV2':False,'USED':True,                'WEIGHT':1.0},          
+        {'NAME':'TRACE',   'VALUE':'TRACE_MHZ',   'SOURCE':'TRACE_SRC',   'DIV2':False,'USED':True,                'WEIGHT':1.0},          
+        {'NAME':'FPGA0',   'VALUE':'FPGA0_MHZ',   'SOURCE':'FPGA0_SRC',   'DIV2':True, 'USED':True,                'WEIGHT':1.0}, # source can be set to None         
+        {'NAME':'FPGA1',   'VALUE':'FPGA1_MHZ',   'SOURCE':'FPGA1_SRC',   'DIV2':True, 'USED':True,                'WEIGHT':1.0}, # source can be set to None         
+        {'NAME':'FPGA2',   'VALUE':'FPGA2_MHZ',   'SOURCE':'FPGA2_SRC',   'DIV2':True, 'USED':True,                'WEIGHT':1.0}, # source can be set to None         
+        {'NAME':'FPGA3',   'VALUE':'FPGA3_MHZ',   'SOURCE':'FPGA3_SRC',   'DIV2':True, 'USED':True,                'WEIGHT':1.0}, # source can be set to None         
+    ]
 class EzynqClk:
     def __init__(self,regs_masked,ddr_type,used_mio_interfaces,permit_undefined_bits=False,force=False,warn=False):
         self.SLCR_CLK_DEFS=  ezynq_slcr_clk_def.SLCR_CLK_DEFS
@@ -46,8 +66,16 @@ class EzynqClk:
                 self.pll_pars[div]={'PLL_CP':pll_line[1],'PLL_RES':pll_line[2],'LOCK_CNT':pll_line[3]}         
 #        for f in self.pll_pars: print f,    self.pll_pars[f]
         self.used_mio_interfaces=used_mio_interfaces
-
-
+        self.arm_valid_div6=   sorted({x for x in range (1,64) if (x != 1) and (x != 3)})
+        self.ddr_3x_valid_div6=sorted({x for x in range (1,64) if (x & 1) == 0})
+        self.other_valid_div6= sorted({x for x in range (1,64)})
+        self.valid_div6x6=     sorted({x*y for x in range(1,64) for y in range(1,64)})
+        self.valid_fdiv={'ARM':self._get_valid_pll_fdiv(), # Now all 3 are the same
+                         'DDR':self._get_valid_pll_fdiv(),
+                         'IO': self._get_valid_pll_fdiv()}
+        self.clk_dict={}
+        for i,c in enumerate(CLK_TEMPLATE):
+            self.clk_dict[c['NAME']]=c
     def parse_parameters(self,raw_configs):
         self.features.parse_features(raw_configs)
     def check_missing_features(self):
@@ -116,7 +144,7 @@ class EzynqClk:
                    self.features.get_par_value_or_default('DDR_2X_MAX_MHZ'),
                    self.features.get_par_value_or_default('COMPLIANCE_PERCENT')))
 #  self.pll_pars[div]={'PLL_CP':pll_line[1],'PLL_RES':pll_line[2],'LOCK_CNT':pll_line[3]}         
-    def get_valid_pll_fdiv(self): # common for all 3
+    def _get_valid_pll_fdiv(self): # common for all 3
         f_in=self.features.get_par_value_or_default('PS_MHZ')
         pll_min=self.features.get_par_value_or_default('PLL_MIN_MHZ')
         pll_max=self.features.get_par_value_or_default('PLL_MAX_MHZ')
@@ -126,12 +154,29 @@ class EzynqClk:
             if (fdiv*f_in>=pll_min) and (fdiv*f_in<=pll_max) :
                 valid_fdiv.add(fdiv)
         return valid_fdiv
-      
-
-            
-            
                     
     def setup_clocks(self):
+        for ifc in self.used_mio_interfaces:
+            print ifc
+        self.get_clk_requirements(self.used_mio_interfaces)    
+
+        
+
+    def div_second_stage(self,d):
+        div_sec= [(((n<<1)  | (n >> 5)) & 0x3f) - (n>63) for n in range(1,65) if n != 32]  # [2,4, .. 62,3,5, .. 63,1]
+        for d2 in div_sec:
+            q,r=divmod(d,d2)
+            if (r==0) and (q<=63) and (d2<=q) :
+                return (d2,q)
+        else:
+            raise Exception ('Can not split %i into two 6-bit divisors'%d)    
+# temporary, just for reference
+# for CAN_ECLK use ['PIN'] to disable from considering (if all used CAN has same channel CAN_ECLK) and set it's clock mux
+
+##'err=%+.3f%%'%-33.33333333
+
+       
+    def get_clk_requirements(self,mio):
         def pll_errors(valid_fdivs,valid_div6,f_in,f_target):
             result={}
             for fdiv in valid_fdivs:
@@ -165,105 +210,142 @@ class EzynqClk:
         def filter_combine_multiclock(fdiv_errors):
             combo_err={}
             for fdiv in fdiv_errors[0]:
-                # verify it is available for all clocks
-                err=0
-                for fdiv_err in fdiv_errors:
-                    if fdiv in fdiv_err:
-                        err+=fdiv_err[fdiv][1]
-                    else:
-                        err=False
-                        break
-                    
-#                 for clock in fdiv_errors:
-#                     if fdiv in fdiv_errors[clock]:
-#                         err+=fdiv_errors[clock][1]
-#                     else:
-#                         err=False
-#                         break
-                if not err is False:
-                    combo_err[fdiv]=(fdiv_errors[0][fdiv][0],err)
+                if fdiv != 'WEIGHT':
+                    # verify it is available for all clocks
+                    err=0
+                    for fdiv_err in fdiv_errors:
+                        try:
+                            weight=fdiv_err['WEIGHT']
+                        except:    
+                            weight=1.0
+                        if fdiv in fdiv_err:
+                            err+=weight*fdiv_err[fdiv][1]
+                        else:
+                            err=False
+                            break
+                    if not err is False:
+                        combo_err[fdiv]=(fdiv_errors[0][fdiv][0],err)
             return combo_err        
-                    
-            
+#         valid_div6x6=     sorted({x*y for x in range(1,64) for y in range(1,64)})
         self.f_in=self.features.get_par_value_or_default('PS_MHZ')
-        # so far all 2 PLLs have the same
-        arm_valid_fdiv=self.get_valid_pll_fdiv() 
-        ddr_valid_fdiv=self.get_valid_pll_fdiv()
-        io_valid_fdiv=self.get_valid_pll_fdiv()
-        # sorted() is not really needed here, maybe will be needed later
-        arm_valid_div6=   sorted({x for x in range (1,64) if (x != 1) and (x != 3)})
-        ddr_3x_valid_div6=sorted({x for x in range (1,64) if (x & 1) == 0})
-        other_valid_div6= sorted({x for x in range (1,64)})
-        valid_div6x6=     sorted({x*y for x in range(1,64) for y in range(1,64)})
-        
-#        print arm_valid_fdiv
-        
-        # arm_6x4x:
-        arm_target=self.features.get_par_value_or_default('ARM_MHZ')
-        pll_errs= pll_errors(arm_valid_fdiv,arm_valid_div6,self.f_in,arm_target)
-#        print 'pll_errs=',pll_errs
-        self.arm_pll_fdiv=  getBest(pll_errs)
-        print 'getBest()->',self.arm_pll_fdiv
-        arm_pll_errs= filter_best(pll_errs)
-        print 'filtered pll_errs=',arm_pll_errs
-        self.arm_6x3x_div6=arm_pll_errs[self.arm_pll_fdiv][0]
-
-        
-        # ddr
-        ddr_3x_target=self.features.get_par_value_or_default('DDR_MHZ')
-        ddr_2x_target=self.features.get_par_value_or_default('DDR2X_MHZ')
-        pll_errs_ddr_3x= pll_errors(ddr_valid_fdiv,ddr_3x_valid_div6,self.f_in,ddr_3x_target)
-        pll_errs_ddr_2x= pll_errors(ddr_valid_fdiv,other_valid_div6, self.f_in,ddr_2x_target)
-#        print 'pll_errs_ddr_3x=',pll_errs_ddr_3x
-#        print 'pll_errs_ddr_2x=',pll_errs_ddr_2x
-        ddr_combo_errors=filter_combine_multiclock((pll_errs_ddr_3x,pll_errs_ddr_2x))
-#        print 'ddr_combo_errors=',ddr_combo_errors
-        self.ddr_pll_fdiv=  getBest(ddr_combo_errors)
-        self.ddr_3x_div6=pll_errs_ddr_3x[self.ddr_pll_fdiv][0]
-        self.ddr_2x_div6=pll_errs_ddr_2x[self.ddr_pll_fdiv][0]
-        print 'ddr_fdiv=',self.ddr_pll_fdiv,': pll_errs_ddr_3x=',pll_errs_ddr_3x[self.ddr_pll_fdiv],'pll_errs_ddr_2x=',pll_errs_ddr_2x[self.ddr_pll_fdiv]
-   
-        self.features.set_calculated_value('ARM_MHZ',  self.f_in*self.arm_pll_fdiv/self.arm_6x3x_div6, True)
-        self.features.set_calculated_value('DDR_MHZ',  self.f_in*self.ddr_pll_fdiv/self.ddr_3x_div6, True)
-        self.features.set_calculated_value('DDR2X_MHZ',self.f_in*self.ddr_pll_fdiv/self.ddr_2x_div6, True)
-        
-        
-        
-        for ifc in self.used_mio_interfaces:
-            print ifc
-
-        
-    def get_ddr_mhz(self):
-        return self.f_in*self.ddr_pll_fdiv/self.ddr_3x_div6    
-# temporary, just for reference
-# for CAN_ECLK use ['PIN'] to disable from considering (if all used CAN has same channel CAN_ECLK) and set it's clock mux
-       
-    CLK_TEMPLATE=[
-        {'NAME':'ARM',     'VALUE':'ARM_MHZ',     'SOURCE':'ARM_SRC',     'DIV2':False,'USED':True,                'WEIGHT':1.0},          
-        {'NAME':'DDR',     'VALUE':'DDR_MHZ',     'SOURCE':'DDR_SRC',     'DIV2':False,'USED':True,                'WEIGHT':1.0},          
-        {'NAME':'DDR2X',   'VALUE':'DDR2X_MHZ',   'SOURCE':'DDR_SRC',     'DIV2':False,'USED':True,                'WEIGHT':1.0},          
-        {'NAME':'DDR_DCI', 'VALUE':'DDR_DCI_MHZ', 'SOURCE':'DDR_DCI_SRC', 'DIV2':False,'USED':True,                'WEIGHT':0.1},          
-        {'NAME':'SMC',     'VALUE':'SMC_MHZ',     'SOURCE':'SMC_SRC',     'DIV2':False,'USED':(('NAND',),('NOR',)),'WEIGHT':1.0},          
-        {'NAME':'QSPI',    'VALUE':'QSPI_MHZ',    'SOURCE':'QSPI_SRC',    'DIV2':False,'USED':(('QSPI',),),        'WEIGHT':1.0},          
-        {'NAME':'GIGE0',   'VALUE':'GIGE0_MHZ',   'SOURCE':'GIGE0_SRC',   'DIV2':True, 'USED':(('ETH',0),),        'WEIGHT':1.0},          
-        {'NAME':'GIGE1',   'VALUE':'GIGE1_MHZ',   'SOURCE':'GIGE1_SRC',   'DIV2':True, 'USED':(('ETH',1),),        'WEIGHT':1.0},          
-        {'NAME':'SDIO',    'VALUE':'SDIO_MHZ',    'SOURCE':'SDIO_SRC',    'DIV2':False,'USED':(('SDIO',),),        'WEIGHT':1.0},          
-        {'NAME':'UART',    'VALUE':'UART_MHZ',    'SOURCE':'UART_SRC',    'DIV2':False,'USED':(('UART',),),        'WEIGHT':1.0},          
-        {'NAME':'SPI',     'VALUE':'SPI_MHZ',     'SOURCE':'SPI_SRC',     'DIV2':False,'USED':(('SPI',),),         'WEIGHT':1.0},          
-        {'NAME':'CAN',     'VALUE':'CAN_MHZ',     'SOURCE':'CAN_SRC',     'DIV2':True, 'USED':(('CAN',),),         'WEIGHT':1.0},          
-        {'NAME':'PCAP',    'VALUE':'PCAP_MHZ',    'SOURCE':'PCAP_SRC',    'DIV2':False,'USED':True,                'WEIGHT':1.0},          
-        {'NAME':'TRACE',   'VALUE':'TRACE_MHZ',   'SOURCE':'TRACE_SRC',   'DIV2':False,'USED':True,                'WEIGHT':1.0},          
-        {'NAME':'FPGA0',   'VALUE':'FPGA0_MHZ',   'SOURCE':'FPGA0_SRC',   'DIV2':True, 'USED':True,                'WEIGHT':1.0}, # source can be set to None         
-        {'NAME':'FPGA1',   'VALUE':'FPGA1_MHZ',   'SOURCE':'FPGA1_SRC',   'DIV2':True, 'USED':True,                'WEIGHT':1.0}, # source can be set to None         
-        {'NAME':'FPGA2',   'VALUE':'FPGA2_MHZ',   'SOURCE':'FPGA2_SRC',   'DIV2':True, 'USED':True,                'WEIGHT':1.0}, # source can be set to None         
-        {'NAME':'FPGA3',   'VALUE':'FPGA3_MHZ',   'SOURCE':'FPGA3_SRC',   'DIV2':True, 'USED':True,                'WEIGHT':1.0}, # source can be set to None         
-                  ]
-    def get_clk_requirements(self,mio):
-        clock_reqs=[]
-        for template in self.CLK_TEMPLATE:
+        clock_reqs={'ARM':[],'DDR':[],'IO':[]}
+        for template in CLK_TEMPLATE:
             name=   template['NAME']
+            div2=   template['DIV2']
+            weight= template['WEIGHT']
             value=  self.features.get_par_value_or_default(template['VALUE'])
+            if value==0:
+                continue
             source= self.features.get_par_value_or_default(template['SOURCE'])
+            if not template['USED'] is True:
+                ifc={i[0]:set() for i in template['USED']}
+#                print 'ifc=',ifc
+                for i in template['USED']:
+#                    print 'i=',i,"template['USED']=",template['USED']
+                    if len(i)>1: 
+                        ifc[i[0]].add(i[1])
+##                print name,':',ifc    
+                for mio_iface in mio:
+                    if (mio_iface['NAME'] in ifc) and ((len(ifc[mio_iface['NAME']])==0) or (mio_iface['CHANNEL'] in ifc[mio_iface['NAME']])):
+                        break
+                    pass
+                else:
+                    continue # no MIO interface uses this clock
+            if source in clock_reqs:
+                if   name == 'ARM':
+                    valid_divs=self.arm_valid_div6
+                elif name == 'DDR':    
+                    valid_divs=self.ddr_3x_valid_div6
+                elif div2:    
+                    valid_divs=self.valid_div6x6
+                else:    
+                    valid_divs=self.other_valid_div6
+                clock_reqs[source].append({'NAME':name,'VALUE':value,'DIV':valid_divs,'WEIGHT':weight})
+#        print 'clock_reqs=',clock_reqs
+#         for pll in clock_reqs:
+#             print pll
+#             for i,c in enumerate(clock_reqs[pll]):
+#                 print i
+#                 for n in c: 
+#                     print '        ',n,':',c[n]        
+        self.iface_divs={} # for each name - PLL, divisor
+        self.pll_fdivs={}
+        for pll in clock_reqs: # clocks belonging to the same PLL
+            pll_errs=[]
+            pll_iface_divs={}
+            names=[]
+            for clk_req in clock_reqs[pll]: # individual clocks specs for this interface
+                iface_pll_errors=pll_errors(self.valid_fdiv[pll],clk_req['DIV'],self.f_in,clk_req['VALUE'])
+                iface_pll_errors['WEIGHT']=clk_req['WEIGHT']
+                pll_errs.append(iface_pll_errors)
+                pll_iface_divs[clk_req['NAME']]=iface_pll_errors
+                names.append(clk_req['NAME'])
+            if len(pll_errs) == 0:
+                continue # nothing for this PLL    
+            combo_errors=filter_combine_multiclock(pll_errs)
+            if len(combo_errors)==0: #Will never come here
+                clk_list=str([self.features.get_par_confname(self.clk_dict[n]['VALUE'])+' = '+self.features.get_par_value(self.clk_dict[n]['VALUE']) for n in names ])                 
+                raise Exception('Could not find valid FDIV for %s PLL to satisfy requirements: %s'%(pll,clk_list))
+#            print 'combo_errors=',combo_errors
+            fdiv=  getBest(combo_errors)
+            self.pll_fdivs[pll]=fdiv
+            for name in pll_iface_divs:
+                div=pll_iface_divs[name][fdiv][0]
+                freq=self.f_in*fdiv/div
+                self.iface_divs[name]={'PLL':pll,'DIV':div,'FREQ':freq,'TARGET':self.features.get_par_value(self.clk_dict[name]['VALUE'])}
+                self.features.set_calculated_value(self.clk_dict[name]['VALUE'],freq,force=True)
+#                self.iface_divs[name]={'PLL':pll,'DIV':div,'FREQ':self.f_in*fdiv/div}
+                if self.clk_dict[name]['DIV2']:
+                    div2,div=self.div_second_stage(div)
+                    self.iface_divs[name]['DIV']= div
+                    self.iface_divs[name]['DIV2']=div2
+                    
+        print 'pll_fdivs=', self.pll_fdivs
+        print 'iface_divs='#,iface_divs
+        for iface in self.iface_divs:
+            print iface,': ',self.iface_divs[iface]
+            
+    def html_list_clocks(self,html_file):
+        html_file.write('<h2>System PLL (input clock - %.3f MHz)</h2>'%self.f_in)
+        html_file.write('<table border="1">')
+        html_file.write('  <tr><th>PLL name</th><th>Frequency</th><th>FDIV</th></tr>\n')
+        for pll_name in ('ARM','DDR','IO'):
+            name=pll_name+' PLL'
+            if pll_name in self.pll_fdivs:
+                freq=self.f_in*self.pll_fdivs[pll_name]
+    #            html_file.write('  <tr><th>'+name+'</th><td>'+('%.3f MHz'%freq)+'</td><td>'+str(self.pll_fdivs[pll_name])+'</td></tr>\n')
+                html_file.write('  <tr><th>%s</th><td>%.3f MHz</td><td>%s</td></tr>\n'%(name,freq,str(self.pll_fdivs[pll_name])))
+            else:
+                html_file.write('  <tr><th>%s</th><td colspan="2" align="center">Unused</td></tr>\n'%name)
+                    
+        html_file.write('</table>')
+
+        html_file.write('<h2>System Clocks</h2>')
+        html_file.write('<table border="1">')
+        html_file.write('  <tr><th>Name</th><th>Frequency</th><th>Target</th><th>Error</th><th>PLL</th><th>div 1</th><th>div 2</th><th>Config. name</th><th>Comments</th></tr>\n')
+#CLK_TEMPLATE
+        for line in CLK_TEMPLATE:
+            name=line['NAME']
+            if name in self.iface_divs:
+                iface=self.iface_divs[name]
+                freq=iface['FREQ']
+                target=iface['TARGET']
+                rel_err=(freq-target)/target
+                pll=iface['PLL']
+                div1=iface['DIV']
+                conf_name=  self.features.get_par_confname(self.clk_dict[name]['VALUE'])
+                description=self.features.get_par_description(self.clk_dict[name]['VALUE'])
+                try:
+                    div2='%i'%iface['DIV2']
+                except:
+                    div2='-'    
+                html_file.write('  <tr><th>%s</th><td>%.3f MHz</td><td>%.3f MHz</td><td>%.2f%%</td><td>%s</td><td>%i</td><td>%s</td><td>%s</td><td>%s</td></tr>'%(
+                                          name,        freq,           target,     100*rel_err,    pll,        div1,     div2, conf_name,   description))
+                html_file.write('  </tr>')
+        html_file.write('</table>')
+    def get_ddr_mhz(self):
+        return self.f_in*self.pll_fdivs[self.iface_divs['DDR']['PLL']]/self.iface_divs['DDR']['DIV']    
+                
 ############# Main clock settings #############
 #CONFIG_EZYNQ_CLK_PS_MHZ =   33.333333 # PS_CLK System clock input frequency (MHz)   
 #CONFIG_EZYNQ_CLK_DDR_MHZ = 533.333333 # DDR clock frequency - DDR_3X (MHz)

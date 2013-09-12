@@ -45,13 +45,13 @@ class EzynqFeatures:
             for c in t:
                 if isinstance(c,int):
                     try:
-                        if (c==int(value,0)):
+                        if c==int(value,0):
                             return c
                     except:
                         pass
                 elif isinstance(c,float):
                     try:
-                        if (c==float(value)):
+                        if c==float(value):
                             return c
                     except:
                         pass
@@ -61,7 +61,12 @@ class EzynqFeatures:
                     elif value in self.BOOLEANS[0]:
                         return False
                 elif isinstance(c, str):
-                    return value
+                    try:
+                        if c.upper()==value.upper():
+                            return c
+                    except:
+                        pass
+#                    return value
             else:
                 return None
                          
@@ -102,8 +107,8 @@ class EzynqFeatures:
                 continue
             if isinstance(feature['TYPE'], tuple):
                 val=self._choice_val(feature['TYPE'],value)
-                if val==None:
-                    raise Exception(self.BOOLEANS['ERR_NOT_A_VARIANT']+': '+line['VALUE'] +' is not a valid variant for parameter '+
+                if val is None:
+                    raise Exception(self.ERRORS['ERR_NOT_A_VARIANT']+': '+line['VALUE'] +' is not a valid variant for parameter '+
                                     conf_name+'. Valid are:'+str(feature['TYPE']))
                 else:
                     value=val
@@ -161,6 +166,11 @@ class EzynqFeatures:
     def get_par_confname(self,name):
         try:
             return self.defs[name]['CONF_NAME']
+        except:
+            raise Exception (name+' not found in self.defs') # should not happen with wrong data, program bug
+    def get_par_description(self,name):
+        try:
+            return self.defs[name]['DESCRIPTION']
         except:
             raise Exception (name+' not found in self.defs') # should not happen with wrong data, program bug
 
