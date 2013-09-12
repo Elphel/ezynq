@@ -5,11 +5,16 @@ After running
 and then
   make
 the include/autoconf.mk will be generated and you can run
-  ezynqcfg.py -c include/autoconf.mk [-o boot_head.bin] [--html u-boot.html [--html-mask 255]] [-v]
-
+./ezynqcfg.py -c include/autoconf.mk [-o boot_head.bin] [--html u-boot.html [--html-mask 255]] [-v]
+  
 This command will generate  boot_head.bin and u-boot.html
 When there will be u-boot running from OCM, it will be possible to make a bootable immage with
 cat boot_head.bin u-boot.bin > boot.bin
 
 For testing the program it is possible to make a shortcut and substitute the autoconf.mk with a manually edited file,
 such as test.mk - it has some examples of other valid defines to fine-tune the hardware configuration
+
+
+Temporary testing is performed with (only html file output):
+./ezynqcfg.py -c test.mk --html test.html --html-mask 0x3ff
+
