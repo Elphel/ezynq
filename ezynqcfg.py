@@ -278,6 +278,8 @@ def write_image(image,name):
     bf.close()
          
 #=========================
+if not args.verbosity:
+    args.verbosity=0
 raw_configs=read_config(args.configs)
 raw_options={n['KEY']:n['VALUE'] for n in raw_configs}
 permit_undefined_bits=False
@@ -295,7 +297,7 @@ ddr_type=ddr.get_ddr_type()
 used_mio_interfaces=mio_regs.get_used_interfaces()
 
 #clk=ezynq_clk.EzynqClk(regs_masked,ddr_type,permit_undefined_bits=False,force=False,warn=False)
-clk=ezynq_clk.EzynqClk([],ddr_type,used_mio_interfaces,permit_undefined_bits,force,warn_notfit) # will it verify memory type is set?
+clk=ezynq_clk.EzynqClk(args.verbosity,[],ddr_type,used_mio_interfaces,permit_undefined_bits,force,warn_notfit) # will it verify memory type is set?
 clk.parse_parameters(raw_configs)
 
 clk.calculate_dependent_pars() # will calculate DDR clock, needed for ddr.calculate_dependent_pars()
@@ -335,19 +337,72 @@ num_mio_regs=len(reg_sets)
 
 #adding ddr registers
 ddr.ddr_init_memory(reg_sets,False,False)
-#Collecting registers for output
+reg_sets=ddr.get_new_register_sets() # mio, ddr
+num_ddr_regs=len(reg_sets)-num_mio_regs
 
-reg_sets=ddr.get_new_register_sets() #all - mio and ddr
+
+#initialize clocks
+#   def clocks_rbl_setup(self,current_reg_sets,force=False,warn=False):
+ 
+clk.clocks_rbl_setup(reg_sets,force) # reg Sets include now MIO and CLK
+reg_sets=clk.get_new_register_sets() # mio, ddr and clk
+
+num_clk_regs=len(reg_sets)-num_mio_regs-num_ddr_regs
+
+
+# #adding ddr registers
+# ddr.ddr_init_memory(reg_sets,False,False)
+# #Collecting registers for output
+# 
+# reg_sets=ddr.get_new_register_sets() #all - mio,clk and ddr
 
 
 ezynq_registers.print_html_reg_header(f, 'MIO registers configuration', MIO_HTML_MASK & 0x100, MIO_HTML_MASK & 0x200, not MIO_HTML_MASK & 0x400)
+
 #ezynq_registers.print_html_registers(f, reg_sets[:num_mio_regs], MIO_HTML_MASK & 0x100, MIO_HTML_MASK & 0x200, not MIO_HTML_MASK & 0x400)
 ezynq_registers.print_html_registers(f, reg_sets[:num_mio_regs], MIO_HTML_MASK & 0x800, MIO_HTML_MASK & 0x200, not MIO_HTML_MASK & 0x400)
 ezynq_registers.print_html_reg_footer(f)
 
+
 ezynq_registers.print_html_reg_header(f, 'DDR Configuration', MIO_HTML_MASK & 0x100, MIO_HTML_MASK & 0x200, not MIO_HTML_MASK & 0x400)
-ezynq_registers.print_html_registers(f, reg_sets[num_mio_regs:], MIO_HTML_MASK & 0x100, MIO_HTML_MASK & 0x200, not MIO_HTML_MASK & 0x400)
+ezynq_registers.print_html_registers(f, reg_sets[num_mio_regs:num_mio_regs+num_ddr_regs], MIO_HTML_MASK & 0x100, MIO_HTML_MASK & 0x200, not MIO_HTML_MASK & 0x400)
 ezynq_registers.print_html_reg_footer(f)
+
+ezynq_registers.print_html_reg_header(f, 'CLOCK registers configuration', MIO_HTML_MASK & 0x100, MIO_HTML_MASK & 0x200, not MIO_HTML_MASK & 0x400)
+ezynq_registers.print_html_registers(f, reg_sets[num_mio_regs+num_ddr_regs:], MIO_HTML_MASK & 0x100, MIO_HTML_MASK & 0x200, not MIO_HTML_MASK & 0x400)
+ezynq_registers.print_html_reg_footer(f)
+
+
+
+# #initialize clocks
+# #   def clocks_rbl_setup(self,current_reg_sets,force=False,warn=False):
+#  
+# clk.clocks_rbl_setup(reg_sets,force) # reg Sets include now MIO and CLK
+# reg_sets=clk.get_new_register_sets() # mio and clk
+# num_clk_regs=len(reg_sets)-num_mio_regs
+# 
+# 
+# #adding ddr registers
+# ddr.ddr_init_memory(reg_sets,False,False)
+# #Collecting registers for output
+# 
+# reg_sets=ddr.get_new_register_sets() #all - mio,clk and ddr
+# 
+# 
+# ezynq_registers.print_html_reg_header(f, 'MIO registers configuration', MIO_HTML_MASK & 0x100, MIO_HTML_MASK & 0x200, not MIO_HTML_MASK & 0x400)
+# 
+# #ezynq_registers.print_html_registers(f, reg_sets[:num_mio_regs], MIO_HTML_MASK & 0x100, MIO_HTML_MASK & 0x200, not MIO_HTML_MASK & 0x400)
+# ezynq_registers.print_html_registers(f, reg_sets[:num_mio_regs], MIO_HTML_MASK & 0x800, MIO_HTML_MASK & 0x200, not MIO_HTML_MASK & 0x400)
+# ezynq_registers.print_html_reg_footer(f)
+# 
+# ezynq_registers.print_html_reg_header(f, 'CLOCK registers configuration', MIO_HTML_MASK & 0x100, MIO_HTML_MASK & 0x200, not MIO_HTML_MASK & 0x400)
+# ezynq_registers.print_html_registers(f, reg_sets[num_mio_regs: num_mio_regs+num_clk_regs], MIO_HTML_MASK & 0x100, MIO_HTML_MASK & 0x200, not MIO_HTML_MASK & 0x400)
+# ezynq_registers.print_html_reg_footer(f)
+# 
+# 
+# ezynq_registers.print_html_reg_header(f, 'DDR Configuration', MIO_HTML_MASK & 0x100, MIO_HTML_MASK & 0x200, not MIO_HTML_MASK & 0x400)
+# ezynq_registers.print_html_registers(f, reg_sets[num_mio_regs+num_clk_regs:], MIO_HTML_MASK & 0x100, MIO_HTML_MASK & 0x200, not MIO_HTML_MASK & 0x400)
+# ezynq_registers.print_html_reg_footer(f)
 
 
 #TODO: Need to be modified for the new format

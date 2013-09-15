@@ -77,14 +77,14 @@ CLK_CFG_DEFS=[
               
     {'NAME':'ARM_SRC',       'CONF_NAME':'CONFIG_EZYNQ_CLK_ARM_SRC','TYPE':('ARM','DDR','IO'),'MANDATORY':False,'DERIVED':False,'DEFAULT':'ARM',
                 'DESCRIPTION':'ARM CPU clock source (normally ARM PLL)'},
-    {'NAME':'DDR_SRC',       'CONF_NAME':'CONFIG_EZYNQ_CLK_DDR_SRC','TYPE':('ARM','DDR','IO'),'MANDATORY':False,'DERIVED':False,'DEFAULT':'DDR',
-                'DESCRIPTION':'DDR (DDR2x, DDR3x) clock source (normally DDR PLL)'},
-    {'NAME':'DDR_DCI_SRC',   'CONF_NAME':'CONFIG_EZYNQ_CLK_DDR_DCI_SRC','TYPE':('ARM','DDR','IO'),'MANDATORY':False,'DERIVED':False,'DEFAULT':'DDR',
-                'DESCRIPTION':'DDR DCI clock source (normally DDR PLL)'},
+    {'NAME':'DDR_SRC',       'CONF_NAME':'CONFIG_EZYNQ_CLK_DDR_SRC','TYPE':('DDR',),'MANDATORY':False,'DERIVED':False,'DEFAULT':'DDR',
+                'DESCRIPTION':'DDR (DDR2x, DDR3x) clock source (Only valid DDR PLL)'},
+    {'NAME':'DDR_DCI_SRC',   'CONF_NAME':'CONFIG_EZYNQ_CLK_DDR_DCI_SRC','TYPE':('DDR',),'MANDATORY':False,'DERIVED':False,'DEFAULT':'DDR',
+                'DESCRIPTION':'DDR DCI clock source (only valid DDR PLL)'},
     {'NAME':'SMC_SRC',       'CONF_NAME':'CONFIG_EZYNQ_CLK_SMC_SRC','TYPE':('ARM','DDR','IO'),'MANDATORY':False,'DERIVED':False,'DEFAULT':'IO',
                 'DESCRIPTION':'Static memory controller clock source (normally IO PLL)'},
-    {'NAME':'QSPI_SRC',       'CONF_NAME':'CONFIG_EZYNQ_CLK_QSPI_SRC','TYPE':('ARM','DDR','IO'),'MANDATORY':False,'DERIVED':False,'DEFAULT':'IO',
-                'DESCRIPTION':'Quad SPI memory controller clock source (normally IO PLL)'},
+    {'NAME':'QSPI_SRC',       'CONF_NAME':'CONFIG_EZYNQ_CLK_QSPI_SRC','TYPE':('ARM','DDR','IO'),'MANDATORY':False,'DERIVED':False,'DEFAULT':'ARM',
+                'DESCRIPTION':'Quad SPI memory controller clock source (normally ARM PLL)'},
     {'NAME':'GIGE0_SRC',      'CONF_NAME':'CONFIG_EZYNQ_CLK_GIGE0_SRC','TYPE':('ARM','DDR','IO','EMIO'),'MANDATORY':False,'DERIVED':False,'DEFAULT':'IO',
                 'DESCRIPTION':'GigE 0 Ethernet controller clock source (normally IO PLL, can be EMIO)'},
     {'NAME':'GIGE1_SRC',      'CONF_NAME':'CONFIG_EZYNQ_CLK_GIGE1_SRC','TYPE':('ARM','DDR','IO','EMIO'),'MANDATORY':False,'DERIVED':False,'DEFAULT':'IO',
@@ -99,7 +99,7 @@ CLK_CFG_DEFS=[
                 'DESCRIPTION':'CAN controller clock source (normally IO PLL)'},
     {'NAME':'PCAP_SRC',       'CONF_NAME':'CONFIG_EZYNQ_CLK_PCAP_SRC','TYPE':('ARM','DDR','IO'),'MANDATORY':False,'DERIVED':False,'DEFAULT':'IO',
                 'DESCRIPTION':'PCAP controller clock source (normally IO PLL)'},
-    {'NAME':'TRACE_SRC',       'CONF_NAME':'CONFIG_EZYNQ_CLK_TRACE_SRC','TYPE':('ARM','DDR','IO'),'MANDATORY':False,'DERIVED':False,'DEFAULT':'IO',
+    {'NAME':'TRACE_SRC',       'CONF_NAME':'CONFIG_EZYNQ_CLK_TRACE_SRC','TYPE':('ARM','DDR','IO','EMIO'),'MANDATORY':False,'DERIVED':False,'DEFAULT':'IO',
                 'DESCRIPTION':'Trace Port clock source (normally IO PLL)'},
 
 # performance data, final values (overwrites calculated)              
@@ -191,7 +191,7 @@ CLK_CFG_DEFS=[
 #CONFIG_EZYNQ_CLK_DDR_SRC =       DDR # DDR (DDR2x, DDR3x) clock source (normally DDR PLL)
 #CONFIG_EZYNQ_CLK_DDR_DCI_SRC =   DDR # DDR DCI clock source (normally DDR PLL)
 #CONFIG_EZYNQ_CLK_SMC_SRC =        IO # Static memory controller clock source (normally IO PLL)
-#CONFIG_EZYNQ_CLK_QSPI_SRC =       IO # Quad SPI memory controller clock source (normally IO PLL)
+#CONFIG_EZYNQ_CLK_QSPI_SRC =      ARM # Quad SPI memory controller clock source (normally ARM PLL)
 #CONFIG_EZYNQ_CLK_GIGE0_SRC =      IO # GigE 0 Ethernet controller clock source (normally IO PLL, can be EMIO)
 #CONFIG_EZYNQ_CLK_GIGE1_SRC =      IO # GigE 1 Ethernet controller clock source (normally IO PLL, can be EMIO)
 #CONFIG_EZYNQ_CLK_SDIO_SRC =       IO # SDIO controller clock source (normally IO PLL)

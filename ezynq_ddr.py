@@ -262,10 +262,10 @@ class EzynqDDR:
         ddrc_register_set=  self.ddrc_register_set
         ddriob_register_set.set_initial_state(current_reg_sets, True)# start from the current registers state
         
-        self.ddr_init_ddriob(force,warn) # will program to sequence 'MAIN'
+        self.ddr_init_ddriob(force,warn)
         regs1=ddriob_register_set.get_register_sets(True,True)
         ddrc_register_set.set_initial_state(regs1, True)# add
-        self.ddr_init_ddrc(force,warn) # will program to sequence 'MAIN'
+        self.ddr_init_ddrc(force,warn)
         return ddrc_register_set.get_register_sets(True,True)
 
     def ddr_init_ddrc(self,force=False,warn=False): # will program to sequence 'MAIN'
@@ -1439,7 +1439,7 @@ class EzynqDDR:
                                                               ('pref_opt2',0),
                                                               ('update_control',0)),force,warn)        
   
- #TODO: Remove? 
+#TODO: Remove? 
             
     def parse_ddrc_raw_register_set(self,raw_configs,qualifier_char,force=True,warn=True):
 #        for i,attribs in enumerate(self.set_attribs):

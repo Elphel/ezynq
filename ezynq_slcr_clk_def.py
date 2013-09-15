@@ -120,11 +120,11 @@ SLCR_CLK_DEFS={ #not all fields are defined currently
                                    'COMMENTS':'CPU clock control',
                                    'FIELDS':{
                   'reserved1':                {'r':(29,31),'d':0,     'c':'reserved'},
-                  'cpu_peri_clkact':          {'r':(28,28),'d':0x1,   'c':'Clock active (0 - disabled)'},         # 1
-                  'cpu_1x_clkact':            {'r':(27,27),'d':0x1,   'c':'CPU-1x clock active (0 - disabled)'},  # 1
-                  'cpu_2x_clkact':            {'r':(26,26),'d':0x1,   'c':'CPU-2x clock active (0 - disabled)'},  # 1
-                  'cpu_3x2x_clkact':          {'r':(25,25),'d':0x1,   'c':'CPU-3x2x clock active (0 - disabled)'},# 1
-                  'cpu_6x4x_clkact':          {'r':(24,24),'d':0x1,   'c':'CPU-6x4x clock active (0 - disabled)'},# 1
+                  'cpu_peri_clkact':          {'r':(28,28),'d':0x1,   'c':'Peripheral clock active (0 - disabled)'},# 1
+                  'cpu_1x_clkact':            {'r':(27,27),'d':0x1,   'c':'CPU-1x clock active (0 - disabled)'},    # 1
+                  'cpu_2x_clkact':            {'r':(26,26),'d':0x1,   'c':'CPU-2x clock active (0 - disabled)'},    # 1
+                  'cpu_3x2x_clkact':          {'r':(25,25),'d':0x1,   'c':'CPU-3x2x clock active (0 - disabled)'},  # 1
+                  'cpu_6x4x_clkact':          {'r':(24,24),'d':0x1,   'c':'CPU-6x4x clock active (0 - disabled)'},  # 1
                   'reserved2':                {'r':(14,23),'d':0,     'c':'reserved'},
                   'divisor':                  {'r':( 8,13),'d':0x4,   'c':'Frequency divisor for the CPU clock source. If PLL is NOT bypassed values 1 and 3 are invalid'}, #0x2
                   'reserved3':                {'r':( 6, 7),'d':0,     'c':'reserved'},
@@ -132,16 +132,16 @@ SLCR_CLK_DEFS={ #not all fields are defined currently
                   'reserved4':                {'r':( 6, 7),'d':0,     'c':'reserved'}}},
 
       'ddr_clk_ctrl':             {'OFFS': 0x124,'DFLT':0x18400003,'RW':'RW', # 0xc200003
-                                   'COMMENTS':'CPU clock control',
+                                   'COMMENTS':'DDR_3x (including PHY) and DDR_2X clock control',
                                    'FIELDS':{
                   'ddr_2x_clk_divisor':       {'r':(26,31),'d':0x6,   'c':'Frequency divisor for ddr_2x clk'},  # 0x3
                   'ddr_3x_clk_divisor':       {'r':(20,25),'d':0x4,   'c':'Frequency divisor for ddr_3x clk'},  # 0x2
                   'reserved1':                {'r':( 2,19),'d':0,     'c':'reserved'},
-                  'cpu_2x_clkact':            {'r':( 1, 1),'d':0x1,   'c':'1 - ddr_2x clk enabled (0 - disabled)'},  # 0x1
-                  'cpu_3x_clkact':            {'r':( 0, 0),'d':0x1,   'c':'1 - ddr_3x clk enabled (0 - disabled)'}}},# 0x1
+                  'ddr_2x_clkact':            {'r':( 1, 1),'d':0x1,   'c':'1 - ddr_2x clk enabled (0 - disabled)'},  # 0x1
+                  'ddr_3x_clkact':            {'r':( 0, 0),'d':0x1,   'c':'1 - ddr_3x clk enabled (0 - disabled)'}}},# 0x1
 
       'dci_clk_ctrl':             {'OFFS': 0x128,'DFLT':0x18400003,'RW':'RW', # 0x302301
-                                   'COMMENTS':'CPU clock control',
+                                   'COMMENTS':'DDR DCI clock control',
                                    'FIELDS':{
                   'reserved1':                {'r':(26,31),'d':0,     'c':'reserved'},
                   'divisor1':                 {'r':(20,25),'d':0x1e,  'c':'Frequency divisor, second stage'},       # 0x3
@@ -151,7 +151,7 @@ SLCR_CLK_DEFS={ #not all fields are defined currently
                   'clkact':                   {'r':( 0, 0),'d':0x1,   'c':'1 - dci clock enabled (0 - disabled)'}}},# 0x1
 
       'aper_clk_ctrl':            {'OFFS': 0x12c,'DFLT':0x01ffcccd, 'RW':'RW', # 0x01ec044d (set after peripherals)
-                                   'COMMENTS':'CPU clock control',
+                                   'COMMENTS':'AMBA peripherals clock control',
                                    'FIELDS':{
                   'reserved1':                {'r':(25,31),'d':0,     'c':'reserved'},
                   'smc_cpu_1x_clkact':        {'r':(24,24),'d':0x1,   'c':'SMC AMBA clock control (1- enabled, 0- disabled)'},        # 0x1
@@ -315,10 +315,10 @@ SLCR_CLK_DEFS={ #not all fields are defined currently
                   'can1_ref_sel':             {'r':(22,22),'d':0,    'c':'CAN1 reference clock selection: 0: from internal PLL, 1 - from MIO based on can1_mux selection'},
                   'can1_mux':                 {'r':(16,21),'d':0,    'c':'CAN1 MIO pin selection (valid: 0..53)'},
                   'reserved2':                {'r':( 7,15),'d':0,    'c':'reserved'},
-                  'can1_ref_sel':             {'r':( 6, 6),'d':0,    'c':'CAN0 reference clock selection: 0: from internal PLL, 1 - from MIO based on can0_mux selection'},
-                  'can1_mux':                 {'r':( 0, 5),'d':0,    'c':'CAN0 MIO pin selection (valid: 0..53)'}}},
+                  'can0_ref_sel':             {'r':( 6, 6),'d':0,    'c':'CAN0 reference clock selection: 0: from internal PLL, 1 - from MIO based on can0_mux selection'},
+                  'can0_mux':                 {'r':( 0, 5),'d':0,    'c':'CAN0 MIO pin selection (valid: 0..53)'}}},
 
-      'spi_clk_ctrl':             {'OFFS': 0x164,'DFLT':0xf03,'RW':'RW', # Never set
+      'dbg_clk_ctrl':             {'OFFS': 0x164,'DFLT':0xf03,'RW':'RW', # Never set
                                    'COMMENTS':'SoC debug clock control',
                                    'FIELDS':{
                   'reserved1':                {'r':(14,31),'d':0,    'c':'reserved'},
