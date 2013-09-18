@@ -288,8 +288,13 @@ CONFIG_EZYNQ_CLK_TRACE_SRC =      IO # Trace Port clock source (normally IO PLL)
 
 
 
-
+# Even if memory itself is DDR3L (1.35V) it also can support DDR3 mode (1.5V). And unfortunately Zynq has degraded
+# specs at 1.35V (only 400MHz maximal clock), so datasheets's 'DDR3L' should be replaced with 'DDR3' and the board
+# power supply should be 1.5V - in that case 533MHz clock is possible
 CONFIG_EZYNQ_DDR_DS_MEMORY_TYPE =  DDR3  # DDR memory type: DDR3 (1.5V), DDR3L (1.35V), DDR2 (1.8V), LPDDR2 (1.2V)
+
+
+
 ##### performance data, final values (overwrite calculated) #####              
 CONFIG_EZYNQ_CLK_SPEED_GRADE =        3   # Device speed grade
 #CONFIG_EZYNQ_CLK_PLL_MAX_MHZ =     1800.0 # Maximal PLL clock frequency, MHz. Overwrites default for selected speed grade: (Speed grade -1:1600, -2:1800, -3:2000)'},
@@ -319,3 +324,5 @@ CONFIG_EZYNQ_CLK_DS_DDR_2X_MAX_3_MHZ = 444.0 # Maximal DDR_2X clock frequency (M
 
 CONFIG_EZYNQ_CLK_COMPLIANCE_PERCENT =  5.0 # Allow exceeding maximal limits by this margin (percent'},
 
+#CONFIG_EZYNQ_SKIP_DDR = y
+CONFIG_EZYNQ_SKIP_CLK = y

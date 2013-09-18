@@ -35,6 +35,7 @@ parser.add_argument('-w', '--warn',      help='Warn when the pin function is ove
 parser.add_argument('-o', '--outfile',   help='Path to save the generated boot file')
 parser.add_argument('--html', help='Generate HTML map of MIO, save to the specified file')
 parser.add_argument('--html-mask', help='Bit mask of what data to include in the HTML MIO map')
+parser.add_argument('-i', '--include',   help='Generate include file for u-boot')
 
 args = parser.parse_args()
 #print args
@@ -260,6 +261,18 @@ def image_generator (image,
         waddr+=1
         image[waddr]=0
         waddr+=1
+
+#    for addr, data, mask, module_name, register_name, r_def in reg_sets:
+def write_include(filename,reg_sets):
+    incl_file=open(filename,'w')
+#    for addr, data, mask, module_name, register_name, r_def in reg_sets:
+    for addr, data, _, module_name, register_name, r_def in reg_sets:
+            try:
+                comments=r_def['COMMENTS']
+            except:
+                comments=''
+            incl_file.write('    writel(0x%08x, 0x%08x); /* %s.%s  %s */\n'%(data,addr,module_name,register_name,comments))        
+    incl_file.close()
             
 def write_image(image,name):
     bf=open(name,'wb')
@@ -276,7 +289,13 @@ def write_image(image,name):
 #    data=s.pack(*image)
     bf.write(data)
     bf.close()
-         
+
+def raw_config_value(key, raw_config):
+    for kv in raw_config:
+        if kv['KEY']== key:
+            return kv['VALUE']
+    return None     
+
 #=========================
 if not args.verbosity:
     args.verbosity=0
@@ -336,25 +355,36 @@ reg_sets=mio_regs.setregs_mio(reg_sets,force) # reg Sets include now MIO
 num_mio_regs=len(reg_sets)
 
 #adding ddr registers
-ddr.ddr_init_memory(reg_sets,False,False)
-reg_sets=ddr.get_new_register_sets() # mio, ddr
+if raw_config_value('CONFIG_EZYNQ_SKIP_DDR', raw_configs) is None:        
+    ddr.ddr_init_memory(reg_sets,False,False)
+    reg_sets=ddr.get_new_register_sets() # mio, ddr
+else:
+    print 'Debug mode: skipping DDR-related configuration'
+
 num_ddr_regs=len(reg_sets)-num_mio_regs
+
+#define CONFIG_EZYNQ_SKIP_DDR
+#define CONFIG_EZYNQ_SKIP_CLK
 
 
 #initialize clocks
 #   def clocks_rbl_setup(self,current_reg_sets,force=False,warn=False):
- 
+#if raw_config_value('CONFIG_EZYNQ_SKIP_CLK', raw_configs) is None:        
 clk.clocks_rbl_setup(reg_sets,force) # reg Sets include now MIO and CLK
 reg_sets=clk.get_new_register_sets() # mio, ddr and clk
+#else:    
+#    print 'Debug mode: skipping CLK/PLL configuration'
 
 num_clk_regs=len(reg_sets)-num_mio_regs-num_ddr_regs
 
+if raw_config_value('CONFIG_EZYNQ_SKIP_CLK', raw_configs) is None:
+    num_rbl_regs=len(reg_sets)
+    print 'Debug mode: CLK/PLL configuration by RBL'
+else:    
+    num_rbl_regs=len(reg_sets)-num_clk_regs        
+    print 'Debug mode: CLK/PLL configuration by u-boot'
 
-# #adding ddr registers
-# ddr.ddr_init_memory(reg_sets,False,False)
-# #Collecting registers for output
-# 
-# reg_sets=ddr.get_new_register_sets() #all - mio,clk and ddr
+
 
 
 ezynq_registers.print_html_reg_header(f, 'MIO registers configuration', MIO_HTML_MASK & 0x100, MIO_HTML_MASK & 0x200, not MIO_HTML_MASK & 0x400)
@@ -369,48 +399,24 @@ ezynq_registers.print_html_registers(f, reg_sets[num_mio_regs:num_mio_regs+num_d
 ezynq_registers.print_html_reg_footer(f)
 
 ezynq_registers.print_html_reg_header(f, 'CLOCK registers configuration', MIO_HTML_MASK & 0x100, MIO_HTML_MASK & 0x200, not MIO_HTML_MASK & 0x400)
-ezynq_registers.print_html_registers(f, reg_sets[num_mio_regs+num_ddr_regs:], MIO_HTML_MASK & 0x100, MIO_HTML_MASK & 0x200, not MIO_HTML_MASK & 0x400)
+ezynq_registers.print_html_registers(f, reg_sets[num_mio_regs+num_ddr_regs:num_rbl_regs], MIO_HTML_MASK & 0x100, MIO_HTML_MASK & 0x200, not MIO_HTML_MASK & 0x400)
 ezynq_registers.print_html_reg_footer(f)
 
-
-
-# #initialize clocks
-# #   def clocks_rbl_setup(self,current_reg_sets,force=False,warn=False):
-#  
-# clk.clocks_rbl_setup(reg_sets,force) # reg Sets include now MIO and CLK
-# reg_sets=clk.get_new_register_sets() # mio and clk
-# num_clk_regs=len(reg_sets)-num_mio_regs
-# 
-# 
-# #adding ddr registers
-# ddr.ddr_init_memory(reg_sets,False,False)
-# #Collecting registers for output
-# 
-# reg_sets=ddr.get_new_register_sets() #all - mio,clk and ddr
-# 
-# 
-# ezynq_registers.print_html_reg_header(f, 'MIO registers configuration', MIO_HTML_MASK & 0x100, MIO_HTML_MASK & 0x200, not MIO_HTML_MASK & 0x400)
-# 
-# #ezynq_registers.print_html_registers(f, reg_sets[:num_mio_regs], MIO_HTML_MASK & 0x100, MIO_HTML_MASK & 0x200, not MIO_HTML_MASK & 0x400)
-# ezynq_registers.print_html_registers(f, reg_sets[:num_mio_regs], MIO_HTML_MASK & 0x800, MIO_HTML_MASK & 0x200, not MIO_HTML_MASK & 0x400)
-# ezynq_registers.print_html_reg_footer(f)
-# 
-# ezynq_registers.print_html_reg_header(f, 'CLOCK registers configuration', MIO_HTML_MASK & 0x100, MIO_HTML_MASK & 0x200, not MIO_HTML_MASK & 0x400)
-# ezynq_registers.print_html_registers(f, reg_sets[num_mio_regs: num_mio_regs+num_clk_regs], MIO_HTML_MASK & 0x100, MIO_HTML_MASK & 0x200, not MIO_HTML_MASK & 0x400)
-# ezynq_registers.print_html_reg_footer(f)
-# 
-# 
-# ezynq_registers.print_html_reg_header(f, 'DDR Configuration', MIO_HTML_MASK & 0x100, MIO_HTML_MASK & 0x200, not MIO_HTML_MASK & 0x400)
-# ezynq_registers.print_html_registers(f, reg_sets[num_mio_regs+num_clk_regs:], MIO_HTML_MASK & 0x100, MIO_HTML_MASK & 0x200, not MIO_HTML_MASK & 0x400)
-# ezynq_registers.print_html_reg_footer(f)
+if len(reg_sets)>num_rbl_regs:
+    ezynq_registers.print_html_reg_header(f, 'Registers configuration in u-boot', MIO_HTML_MASK & 0x100, MIO_HTML_MASK & 0x200, not MIO_HTML_MASK & 0x400)
+    ezynq_registers.print_html_registers(f, reg_sets[num_rbl_regs:], MIO_HTML_MASK & 0x100, MIO_HTML_MASK & 0x200, not MIO_HTML_MASK & 0x400)
+    ezynq_registers.print_html_reg_footer(f)
+    
 
 
 #TODO: Need to be modified for the new format
 # if 'CONFIG_EZYNQ_UART_LOOPBACK_0' in raw_options: uart_remote_loopback(registers,f, 0,MIO_HTML_MASK)
 # if 'CONFIG_EZYNQ_UART_LOOPBACK_1' in raw_options: uart_remote_loopback(registers,f, 1,MIO_HTML_MASK)
 if f:
-    f.write('<h4>Total number of registers set up in the RBL header is <b>'+str(len(reg_sets))+"</b> of maximal 256</h4>")
-
+    f.write('<h4>Total number of registers set up in the RBL header is <b>'+str(num_rbl_regs)+"</b> of maximal 256</h4>")
+    if num_rbl_regs<len(reg_sets):
+        f.write('<h4>Number of registers set up in u-boot is <b>'+str(len(reg_sets)-num_rbl_regs)+"</b> of maximal 256</h4>")
+#
 if MIO_HTML:
     f.close
 #if args.verbosity >= 1:
@@ -424,7 +430,7 @@ image =[ 0 for k in range (0x8c0/4)]
 #CONFIG_EZYNQ_START_EXEC=             0x20 # number of bytes to load to the OCM memory, <= 0x30000 
 
 image_generator (image,
-                 reg_sets, #
+                 reg_sets[:num_rbl_regs], #
                  #registers,
                  raw_options,
                  int(raw_options['CONFIG_EZYNQ_BOOT_USERDEF'],0), # user_def
@@ -433,6 +439,9 @@ image_generator (image,
                  int(raw_options['CONFIG_EZYNQ_START_EXEC'],0)) #start_exec)
 if args.outfile:
     write_image(image,args.outfile)
+if args.include and (num_rbl_regs<len(reg_sets)):
+    write_include(args.include,reg_sets[num_rbl_regs:])
+    print 'Debug mode: writing u-boot setup registers to ',args.include
 # print int(hex(1234567),0) # works for decimal and hex
  
-# binary i/o - tutorial 11.3
+

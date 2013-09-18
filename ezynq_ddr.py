@@ -1426,7 +1426,10 @@ class EzynqDDR:
                                                         ('drive_p',self.features.get_par_value('BIDIR_DRIVE_POS'))),force,warn) #0xf9861c
 #Trying toggle feature (but actually for now it can be left in reset state - is this on/off/on needed?                
         _ = ddriob_register_set.get_register_sets(True,True) # close previous register settings
-#        ddriob_register_set.set_bitfields('ddriob_dci_ctrl', ('vrn_out',0),force,warn) # default value shows 1, actual settings - 0  (first time only?)       
+#        ddriob_register_set.set_bitfields('ddriob_dci_ctrl', ('vrn_out',0),force,warn) # default value shows 1, actual settings - 0  (first time only?)
+#
+# Do in u-boot. When moving - use UG585 table 10-7 to set options
+#      
         ddriob_register_set.set_bitfields('ddriob_dci_ctrl', ('reset',1),force,warn)        
         _ = ddriob_register_set.get_register_sets(True,True) # close previous register settings
         ddriob_register_set.set_bitfields('ddriob_dci_ctrl', ('reset',0),force,warn)        

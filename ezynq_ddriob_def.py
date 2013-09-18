@@ -187,8 +187,9 @@ DDRIOB_DEFS={ #not all fields are defined currently
                   'vrp_tri':                  {'r':( 2, 2),'d':0,  'c':'Reserved'},
                   'enable':                   {'r':( 1, 1),'d':0,  'c':'DCI System enable. Silicon v2+ require set to 1'},   #1
                   'reset':                    {'r':( 0, 0),'d':0,  'c':'Toggle once to initialize FF-s in DCI system.'}}}, #1
+             # reset is mentioned as DDRIOB_DCI_CNTRL_RESET_B , so it is active LOW
     'ddriob_dci_status':                      {'OFFS': 0xb74,'DFLT':0x0,'RW':'RW', #0x823
-                                   'COMMENTS':'DDR IOB buffer control',
+                                   'COMMENTS':'DDR IOB buffer DCI status',
                                    'FIELDS':{
                   'reserved1':                {'r':(14,31),'d':0,'m':'R',  'c':'Reserved'},
                   'done':                     {'r':(13,13),'d':0,          'c':'DCI done'},
