@@ -25,7 +25,8 @@ __status__ = "Development"
 DDRC_DEFS={ #not all fields are defined currently
     'BASE_ADDR':(0xF8006000,),
     'MODULE_NAME':('ddrc',),
-    'ddrc_ctrl':               {'OFFS': 0x000,'DFLT':0x00000200,'RW':'RW','FIELDS':{ #0x81
+    'ddrc_ctrl':               {'OFFS': 0x000,'DFLT':0x00000200,'RW':'RW','COMMENTS':'DDRC control: refresh, power down, initialize, debug',
+                                'FIELDS':{ #0x81
                   'reg_ddrc_dis_auto_refresh':{'r':(16,16),'d':0,'c':'Dynamic. 1 - disable autorefresh'},
                   'reg_ddrc_dis_act_bypass':  {'r':(15,15),'d':0,'c':'Debug. 1 - disable bypass for high priority read activity'},
                   'reg_ddrc_dis_rd_bypass':   {'r':(14,14),'d':0,'c':'Debug. 1 - disable bypass for high priority read page hits'},

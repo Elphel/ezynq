@@ -41,13 +41,15 @@ def print_html_reg_footer(html_file):
         return
     html_file.write('</table>\n')
 
-def print_html_registers(html_file, reg_sets, show_bit_fields=True, show_comments=True,filter_fields=True):
+def print_html_registers(html_file, reg_sets, from_index, show_bit_fields=True, show_comments=True,filter_fields=True,all_used_fields=False):
     if not html_file:
         return
 
 #            new_sets.append((addr,data,mask,self.module_name,register_name,self.registers[register_name]))
     current_reg_state={} #address: (data,mask)
-    for addr, data, mask, module_name, register_name, r_def in reg_sets:
+    for index, (addr, data, mask, module_name, register_name, r_def) in enumerate (reg_sets):
+#        if addr==0xf8000100:
+#            print 'index=',index,' addr=',hex(addr),' data=',hex(data),' mask=',hex(mask)
         if mask!=0:
             try:
                 dflt_data=r_def['DFLT']
@@ -59,13 +61,20 @@ def print_html_registers(html_file, reg_sets, show_bit_fields=True, show_comment
                 rw='RW'
             try:
                 old_data,old_mask=current_reg_state[addr]
+                if not all_used_fields:
+                    old_mask=0
                 prev_sdata=hex(old_data)
             except:
                 old_data=dflt_data
                 old_mask=0        
                 prev_sdata='-'
             new_data=((old_data ^ data) & mask) ^ old_data
-            new_mask= old_mask | mask    
+            new_mask= old_mask | mask
+            current_reg_state[addr]=(new_data,new_mask)
+            
+            if index<from_index: # just accumulate previous history of the register mask/values, no output
+                continue
+
             html_file.write('<tr>\n')
             try:
                 comments=r_def['COMMENTS']
@@ -114,7 +123,42 @@ def print_html_registers(html_file, reg_sets, show_bit_fields=True, show_comment
                 if show_comments:
                     html_file.write('<td>'+comments+'</td>')
                 html_file.write('\n</tr>\n')
-            current_reg_state[addr]=(new_data,new_mask)
+
+
+# for i,_ in   enumerate 
+#     def set_initial_state(self,added_reg_sets, init=True):
+#         if init:
+#             self.initial_state={}
+#             self.previous_reg_sets=[]
+#             try:
+#                 self.initial_register_count=len(added_reg_sets)
+#             except:
+#                 self.initial_register_count=0    
+#         if not added_reg_sets:
+#             return
+# #        print added_reg_sets
+#         self.previous_reg_sets+=added_reg_sets # appends, not overwrites
+#         for addr,data,mask,_,_,_ in added_reg_sets: # Do not need to care about default values - they will have 0 in the mask bits.
+#             if addr in self.initial_state:
+#                 old_data,old_mask=self.initial_state[addr]
+#                 data=((old_data ^ data) & mask) ^ old_data
+#                 mask |= old_mask
+#             self.initial_state[addr]=(data,mask)
+
+def accumulate_reg_data(reg_sets,accumulate_mask=False):
+    initial_state={}
+    cumulative_regs=[() for _ in reg_sets]
+    for index, (addr, data, mask, module_name, register_name, r_def) in enumerate (reg_sets):
+        if addr in initial_state:
+            old_data,old_mask=initial_state[addr]
+            data=((old_data ^ data) & mask) ^ old_data
+            if accumulate_mask:
+                mask |= old_mask
+        initial_state[addr]=(data,mask)
+        cumulative_regs[index]=(addr, data, mask, module_name, register_name, r_def)
+    return cumulative_regs     
+        
+   
  
 
 class EzynqRegisters:
@@ -172,22 +216,34 @@ class EzynqRegisters:
         self.previous_reg_sets+=added_reg_sets # appends, not overwrites
         for addr,data,mask,_,_,_ in added_reg_sets: # Do not need to care about default values - they will have 0 in the mask bits.
             if addr in self.initial_state:
-                old_data,old_mask=self.initial_state[addr]
+#                old_data,old_mask=self.initial_state[addr]
+                old_data,_=self.initial_state[addr]
                 data=((old_data ^ data) & mask) ^ old_data
-                mask |= old_mask
-            self.initial_state[addr]=(data,mask)
+#                mask |= old_mask
+#            self.initial_state[addr]=(data,mask)
+            self.initial_state[addr]=(data,0) # ignoring old mask - only accumulating newely set bits in this set
             
     def get_reg_names(self):
-#        name_offs=sorted([(name,self.registers[name]['OFFS']) for name in self.registers], key = lambda l: l[1])
-#        print '---self.registers=',self.registers 
-#        unsorted_name_offs=[(name,self.defs[name]['OFFS']) for name in self.registers]
-#        print '---unsorted_name_offs=',unsorted_name_offs 
-#        name_offs=sorted(unsorted_name_offs, key = lambda l: l[1]) 
-#        print '---name_offs=',name_offs 
-#        return [n for n in name_offs]
-# sort register names in the order of addresses
-#        return [n for n in sorted([(name,self.defs[name]['OFFS']) for name in self.registers], key = lambda l: l[1])]
         return [n[0] for n in sorted([(name,self.defs[name]['OFFS']) for name in self.registers], key = lambda l: l[1])]
+    
+    def get_register_comments(self,register_name):
+        try:
+            return self.defs[register_name]['COMMENTS']
+        except:
+            return ''
+            
+    def get_bitfield_address_mask_comments(self,register_name,field_name): #channel is implied in self
+        try:
+            bit_field=self.defs[register_name]['FIELDS'][field_name]
+        except:    
+            raise Exception (self.ERRORS['ERR_FIELD']+' '+register_name+'.'+field_name)
+        mask=self._mask(bit_field['r'])
+        try:
+            comments=bit_field['c']
+        except:
+            comments=''    
+        addr=self.base_addr+self.defs[register_name]['OFFS']
+        return (addr,mask,comments)
                 
     #number of registers set before this module (can be removed from the result of get_register_sets(sort_addr=True,apply_new=True))      
     def get_initial_count(self):

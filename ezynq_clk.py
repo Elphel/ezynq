@@ -340,7 +340,8 @@ class EzynqClk:
             clk=self.iface_divs[name]
             if (not 'PLL' in clk ) and (not 'FREQ' in clk):
                 self.iface_divs[name]['FREQ']=self.iface_divs[self.iface_divs[name]['SOURCE']]['FREQ'] # same frequency - possible to use 'VALUE' as scale   
-
+    def get_plls_used (self):
+        return set([pll for pll in self.pll_fdivs])
           
     def html_list_clocks(self,html_file):
         def list_with_children(name):
@@ -411,23 +412,26 @@ class EzynqClk:
     def get_new_register_sets(self):
         return self.clk_register_set.get_register_sets(True,True)
 
-    def clocks_rbl_setup(self,current_reg_sets,force=False,warn=False):
+    def clocks_regs_setup(self,current_reg_sets,unlock_needed=True,force=False,warn=False):
         clk_register_set=self.clk_register_set
         clk_register_set.set_initial_state(current_reg_sets, True)# start from the current registers state
+        if unlock_needed:
+            self.slcr_unlock()
+            _ = clk_register_set.get_register_sets(True,True) # close previous register settings
 # Bypass used PLL-s - stage 1 of PLL setup     
-        self.clocks_rbl_pll_bypass(force=False,warn=False)
+        self.clocks_pll_bypass(force=False,warn=False)
         _ = clk_register_set.get_register_sets(True,True) # close previous register settings
 # Turn on PLL reset and program feedback -  stage 2 of PLL setup     
-        self.clocks_rbl_pll_reset_and_fdiv(force=False,warn=False)
+        self.clocks_pll_reset_and_fdiv(force=False,warn=False)
         _ = clk_register_set.get_register_sets(True,True) # close previous register settings
 # Configure PLL parameters -  stage 3 of PLL setup     
-        self.clocks_rbl_pll_conf(force=False,warn=False)
+        self.clocks_pll_conf(force=False,warn=False)
         _ = clk_register_set.get_register_sets(True,True) # close previous register settings
 # Release reset of the PLLs (let them start) -  stage 4 of PLL setup     
-        self.clocks_rbl_pll_start(force=False,warn=False)
+        self.clocks_pll_start(force=False,warn=False)
         _ = clk_register_set.get_register_sets(True,True) # close previous register settings
-# Do after PLL bypass and Reset - stage 5 of clocks setup
-        self.clocks_rbl_program(force=False,warn=False)
+# stage 5 of clocks setup
+        self.clocks_program(force=False,warn=False)
   
 # #Trying toggle feature (but actually for now it can be left in reset state - is this on/off/on needed?                
 #         _ = ddriob_register_set.get_register_sets(True,True) # close previous register settings
@@ -444,9 +448,16 @@ class EzynqClk:
 #                                                               ('update_control',0)),force,warn)        
     
     
+
+#Unlock SLCR (if the code is running after RBL) - stage 0 of PLL setup     
+    def slcr_unlock(self):
+        clk_register_set=self.clk_register_set
+        if self.verbosity>0 :
+            print 'Unlocking SLCR'
+        clk_register_set.set_word('slcr_unlock',0xdf0d)
   
 #Bypass used PLL-s - stage 1 of PLL setup     
-    def clocks_rbl_pll_bypass(self,force=False,warn=False):
+    def clocks_pll_bypass(self,force=False,warn=False):
         clk_register_set=self.clk_register_set
         if self.verbosity>0 :
             print 'pll_fdivs=', self.pll_fdivs
@@ -464,7 +475,7 @@ class EzynqClk:
                                                      ('pll_bypass_force',         1)),force,warn)
 
 # Turn on PLL reset and program feedback -  stage 2 of PLL setup     
-    def clocks_rbl_pll_reset_and_fdiv(self,force=False,warn=False):
+    def clocks_pll_reset_and_fdiv(self,force=False,warn=False):
         clk_register_set=self.clk_register_set
         if 'DDR' in self.pll_fdivs:
             clk_register_set.set_bitfields('ddr_pll_ctrl',( # 
@@ -480,7 +491,7 @@ class EzynqClk:
                                                      ('pll_reset',                     1)),force,warn)
             
 # Configure PLL parameters -  stage 3 of PLL setup     
-    def clocks_rbl_pll_conf(self,force=False,warn=False):
+    def clocks_pll_conf(self,force=False,warn=False):
         clk_register_set=self.clk_register_set
         if 'DDR' in self.pll_fdivs:
             ddr_fdiv=self.pll_fdivs['DDR']
@@ -504,7 +515,7 @@ class EzynqClk:
                                                       ('pll_res',   self.pll_pars[arm_fdiv]['PLL_RES']),  # PLL loop filter resistor control
                                                                                              ),force,warn)
 # Release reset of the PLLs (let them start) -  stage 4 of PLL setup     
-    def clocks_rbl_pll_start(self,force=False,warn=False):
+    def clocks_pll_start(self,force=False,warn=False):
         clk_register_set=self.clk_register_set
         if 'DDR' in self.pll_fdivs:
             clk_register_set.set_bitfields('ddr_pll_ctrl',(('pll_reset',   0)),force,warn)
@@ -513,9 +524,23 @@ class EzynqClk:
         if 'ARM' in self.pll_fdivs:
             clk_register_set.set_bitfields('arm_pll_ctrl',(('pll_reset',   0)),force,warn)
 
+# Release bypass the PLLs (PLLs should be locked already!)     
+    def clocks_pll_bypass_off(self,current_reg_sets,force=False,warn=False):
+        clk_register_set=self.clk_register_set
+        clk_register_set.set_initial_state(current_reg_sets, True)# start from the current registers state
 
-# Do after PLL bypass and Reset - stage 5 of clocks setup 
-    def clocks_rbl_program(self,force=False,warn=False):
+        if 'DDR' in self.pll_fdivs:
+            clk_register_set.set_bitfields('ddr_pll_ctrl',(('pll_bypass_force',  0),
+                                                           ('pll_bypass_qual',   0)),force,warn)
+        if 'IO' in self.pll_fdivs:
+            clk_register_set.set_bitfields('io_pll_ctrl', (('pll_bypass_force',  0),
+                                                           ('pll_bypass_qual',   0)),force,warn)
+        if 'ARM' in self.pll_fdivs:
+            clk_register_set.set_bitfields('arm_pll_ctrl',(('pll_bypass_force',  0),
+                                                           ('pll_bypass_qual',   0)),force,warn)
+
+#clocks setup 
+    def clocks_program(self,force=False,warn=False):
         clk_register_set=self.clk_register_set
 # PLLs are now bypassed and reset, now program        
 # reg  arm_clk_ctrl, offs=0x120 dflt:0x1f000400 actual: 0x1f000200

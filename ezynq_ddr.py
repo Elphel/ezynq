@@ -243,21 +243,24 @@ class EzynqDDR:
         return (address_mapping,page_mask)
 
     def get_new_register_sets(self):
-#        return self.ddrc_register_sets['MAIN'].get_register_sets(True,True)
         return self.ddrc_register_set.get_register_sets(True,True)
 
     def get_ddr_type(self):
         return self.features.get_par_value('MEMORY_TYPE')
     
+    # Start DDR initialization procedure (unlock DDRC)
+    def ddr_start(self,current_reg_sets,force=False,warn=False):
+        ddrc_register_set=self.ddrc_register_set
+        ddrc_register_set.set_initial_state(current_reg_sets, True)
+        ddrc_register_set.set_bitfields('ddrc_ctrl',(('reg_ddrc_soft_rstb', 0x1)),force,warn)
+        return ddrc_register_set.get_register_sets(True,True)
+        
     def ddr_init_memory(self,current_reg_sets,force=False,warn=False):
 #        print 'ddr_init_memory, len(current_reg_sets)=',len(current_reg_sets),'\n'
         if not self.features.get_par_value('ENABLE'):
             print 'DDR configuration is disabled'
             # do some stuff (write regs, output)
             return
-        
-#        ddriob_register_set=self.ddriob_register_sets['MAIN']
-#        ddrc_register_set=  self.ddrc_register_sets['MAIN']
         ddriob_register_set=self.ddriob_register_set
         ddrc_register_set=  self.ddrc_register_set
         ddriob_register_set.set_initial_state(current_reg_sets, True)# start from the current registers state
@@ -268,8 +271,7 @@ class EzynqDDR:
         self.ddr_init_ddrc(force,warn)
         return ddrc_register_set.get_register_sets(True,True)
 
-    def ddr_init_ddrc(self,force=False,warn=False): # will program to sequence 'MAIN'
-#        ddrc_register_set=self.ddrc_register_sets['MAIN']
+    def ddr_init_ddrc(self,force=False,warn=False):
         ddrc_register_set=self.ddrc_register_set
         is_LPDDR2=   (self.features.get_par_value('MEMORY_TYPE')=='LPDDR2')
         is_DDR3L=    (self.features.get_par_value('MEMORY_TYPE')=='DDR3L')
@@ -1322,6 +1324,23 @@ class EzynqDDR:
                                                                                      ),force,warn)
 ##########################################
 
+    def ddr_dci_calibrate(self,current_reg_sets,force=False,warn=False):
+        ddriob_register_set=self.ddriob_register_set
+        ddriob_register_set.set_initial_state(current_reg_sets, True)# start from the current registers state
+        ddriob_register_set.set_bitfields('ddriob_dci_ctrl', ('reset',1),force,warn)        
+        _ = ddriob_register_set.get_register_sets(True,True) # close previous register settings
+        ddriob_register_set.set_bitfields('ddriob_dci_ctrl', ('reset',0),force,warn)        
+        _ = ddriob_register_set.get_register_sets(True,True) # close previous register settings
+        ddriob_register_set.set_bitfields('ddriob_dci_ctrl', (('reset', 1),
+                                                              ('enable',1),
+                                                              ('nref_opt1',0),
+                                                              ('nref_opt2',0),
+                                                              ('nref_opt4',1),
+                                                              ('pref_opt2',0),
+                                                              ('update_control',0)),force,warn)
+        return ddriob_register_set.get_register_sets(True,True) # close previous register settings, return new result        
+
+
     def ddr_init_ddriob(self,force=False,warn=False): # will program to sequence 'MAIN'
 #        print 'ddr_init_ddriob\n'
 #        ddriob_register_set=self.ddriob_register_sets['MAIN']
@@ -1424,23 +1443,24 @@ class EzynqDDR:
                                                         ('slew_p', self.features.get_par_value('BIDIR_SLEW_POS')),
                                                         ('drive_n',self.features.get_par_value('BIDIR_DRIVE_NEG')),
                                                         ('drive_p',self.features.get_par_value('BIDIR_DRIVE_POS'))),force,warn) #0xf9861c
-#Trying toggle feature (but actually for now it can be left in reset state - is this on/off/on needed?                
-        _ = ddriob_register_set.get_register_sets(True,True) # close previous register settings
-#        ddriob_register_set.set_bitfields('ddriob_dci_ctrl', ('vrn_out',0),force,warn) # default value shows 1, actual settings - 0  (first time only?)
-#
-# Do in u-boot. When moving - use UG585 table 10-7 to set options
-#      
-        ddriob_register_set.set_bitfields('ddriob_dci_ctrl', ('reset',1),force,warn)        
-        _ = ddriob_register_set.get_register_sets(True,True) # close previous register settings
-        ddriob_register_set.set_bitfields('ddriob_dci_ctrl', ('reset',0),force,warn)        
-        _ = ddriob_register_set.get_register_sets(True,True) # close previous register settings
-        ddriob_register_set.set_bitfields('ddriob_dci_ctrl', (('reset', 1),
-                                                              ('enable',1),
-                                                              ('nref_opt1',0),
-                                                              ('nref_opt2',0),
-                                                              ('nref_opt4',1),
-                                                              ('pref_opt2',0),
-                                                              ('update_control',0)),force,warn)        
+#             
+# #Trying toggle feature (but actually for now it can be left in reset state - is this on/off/on needed?                
+#         _ = ddriob_register_set.get_register_sets(True,True) # close previous register settings
+# #        ddriob_register_set.set_bitfields('ddriob_dci_ctrl', ('vrn_out',0),force,warn) # default value shows 1, actual settings - 0  (first time only?)
+# #
+# # Do in u-boot. When moving - use UG585 table 10-7 to set options
+# #      
+#         ddriob_register_set.set_bitfields('ddriob_dci_ctrl', ('reset',1),force,warn)        
+#         _ = ddriob_register_set.get_register_sets(True,True) # close previous register settings
+#         ddriob_register_set.set_bitfields('ddriob_dci_ctrl', ('reset',0),force,warn)        
+#         _ = ddriob_register_set.get_register_sets(True,True) # close previous register settings
+#         ddriob_register_set.set_bitfields('ddriob_dci_ctrl', (('reset', 1),
+#                                                               ('enable',1),
+#                                                               ('nref_opt1',0),
+#                                                               ('nref_opt2',0),
+#                                                               ('nref_opt4',1),
+#                                                               ('pref_opt2',0),
+#                                                               ('update_control',0)),force,warn)        
   
 #TODO: Remove? 
             
