@@ -29,6 +29,7 @@ import ezynq_registers
 import ezynq_mio
 import ezynq_clk
 import ezynq_uboot
+import ezynq_uart
 parser = argparse.ArgumentParser()
 parser.add_argument('-v', '--verbosity', action='count', help='increase output verbosity')
 parser.add_argument('-c', '--configs',   help='Configuration file (such as autoconf.mk)')
@@ -248,8 +249,11 @@ def image_generator (image,
     # new_sets.append((addr,data,mask,self.module_name,register_name,self.defs[register_name]))
 
     for register in reg_sets:
-        addr=register[0]
-        data=register[1]
+        op=register[0]
+        addr=register[1]
+        data=register[2]
+        if (op != 's'):
+            raise Exception ('Can not test registers (0x%08x) in RBL, it should be done in user code'%addr)
         if not verify_register_accessible (addr):
             print 'Tried to set non-accessible register', hex(addr),' with data ', hex(data)
             exit (ERROR_DEFS['NONACCESSIBLE_REGISTER'])
@@ -263,19 +267,7 @@ def image_generator (image,
         waddr+=1
         image[waddr]=0
         waddr+=1
-
-#    for addr, data, mask, module_name, register_name, r_def in reg_sets:
-def write_include(filename,reg_sets):
-    incl_file=open(filename,'w')
-#    for addr, data, mask, module_name, register_name, r_def in reg_sets:
-    for addr, data, _, module_name, register_name, r_def in reg_sets:
-            try:
-                comments=r_def['COMMENTS']
-            except:
-                comments=''
-            incl_file.write('    writel(0x%08x, 0x%08x); /* %s.%s  %s */\n'%(data,addr,module_name,register_name,comments))        
-    incl_file.close()
-            
+           
 def write_image(image,name):
     bf=open(name,'wb')
     data=struct.pack('I' * len(image), *image)
@@ -317,7 +309,8 @@ clk.check_ds_compliance()
 clk.setup_clocks()
 
 ddr_mhz=clk.get_ddr_mhz()
-
+    
+        
 if MIO_HTML:
     f=open(MIO_HTML,'w')
 else:
@@ -337,105 +330,95 @@ ddr.calculate_dependent_pars(ddr_mhz)
 ddr.pre_validate() # before applying default values (some timings should be undefined, not defaults)
 ddr.check_missing_features() #and apply default values
 ddr.html_list_features(f) #verify /fix values after defaults are applied
-#ddr.ddr_init_memory(current_reg_sets,force=False,warn=False): # will program to sequence 'MAIN'
 
 #clk.calculate_dependent_pars()
 clk.html_list_features(f)
 
 reg_sets=[]
+segments=[]
 reg_sets=mio_regs.setregs_mio(reg_sets,force) # reg Sets include now MIO
-num_mio_regs=len(reg_sets)
-
-# should be always True, probably
-clk_in_uboot= not (raw_config_value('CONFIG_EZYNQ_SKIP_CLK', raw_configs) is None)
-
-
+segments.append({'TO':len(reg_sets),'RBL':True,'NAME':'MIO','TITLE':'MIO registers configuration'})
 #adding ddr registers
 if raw_config_value('CONFIG_EZYNQ_SKIP_DDR', raw_configs) is None:        
     ddr.ddr_init_memory(reg_sets,False,False)
     reg_sets=ddr.get_new_register_sets() # mio, ddr
+    segments.append({'TO':len(reg_sets),'RBL':True,'NAME':'DDR0','TITLE':'DDR registers configuration'})
 else:
     print 'Debug mode: skipping DDR-related configuration'
 
-num_ddr_regs=len(reg_sets)-num_mio_regs
-
-#define CONFIG_EZYNQ_SKIP_DDR
-#define CONFIG_EZYNQ_SKIP_CLK
-
-
 #initialize clocks
 # unlock slcr - it is locked by RBL, but attempt to unlock in RBL will fail (and hang the system)
-clk.clocks_regs_setup(reg_sets,clk_in_uboot,force) # reg Sets include now MIO and CLK
-reg_sets=clk.get_new_register_sets() # mio, ddr and clk
+reg_sets=clk.clocks_regs_setup(reg_sets,True,force)
+segments.append({'TO':len(reg_sets),'RBL':False,'NAME':'CLK','TITLE':'Clock registers configuration'})
+#print 'Debug mode: CLK/PLL configuration by u-boot'
+reg_sets=clk.clocks_pll_bypass_off(reg_sets,force)
+segments.append({'TO':len(reg_sets),'RBL':False,'NAME':'PLL','TITLE':'Registers to switch to PLL'})
+if not raw_config_value('CONFIG_EZYNQ_BOOT_DEBUG', raw_configs) is None:
+    uart=ezynq_uart.EzynqUART()
+    uart.parse_parameters(raw_configs,used_mio_interfaces,False)
+    uart.check_missing_features()
+    
+    uart_channel=uart.channel
+    if not uart_channel is None:
+        try:
+            uart_mhz=clk.get_uart_mhz()
+        except:
+            print 'UART reference clock is not defined, can not generate boot debug code'
+            uart_channel=None   
+        uart.set_refclk_mhz(uart_mhz)
+#    print 'uart_channel=',uart_channel,' uart_mhz=',uart_mhz
+     
+else:
+    uart_channel=None
 
-num_clk_regs=len(reg_sets)-num_mio_regs-num_ddr_regs
-len_before_pll=len(reg_sets)
-len_before_dci_calibrate=len(reg_sets)
-len_before_ddr_start=len(reg_sets)
-if clk_in_uboot:
-    num_rbl_regs=len_before_pll-num_clk_regs        
-    print 'Debug mode: CLK/PLL configuration by u-boot'
-    clk.clocks_pll_bypass_off(reg_sets,force) # reg Sets include now MIO and CLK
-    reg_sets=clk.get_new_register_sets() # mio, ddr and clk, pll
-    len_before_dci_calibrate=len(reg_sets)
-    num_pll_regs=len_before_dci_calibrate-len_before_pll
+if not uart_channel is None:
+    uart.html_list_features(f)
+    # Generate UART initialization, putc and wait FIFO empty code
+
+    reg_sets=uart.setup_uart(reg_sets,force=False,warn=False)
+    segments.append({'TO':len(reg_sets),'RBL':False,'NAME':'UART_INIT','TITLE':'Registers to initialize UART'})
+if raw_config_value('CONFIG_EZYNQ_SKIP_DDR', raw_configs) is None:
     reg_sets=ddr.ddr_dci_calibrate(reg_sets,False,False)
-    len_before_ddr_start=len(reg_sets)
-    num_dci_init_regs=len_before_ddr_start-len_before_dci_calibrate
-   
+    segments.append({'TO':len(reg_sets),'RBL':False,'NAME':'DCI','TITLE':'DDR DCI Calibration'})
     reg_sets=ddr.ddr_start(reg_sets,False,False)
-    
-    
-else:    
-    num_rbl_regs=len(reg_sets)
-    print 'Debug mode: CLK/PLL configuration by RBL'
-    num_pll_regs=0
-
-#clocks_pll_bypass_off(self,force=False,warn=False):
-#    def clocks_pll_bypass_off(self,current_reg_sets,force=False,warn=False):
+    segments.append({'TO':len(reg_sets),'RBL':False,'NAME':'DDR_START','TITLE':'DDR initialization start'})
 
 # make reg_sets data cumulative
 reg_sets=ezynq_registers.accumulate_reg_data(reg_sets)
-
-
-
-ezynq_registers.print_html_reg_header(f, 'MIO registers configuration', MIO_HTML_MASK & 0x100, MIO_HTML_MASK & 0x200, not MIO_HTML_MASK & 0x400)
-
-#ezynq_registers.print_html_registers(f, reg_sets[:num_mio_regs], MIO_HTML_MASK & 0x100, MIO_HTML_MASK & 0x200, not MIO_HTML_MASK & 0x400)
-ezynq_registers.print_html_registers(f, reg_sets[:num_mio_regs], 0, MIO_HTML_MASK & 0x800, MIO_HTML_MASK & 0x200, not MIO_HTML_MASK & 0x400)
-ezynq_registers.print_html_reg_footer(f)
-
-
-ezynq_registers.print_html_reg_header(f, 'DDR Configuration', MIO_HTML_MASK & 0x100, MIO_HTML_MASK & 0x200, not MIO_HTML_MASK & 0x400)
-ezynq_registers.print_html_registers(f, reg_sets[:num_mio_regs+num_ddr_regs], num_mio_regs, MIO_HTML_MASK & 0x100, MIO_HTML_MASK & 0x200, not MIO_HTML_MASK & 0x400)
-ezynq_registers.print_html_reg_footer(f)
-
-ezynq_registers.print_html_reg_header(f, 'CLOCK registers configuration', MIO_HTML_MASK & 0x100, MIO_HTML_MASK & 0x200, not MIO_HTML_MASK & 0x400)
-ezynq_registers.print_html_registers(f, reg_sets[:num_rbl_regs], num_mio_regs+num_ddr_regs, MIO_HTML_MASK & 0x100, MIO_HTML_MASK & 0x200, not MIO_HTML_MASK & 0x400)
-ezynq_registers.print_html_reg_footer(f)
-
-if len(reg_sets)>num_rbl_regs:
-    ezynq_registers.print_html_reg_header(f, 'Registers configuration in u-boot', MIO_HTML_MASK & 0x100, MIO_HTML_MASK & 0x200, not MIO_HTML_MASK & 0x400)
-    ezynq_registers.print_html_registers(f, reg_sets[:len_before_pll], num_rbl_regs, MIO_HTML_MASK & 0x100, MIO_HTML_MASK & 0x200, not MIO_HTML_MASK & 0x400)
-    ezynq_registers.print_html_reg_footer(f)
-if len(reg_sets)>len_before_pll:
-    ezynq_registers.print_html_reg_header(f, 'Registers configuration in u-boot after PLLs are locked', MIO_HTML_MASK & 0x100, MIO_HTML_MASK & 0x200, not MIO_HTML_MASK & 0x400)
-    ezynq_registers.print_html_registers(f, reg_sets[:len_before_dci_calibrate],len_before_pll, MIO_HTML_MASK & 0x100, MIO_HTML_MASK & 0x200, not MIO_HTML_MASK & 0x400)
-    ezynq_registers.print_html_reg_footer(f)
-    
-if len(reg_sets)>len_before_pll:
-    ezynq_registers.print_html_reg_header(f, 'Registers configuration in u-boot for DDR DCI calibration', MIO_HTML_MASK & 0x100, MIO_HTML_MASK & 0x200, not MIO_HTML_MASK & 0x400)
-    ezynq_registers.print_html_registers(f, reg_sets[:len_before_ddr_start],len_before_dci_calibrate, MIO_HTML_MASK & 0x100, MIO_HTML_MASK & 0x200, not MIO_HTML_MASK & 0x400)
-    ezynq_registers.print_html_reg_footer(f)
-
-if len(reg_sets)>len_before_ddr_start:
-    ezynq_registers.print_html_reg_header(f, 'Registers configuration in u-boot to start DDR initialization', MIO_HTML_MASK & 0x100, MIO_HTML_MASK & 0x200, not MIO_HTML_MASK & 0x400)
-    ezynq_registers.print_html_registers(f, reg_sets,len_before_ddr_start, MIO_HTML_MASK & 0x100, MIO_HTML_MASK & 0x200, not MIO_HTML_MASK & 0x400)
+num_rbl_regs=0
+for segment in segments:
+    if segment['RBL']:
+        num_rbl_regs=segment['TO']
+segment_dict={}
+for index,segment in enumerate(segments):
+    if index==0:
+        start=0
+    else:    
+        start=segments[index-1]['TO']
+    segment['FROM']=start
+    segment_dict[segment['NAME']]=segment
+#for index,segment in enumerate(segments):
+#    print index,':', segment    
+for segment in segments:
+    start=segment['FROM']
+    end=segment['TO']    
+    show_bit_fields= (MIO_HTML_MASK & 0x100,MIO_HTML_MASK & 0x800)[segment['NAME']=='MIO']
+    show_comments=    MIO_HTML_MASK & 0x200
+    filter_fields=not MIO_HTML_MASK & 0x400
+    all_used_fields= False
+    ezynq_registers.print_html_reg_header(f,
+                                           segment['TITLE']+" (%s)"%(('U-BOOT','RBL')[segment['RBL']]),
+                                           show_bit_fields, show_comments, filter_fields)
+#   print segment['TITLE']+" (%s)"%(('U-BOOT','RBL')[segment['RBL']]), start,end
+    ezynq_registers.print_html_registers(f,
+                                          reg_sets[:end],
+                                          start,
+                                          show_bit_fields,
+                                          show_comments,
+                                          filter_fields,
+                                          all_used_fields)
     ezynq_registers.print_html_reg_footer(f)
 
-#TODO: Need to be modified for the new format
-# if 'CONFIG_EZYNQ_UART_LOOPBACK_0' in raw_options: uart_remote_loopback(registers,f, 0,MIO_HTML_MASK)
-# if 'CONFIG_EZYNQ_UART_LOOPBACK_1' in raw_options: uart_remote_loopback(registers,f, 1,MIO_HTML_MASK)
 if f:
     f.write('<h4>Total number of registers set up in the RBL header is <b>'+str(num_rbl_regs)+"</b> of maximal 256</h4>")
     if num_rbl_regs<len(reg_sets):
@@ -464,15 +447,27 @@ image_generator (image,
 if args.outfile:
     write_image(image,args.outfile)
     
-# if args.include and (num_rbl_regs<len(reg_sets)):
-#     write_include(args.include,reg_sets[num_rbl_regs:])
-#     print 'Debug mode: writing u-boot setup registers to ',args.include
+# segments.append({'TO':len(reg_sets),'RBL':True,'NAME':'MIO','TITLE':'MIO registers configuration'})
+#     segments.append({'TO':len(reg_sets),'RBL':True,'NAME':'DDR0','TITLE':'DDR registers configuration'})
 
-u_boot=ezynq_uboot.EzynqUBoot(args.verbosity) 
-u_boot.registers_setup (reg_sets[num_rbl_regs:len_before_pll],clk,num_rbl_regs)
-u_boot.pll_setup (reg_sets[len_before_pll:len_before_dci_calibrate],clk)
-u_boot.dci_calibration(reg_sets[len_before_dci_calibrate:len_before_ddr_start],ddr)
-u_boot.ddr_start      (reg_sets[len_before_ddr_start:],ddr)
+# segments.append({'TO':len(reg_sets),'RBL':False,'NAME':'CLK','TITLE':'Clock registers configuration'})
+# segments.append({'TO':len(reg_sets),'RBL':False,'NAME':'PLL','TITLE':'Registers to switch to PLL'})
+#     segments.append({'TO':len(reg_sets),'RBL':False,'NAME':'UART_INIT','TITLE':'Registers to initialize UART'})
+#     segments.append({'TO':len(reg_sets),'RBL':False,'NAME':'DCI','TITLE':'DDR DCI Calibration'})
+#     segments.append({'TO':len(reg_sets),'RBL':False,'NAME':'DDR_START','TITLE':'DDR initialization start'})
+
+u_boot=ezynq_uboot.EzynqUBoot(args.verbosity)
+if 'CLK' in segment_dict: 
+    u_boot.registers_setup (reg_sets[segment_dict['CLK']['FROM']:segment_dict['CLK']['TO']],clk,num_rbl_regs)
+if 'PLL' in segment_dict: 
+    u_boot.pll_setup (reg_sets[segment_dict['PLL']['FROM']:segment_dict['PLL']['TO']],clk)
+if 'UART_INIT' in segment_dict: 
+    u_boot.uart_init (reg_sets[segment_dict['UART_INIT']['FROM']:segment_dict['UART_INIT']['TO']],clk)
+    
+if 'DCI' in segment_dict: 
+    u_boot.dci_calibration(reg_sets[segment_dict['DCI']['FROM']:segment_dict['DCI']['TO']],ddr)
+if 'DDR' in segment_dict: 
+    u_boot.ddr_start      (reg_sets[segment_dict['DDR']['FROM']:segment_dict['DDR']['TO']],ddr)
 u_boot.make_lowlevel_init()
 u_boot.output_c_file(args.lowlevel)
 #print u_boot.get_c_file()

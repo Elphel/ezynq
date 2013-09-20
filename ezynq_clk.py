@@ -101,6 +101,8 @@ class EzynqClk:
             return
         html_file.write('<h2>Clock configuration parameters</h2>\n')
         self.features.html_list_features(html_file)
+    def get_clocks(self):
+        return self.iface_divs
     def calculate_dependent_pars(self):
         speed_grade=self.features.get_par_value_or_default("SPEED_GRADE")
         ddr_type=self.ddr_type
@@ -408,6 +410,8 @@ class EzynqClk:
         html_file.write('</table>')
     def get_ddr_mhz(self):
         return self.f_in*self.pll_fdivs[self.iface_divs['DDR']['PLL']]/self.iface_divs['DDR']['DIV']
+    def get_uart_mhz(self):
+        return self.iface_divs['UART']['FREQ']
 
     def get_new_register_sets(self):
         return self.clk_register_set.get_register_sets(True,True)
@@ -417,37 +421,22 @@ class EzynqClk:
         clk_register_set.set_initial_state(current_reg_sets, True)# start from the current registers state
         if unlock_needed:
             self.slcr_unlock()
-            _ = clk_register_set.get_register_sets(True,True) # close previous register settings
+            clk_register_set.flush() # close previous register settings
 # Bypass used PLL-s - stage 1 of PLL setup     
         self.clocks_pll_bypass(force=False,warn=False)
-        _ = clk_register_set.get_register_sets(True,True) # close previous register settings
+        clk_register_set.flush() # close previous register settings
 # Turn on PLL reset and program feedback -  stage 2 of PLL setup     
         self.clocks_pll_reset_and_fdiv(force=False,warn=False)
-        _ = clk_register_set.get_register_sets(True,True) # close previous register settings
+        clk_register_set.flush() # close previous register settings
 # Configure PLL parameters -  stage 3 of PLL setup     
         self.clocks_pll_conf(force=False,warn=False)
-        _ = clk_register_set.get_register_sets(True,True) # close previous register settings
+        clk_register_set.flush() # close previous register settings
 # Release reset of the PLLs (let them start) -  stage 4 of PLL setup     
         self.clocks_pll_start(force=False,warn=False)
-        _ = clk_register_set.get_register_sets(True,True) # close previous register settings
+        clk_register_set.flush() # close previous register settings
 # stage 5 of clocks setup
         self.clocks_program(force=False,warn=False)
-  
-# #Trying toggle feature (but actually for now it can be left in reset state - is this on/off/on needed?                
-#         _ = ddriob_register_set.get_register_sets(True,True) # close previous register settings
-#         ddriob_register_set.set_bitfields('ddriob_dci_ctrl', ('reset',1),force,warn)        
-#         _ = ddriob_register_set.get_register_sets(True,True) # close previous register settings
-#         ddriob_register_set.set_bitfields('ddriob_dci_ctrl', ('reset',0),force,warn)        
-#         _ = ddriob_register_set.get_register_sets(True,True) # close previous register settings
-#         ddriob_register_set.set_bitfields('ddriob_dci_ctrl', (('reset', 1),
-#                                                               ('enable',1),
-#                                                               ('nref_opt1',0),
-#                                                               ('nref_opt2',0),
-#                                                               ('nref_opt4',1),
-#                                                               ('pref_opt2',0),
-#                                                               ('update_control',0)),force,warn)        
-    
-    
+        return self.get_new_register_sets()
 
 #Unlock SLCR (if the code is running after RBL) - stage 0 of PLL setup     
     def slcr_unlock(self):
@@ -528,6 +517,17 @@ class EzynqClk:
     def clocks_pll_bypass_off(self,current_reg_sets,force=False,warn=False):
         clk_register_set=self.clk_register_set
         clk_register_set.set_initial_state(current_reg_sets, True)# start from the current registers state
+# add wait for DCI calibration DONE
+#        ddriob_register_set.wait_reg_field_values('ddriob_dci_status',('done',1), True, warn)
+        bits=[]
+        if 'ARM' in self.pll_fdivs:
+            bits.append(('arm_pll_lock',1))
+        if 'DDR' in self.pll_fdivs:
+            bits.append(('ddr_pll_lock',1))
+        if  'IO' in self.pll_fdivs:
+            bits.append(('io_pll_lock',1))
+        
+        clk_register_set.wait_reg_field_values('pll_status',tuple(bits), True, warn)
 
         if 'DDR' in self.pll_fdivs:
             clk_register_set.set_bitfields('ddr_pll_ctrl',(('pll_bypass_force',  0),
@@ -538,6 +538,8 @@ class EzynqClk:
         if 'ARM' in self.pll_fdivs:
             clk_register_set.set_bitfields('arm_pll_ctrl',(('pll_bypass_force',  0),
                                                            ('pll_bypass_qual',   0)),force,warn)
+        return self.get_new_register_sets()
+
 
 #clocks setup 
     def clocks_program(self,force=False,warn=False):
@@ -869,6 +871,7 @@ class EzynqClk:
 
 # reg  uart_clk_ctrl, offs=0x154 dflt:0x3f03 actual: 0xa02
         if 'UART' in self.iface_divs:
+            print self.iface_divs['UART']
             if self.iface_divs['UART']['PLL']=='ARM':     
                 uart_srcsel= 2
             elif self.iface_divs['UART']['PLL']=='DDR':     

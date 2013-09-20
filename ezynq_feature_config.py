@@ -287,6 +287,9 @@ class EzynqFeatures:
             else:        
                 par_type={'H':'Integer','I':'Integer','F':'Float','B':'Boolean','T':'Text'}[feature['TYPE']]
 
+#            if name=='BAUD_RATE':
+#                print value
+
             html_file.write('<tr><th>'+feature['CONF_NAME']+'</th><td>'+str(value)+'</td><td>'+par_type+
                             '</td><td>'+('-','Y')[feature['MANDATORY']]+'</td><td>'+origin+'</td><td>'+str(feature['DEFAULT'])+'</td><td>'+feature['DESCRIPTION']+'</td></tr>\n')
         html_file.write('</table>\n')

@@ -194,7 +194,7 @@ DDRC_DEFS={ #not all fields are defined currently
                   'reg_phy_rdc_we_to_re_delay':       {'r':( 8,11),'d':0x2,'c':'use for fixed delay, when reg_phy_use_fixed_re==1'}, #0x8
                   'reg_phy_wr_cmd_to_data':           {'r':( 4, 7),'d':0,'c':'Not used in DFI PHY'}, 
                   'reg_phy_rd_cmd_to_data':           {'r':( 0, 3),'d':0,'c':'Not used in DFI PHY'}}}, 
-    'mode_sts_reg':            {'OFFS': 0x054,'DFLT':0x00000000,'RW':'R','FIELDS':{
+    'mode_sts_reg':            {'OFFS': 0x054,'DFLT':0x00000000,'RW':'R','COMMENTS':'DDR Controller status','FIELDS':{
                   'ddrc_reg_dbg_hpr_q_depth':         {'r':(16,20),'d':0,'m':'R','c':'number in high priority read CAM'},   
                   'ddrc_reg_dbg_lpr_q_depth':         {'r':(10,15),'d':0,'m':'R','c':'number in low priority read CAM'},  
                   'ddrc_reg_dbg_wr_q_depth':          {'r':( 4, 9),'d':0,'m':'R','c':'number in write CAM '},  

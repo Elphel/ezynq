@@ -42,35 +42,47 @@ def print_html_reg_footer(html_file):
     html_file.write('</table>\n')
 
 def print_html_registers(html_file, reg_sets, from_index, show_bit_fields=True, show_comments=True,filter_fields=True,all_used_fields=False):
+    def opt_hex(d):
+        if d <10:
+            return str(d)
+        else:
+            return hex(d)
     if not html_file:
         return
 
 #            new_sets.append((addr,data,mask,self.module_name,register_name,self.registers[register_name]))
     current_reg_state={} #address: (data,mask)
-    for index, (addr, data, mask, module_name, register_name, r_def) in enumerate (reg_sets):
+    for index, (op,addr, data, mask, module_name, register_name, r_def) in enumerate (reg_sets):
+#        if (op != 's'):
+#            continue # TODO: add handling of test conditions later  
+        
 #        if addr==0xf8000100:
 #            print 'index=',index,' addr=',hex(addr),' data=',hex(data),' mask=',hex(mask)
         if mask!=0:
-            try:
-                dflt_data=r_def['DFLT']
-            except:
-                dflt_data=0
-            try:
-                rw=r_def['RW']
-            except:
-                rw='RW'
-            try:
-                old_data,old_mask=current_reg_state[addr]
-                if not all_used_fields:
-                    old_mask=0
-                prev_sdata=hex(old_data)
-            except:
-                old_data=dflt_data
-                old_mask=0        
-                prev_sdata='-'
-            new_data=((old_data ^ data) & mask) ^ old_data
-            new_mask= old_mask | mask
-            current_reg_state[addr]=(new_data,new_mask)
+            if (op == 's'):
+                try:
+                    dflt_data=r_def['DFLT']
+                except:
+                    dflt_data=0
+                try:
+                    rw=r_def['RW']
+                except:
+                    rw='RW'
+                try:
+                    old_data,old_mask=current_reg_state[addr]
+                    if not all_used_fields:
+                        old_mask=0
+                    prev_sdata=opt_hex(old_data)
+                except:
+                    old_data=dflt_data
+                    old_mask=0        
+                    prev_sdata='-'
+                new_data=((old_data ^ data) & mask) ^ old_data
+                new_mask= old_mask | mask
+                current_reg_state[addr]=(new_data,new_mask)
+            else:
+                new_data= data
+                new_mask= mask
             
             if index<from_index: # just accumulate previous history of the register mask/values, no output
                 continue
@@ -82,16 +94,22 @@ def print_html_registers(html_file, reg_sets, from_index, show_bit_fields=True, 
                 comments=''    
 
             if show_bit_fields:
-                html_file.write('  <th>'+hex(addr)+'</th><th>'+module_name+'.'+register_name+'</th><th>'+rw+'</th><th>'+
-                                hex(new_data)+'</th><th>'+prev_sdata+'</th><th>'+hex(dflt_data)+'</th>')
+                if op == 's':
+                    html_file.write('  <th>0x%8x</th><th>%s.%s</th><th>%s</th><th>%s</th><th>%s</th><th>%s</th>'%
+                                         (addr, module_name,register_name,rw,   opt_hex(new_data), prev_sdata,    opt_hex(dflt_data)))
+                elif op == '=':
+                    html_file.write('  <th>0x%8x</th><th>%s.%s</th><th colspan="4">Wait for (reg & %s) == %s</th>'%
+                                         (addr, module_name,register_name, opt_hex(mask), opt_hex(data)))
+                elif op == '!':
+                    html_file.write('  <th>0x%8x</th><th>%s.%s</th><th colspan="4">Wait for (reg & %s) != %s</th>'%
+                                         (addr, module_name,register_name,  opt_hex(mask), opt_hex(data)))
+                else:
+                    raise Exception ('Invalid register operation: %s for register 0x%08x'%(op,addr))    
                 if show_comments:
-                    html_file.write('<th>'+comments+'</th>')
+                    html_file.write('<th>%s</th>'%comments)
                 html_file.write('\n</tr>\n')
                 if 'FIELDS' in r_def:
                     #sort bit fields
-#                    name_addr= [(n,r_def['FIELDS'][n]['r'][0]) for n in r_def['FIELDS']]
-#                    names=[pair[0] for pair in sorted(name_addr, key = lambda rr: -rr[1])]
-#                    names=[pair[0] for pair in sorted([(n,r_def['FIELDS'][n]['r'][0]) for n in r_def['FIELDS']], key = lambda rr: -rr[1])]
                     for f_name in [pair[0] for pair in sorted([(nam,r_def['FIELDS'][nam]['r'][0]) for nam in r_def['FIELDS']], key = lambda rr: -rr[1])]:
                         field=r_def['FIELDS'][f_name]
                         try:
@@ -104,58 +122,58 @@ def print_html_registers(html_file, reg_sets, from_index, show_bit_fields=True, 
                             f_mask|=(1<<i)
                         if (not filter_fields) or (f_mask & mask):
                             f_data=(new_data & f_mask) >> r[0]
-                            f_dflt=(dflt_data & f_mask) >> r[0]
-                            f_prev=(old_data & f_mask) >> r[0]
-                            field_prev=('-', hex(f_prev))[prev_sdata!='-']
-                            modified=f_data != f_prev
-                            html_file.write('  <tr><td>'+str(r[0])+":"+str(r[1])+'</td><td>'+f_name+'</td><td>'+f_rw+'</td>')
-                            html_file.write('<td>'+('','<b>')[modified]+hex(f_data)+('','</b>')[modified]+'</td><td>'+field_prev+'</td><td>'+hex(f_dflt)+'</td>')
+                            if op == 's':
+                                f_dflt=(dflt_data & f_mask) >> r[0]
+                                f_prev=(old_data & f_mask) >> r[0]
+                                field_prev=('-', opt_hex(f_prev))[prev_sdata!='-']
+                                modified=f_data != f_prev
+                                html_file.write('  <tr><td>%i:%i</td><td>%s</td><td>%s</td><td>%s%s%s</td><td>%s</td><td>%s</td>'%
+                                                        (r[0],r[1],   f_name,     f_rw,('','<b>')[modified],opt_hex(f_data),('','</b>')[modified],field_prev,opt_hex(f_dflt)))
+                            elif op == '=':
+                                html_file.write('  <tr><td>%i:%i</td><td>%s</td><td colspan="4">Wait for bit(s) == %s</th>'%
+                                                        (r[0],r[1],  f_name,                                   opt_hex(f_data)))
+                            elif op == '!':
+                                html_file.write('  <tr><td>%i:%i</td><td>%s</td><td colspan="4">Wait for bit(s) != %s</th>'%
+                                                        (r[0],r[1],  f_name,                                   opt_hex(f_data)))
+    
+                            else:
+                                raise Exception ('Invalid register operation: %s for register 0x%08x'%(op,addr))    
+                            
                             if show_comments:
                                 try:
                                     f_comments=field['c']
                                 except:
                                     f_comments=''    
-                                html_file.write('<td>'+f_comments+'</td>')
+                                html_file.write('<td>%s</td>'%f_comments)
                             html_file.write('\n</tr>\n')
             else:
-                html_file.write('  <th>'+hex(addr)+'</th><td>'+module_name+'.'+register_name+'</td><td>'+rw+'</td><td><b>'+
-                                hex(new_data)+'</th><th>'+prev_sdata+'</b></td><td>'+hex(dflt_data)+'</td>')
+                if op == 's':
+                    html_file.write('  <th>0x%8x</th><td>%s.%s</td><td>%s</td><td><b>%s</b></td><td>%s</td><td>%s</td>'%
+                                         (addr, module_name,register_name,rw,opt_hex(new_data),    prev_sdata, opt_hex(dflt_data)))
+                elif op == '=':
+                    html_file.write('  <th>0x%8x</th><td>%s.%s</td><tdcolspan="4"><b>Wait for (reg & %s) == %s</b></td>'%
+                                          (addr, module_name,register_name,opt_hex(mask),opt_hex(data)))
+                elif op == '!':
+                    html_file.write('  <th>0x%8x</th><td>%s.%s</td><tdcolspan="4"><b>Wait for (reg & %s) != %s</b></td>'%
+                                          (addr, module_name,register_name,opt_hex(mask),opt_hex(data)))
+                else:
+                    raise Exception ('Invalid register operation: %s for register 0x%08x'%(op,addr))    
                 if show_comments:
-                    html_file.write('<td>'+comments+'</td>')
+                    html_file.write('<td>%s</td>'%comments)
                 html_file.write('\n</tr>\n')
 
-
-# for i,_ in   enumerate 
-#     def set_initial_state(self,added_reg_sets, init=True):
-#         if init:
-#             self.initial_state={}
-#             self.previous_reg_sets=[]
-#             try:
-#                 self.initial_register_count=len(added_reg_sets)
-#             except:
-#                 self.initial_register_count=0    
-#         if not added_reg_sets:
-#             return
-# #        print added_reg_sets
-#         self.previous_reg_sets+=added_reg_sets # appends, not overwrites
-#         for addr,data,mask,_,_,_ in added_reg_sets: # Do not need to care about default values - they will have 0 in the mask bits.
-#             if addr in self.initial_state:
-#                 old_data,old_mask=self.initial_state[addr]
-#                 data=((old_data ^ data) & mask) ^ old_data
-#                 mask |= old_mask
-#             self.initial_state[addr]=(data,mask)
 
 def accumulate_reg_data(reg_sets,accumulate_mask=False):
     initial_state={}
     cumulative_regs=[() for _ in reg_sets]
-    for index, (addr, data, mask, module_name, register_name, r_def) in enumerate (reg_sets):
-        if addr in initial_state:
+    for index, (op, addr, data, mask, module_name, register_name, r_def) in enumerate (reg_sets):
+        if (op == 's') and (addr in initial_state): # only accumulate register set operations, not wait for equal ('=') or wait for not-equal ('!')
             old_data,old_mask=initial_state[addr]
             data=((old_data ^ data) & mask) ^ old_data
             if accumulate_mask:
                 mask |= old_mask
         initial_state[addr]=(data,mask)
-        cumulative_regs[index]=(addr, data, mask, module_name, register_name, r_def)
+        cumulative_regs[index]=(op, addr, data, mask, module_name, register_name, r_def)
     return cumulative_regs     
         
    
@@ -212,16 +230,15 @@ class EzynqRegisters:
                 self.initial_register_count=0    
         if not added_reg_sets:
             return
-#        print added_reg_sets
         self.previous_reg_sets+=added_reg_sets # appends, not overwrites
-        for addr,data,mask,_,_,_ in added_reg_sets: # Do not need to care about default values - they will have 0 in the mask bits.
-            if addr in self.initial_state:
+        for op,addr,data,mask,_,_,_ in added_reg_sets: # Do not need to care about default values - they will have 0 in the mask bits.
+            if (op == 's') and (addr in self.initial_state):
 #                old_data,old_mask=self.initial_state[addr]
                 old_data,_=self.initial_state[addr]
                 data=((old_data ^ data) & mask) ^ old_data
 #                mask |= old_mask
 #            self.initial_state[addr]=(data,mask)
-            self.initial_state[addr]=(data,0) # ignoring old mask - only accumulating newely set bits in this set
+            self.initial_state[addr]=(data,0) # ignoring old mask - only accumulating newly set bits in this set
             
     def get_reg_names(self):
         return [n[0] for n in sorted([(name,self.defs[name]['OFFS']) for name in self.registers], key = lambda l: l[1])]
@@ -247,7 +264,11 @@ class EzynqRegisters:
                 
     #number of registers set before this module (can be removed from the result of get_register_sets(sort_addr=True,apply_new=True))      
     def get_initial_count(self):
-        return self.initial_register_count       
+        return self.initial_register_count
+    
+    def flush(self):
+        _= self.get_register_sets(sort_addr=True,apply_new=True)
+            
     def get_register_sets(self, sort_addr=True,apply_new=True):
         new_sets=[]
 #        for register_name in self.registers:
@@ -258,7 +279,8 @@ class EzynqRegisters:
             if mask == 0:
                 continue # no bits set
             data,_= self._final_data_mask(register_name) # combined data
-            new_sets.append((addr,data,mask,self.module_name,register_name,self.defs[register_name]))
+            op='s' # register set
+            new_sets.append((op,addr,data,mask,self.module_name,register_name,self.defs[register_name]))
         if apply_new:
             self.set_initial_state(new_sets, False)
             self.registers={} # delete the applied registers
@@ -305,7 +327,6 @@ class EzynqRegisters:
     def set_word(self,register_name,data,force=False):
         if not register_name in self.defs:
             raise Exception (self.ERRORS['ERR_REG']+' '+register_name) 
-#        addr=self.base_addr+self.defs[register_name]['OFFS']
         # see if that register at this address was previously set
         default_mask=(self.ro_masks[register_name] ^ 0xffffffff) & 0xffffffff # write enabled bits in the register
         #no need to look at self.initial_state - it will be combined later. When handling never-defined-fields will use data from the first use of the address 
@@ -321,12 +342,39 @@ class EzynqRegisters:
             else:    
                 raise Exception (self.ERRORS['ERR_RO'] + " " + msg)
         data= ((data ^ old_data) & default_mask) ^ old_data   
-#        mask= old_mask | default_mask      
-#        self.registers[register_name]=(data,mask)
         #assuming that writing words overwrites all defined bitfields
         self.registers[register_name]=(data,default_mask) # that does not include old mask, will have to be combined for the next state of the registers
         
-#       old_data,old_mask=self.initial_state[addr]
+    def _combine_bitfields(self,register_name,field_data, warn=False):
+        if not register_name in self.defs:
+            raise Exception (self.ERRORS['ERR_REG']+' '+register_name) 
+        if (len(field_data)==2) and not isinstance(field_data[1],tuple):
+            field_data=(field_data,)
+        data=0
+        mask=0    
+        for f_name,f_data in field_data:
+            try:
+                field=self.defs[register_name]['FIELDS'][f_name]
+            except:
+                print self.defs[register_name]
+                raise Exception (self.ERRORS['ERR_FIELD']+': '+register_name+'.'+f_name) 
+            shifted_data,shifted_mask=self._data(field['r'],f_data,warn)
+            mask |= shifted_mask
+            data ^= (data ^ shifted_data) & shifted_data
+        return (data,mask)    
+
+    def wait_reg_value(self,register_name, data, mask, equals):
+        if not register_name in self.defs:
+            raise Exception (self.ERRORS['ERR_REG']+' '+register_name) 
+        addr=self.base_addr+self.defs[register_name]['OFFS']
+        op=('!','=')[equals]
+        new_entry=(op, addr, data, mask, self.module_name, register_name, self.defs[register_name])
+        self.flush() # so self.previous_reg_sets have no all registers set so far
+        self.previous_reg_sets.append(new_entry)
+
+    def wait_reg_field_values(self,register_name,field_data, equals, warn=False):
+        data,mask=self._combine_bitfields(register_name,field_data, warn)
+        self.wait_reg_value(register_name,data,mask, equals) 
 
     def unset_word(self,register):
         if not register in self.defs:
@@ -339,6 +387,8 @@ class EzynqRegisters:
 # force - force readonly/undefined, warn - if data does n ot fit into the bit field
     def set_bitfield(self,register_name,field_name,data,force=False,warn=False):
         if not register_name in self.defs:
+            print 'register_name=',register_name
+            print 'self.defs=',self.defs
             raise Exception (self.ERRORS['ERR_REG']+' '+register_name) 
         try:
             old_data,old_mask=self.registers[register_name] # already in the list of registers?
@@ -356,12 +406,6 @@ class EzynqRegisters:
         new_data,new_mask=self._data(field['r'],data,warn)
         combined_data= ((new_data ^ old_data) & new_mask) ^ old_data # new data applied to old data
         combined_mask=old_mask | new_mask
-#         print "field['r']=",field['r']
-#         print 'register_name=',register_name,' field_name=', field_name,
-#         print 'new_data=',hex(new_data),' new_mask=',hex(new_mask)
-#         print 'old_data=',hex(old_data),' old_mask=',hex(old_mask)
-#         print 'combined_data=',hex(combined_data),' combined_mask=',hex(combined_mask)
-#         print
         diff = (combined_data ^ old_data) & self.ro_masks[register_name]
         if diff:
             msg= register_name+" readonly mask="+hex(self.ro_masks[register_name])+" old data="+hex(old_data)+" new data = "+combined_data+" force="+force
@@ -377,8 +421,7 @@ class EzynqRegisters:
 #        print field_data
         for field_name,data in field_data:
             self.set_bitfield(register_name,field_name,data,force,warn)
-
-
+    # combine multiple bit-fields into (data, mask) pair 
 
 
     def unset_bitfield(self,register_name,field_name):

@@ -1,4 +1,8 @@
-#COnfiguration for the microzed board
+CONFIG_EZYNQ_BOOT_DEBUG=y # configure UARTx and send register dumps there
+CONFIG_EZYNQ_LED_DEBUG=47 # toggle LED during boot
+CONFIG_EZYNQ_UART1_BAUD_RATE=115200
+
+#Configuration for the microzed board
 CONFIG_EZYNQ_MIO_0_VOLT=3.3
 CONFIG_EZYNQ_MIO_1_VOLT=1.8
 #CONFIG_EZYNQ_MIO_0_PULLUP=y #default pullup for MIO0 - may be overwritten for individual pins
@@ -82,20 +86,6 @@ CONFIG_EZYNQ_BOOT_USERDEF=           0x1234567 # will be saved in the file heade
 CONFIG_EZYNQ_BOOT_OCM_OFFSET=        0x8C0   # start of OCM data relative to the flash image start >=0x8C0, 63-bytes aligned
 CONFIG_EZYNQ_BOOT_OCM_IMAGE_LENGTH=  0#0x30000 # number of bytes to load to the OCM memory, <= 0x30000 
 CONFIG_EZYNQ_START_EXEC=             0x00 # start of execution address 
-
-
-
-
- 
-#just software testing - remove later
-#CONFIG_EZYNQ_DDR_SETREG_ctrl_reg1__reg_ddrc_selfref_en_PRE = 1
-#CONFIG_EZYNQ_DDR_SETREG_ctrl_reg1__reg_ddrc_lpr_num_entries_PRE = 5
-#CONFIG_EZYNQ_DDR_SETREG_phy_wr_dqs_cfg0_PRE = 0xAAAAA
-#CONFIG_EZYNQ_DDR_SETREG_phy_wr_dqs_cfg0__reg_phy_wr_dqs_slave_delay_PRE = 0x77
-#CONFIG_EZYNQ_DDR_ARB_PAGE_BANK  = N # Y # default N, testing
-
-
-
 
 
 

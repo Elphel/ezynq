@@ -253,6 +253,8 @@ class EzynqDDR:
         ddrc_register_set=self.ddrc_register_set
         ddrc_register_set.set_initial_state(current_reg_sets, True)
         ddrc_register_set.set_bitfields('ddrc_ctrl',(('reg_ddrc_soft_rstb', 0x1)),force,warn)
+        # add wait for DDR ready
+        ddrc_register_set.wait_reg_field_values('mode_sts_reg',('ddrc_reg_operating_mode',0), False, warn)
         return ddrc_register_set.get_register_sets(True,True)
         
     def ddr_init_memory(self,current_reg_sets,force=False,warn=False):
@@ -1328,9 +1330,9 @@ class EzynqDDR:
         ddriob_register_set=self.ddriob_register_set
         ddriob_register_set.set_initial_state(current_reg_sets, True)# start from the current registers state
         ddriob_register_set.set_bitfields('ddriob_dci_ctrl', ('reset',1),force,warn)        
-        _ = ddriob_register_set.get_register_sets(True,True) # close previous register settings
+        ddriob_register_set.flush() # close previous register settings
         ddriob_register_set.set_bitfields('ddriob_dci_ctrl', ('reset',0),force,warn)        
-        _ = ddriob_register_set.get_register_sets(True,True) # close previous register settings
+        ddriob_register_set.flush()# close previous register settings
         ddriob_register_set.set_bitfields('ddriob_dci_ctrl', (('reset', 1),
                                                               ('enable',1),
                                                               ('nref_opt1',0),
@@ -1338,6 +1340,9 @@ class EzynqDDR:
                                                               ('nref_opt4',1),
                                                               ('pref_opt2',0),
                                                               ('update_control',0)),force,warn)
+# add wait for DCI calibration DONE
+        ddriob_register_set.wait_reg_field_values('ddriob_dci_status',('done',1), True, warn)
+
         return ddriob_register_set.get_register_sets(True,True) # close previous register settings, return new result        
 
 
@@ -1443,24 +1448,6 @@ class EzynqDDR:
                                                         ('slew_p', self.features.get_par_value('BIDIR_SLEW_POS')),
                                                         ('drive_n',self.features.get_par_value('BIDIR_DRIVE_NEG')),
                                                         ('drive_p',self.features.get_par_value('BIDIR_DRIVE_POS'))),force,warn) #0xf9861c
-#             
-# #Trying toggle feature (but actually for now it can be left in reset state - is this on/off/on needed?                
-#         _ = ddriob_register_set.get_register_sets(True,True) # close previous register settings
-# #        ddriob_register_set.set_bitfields('ddriob_dci_ctrl', ('vrn_out',0),force,warn) # default value shows 1, actual settings - 0  (first time only?)
-# #
-# # Do in u-boot. When moving - use UG585 table 10-7 to set options
-# #      
-#         ddriob_register_set.set_bitfields('ddriob_dci_ctrl', ('reset',1),force,warn)        
-#         _ = ddriob_register_set.get_register_sets(True,True) # close previous register settings
-#         ddriob_register_set.set_bitfields('ddriob_dci_ctrl', ('reset',0),force,warn)        
-#         _ = ddriob_register_set.get_register_sets(True,True) # close previous register settings
-#         ddriob_register_set.set_bitfields('ddriob_dci_ctrl', (('reset', 1),
-#                                                               ('enable',1),
-#                                                               ('nref_opt1',0),
-#                                                               ('nref_opt2',0),
-#                                                               ('nref_opt4',1),
-#                                                               ('pref_opt2',0),
-#                                                               ('update_control',0)),force,warn)        
   
 #TODO: Remove? 
             

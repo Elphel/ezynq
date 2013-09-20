@@ -46,14 +46,26 @@ class EzynqUBoot:
         self.sections=['license','include'] 
     def get_c_file(self):
         return self.cfile
+    def _opt_hex(self,d):
+        if d <10:
+            return str(d)
+        else:
+            return hex(d)
    
     def _add_reg_writes(self,reg_sets):
-        for addr, data, _, module_name, register_name, r_def in reg_sets:
+        for op, addr, data, mask, module_name, register_name, r_def in reg_sets:
             try:
                 comments=r_def['COMMENTS']
             except:
                 comments=''
-            self.cfile+='\twritel(0x%08x, 0x%08x); /* %s.%s  %s */\n'%(data,addr,module_name,register_name,comments)
+            if op == 's':    
+                self.cfile+='\twritel(0x%08x, 0x%08x); /* %s.%s  %s */\n'%(data,addr,module_name,register_name,comments)
+            elif op == '=':
+                self.cfile+='\twhile((readl(0x%08x) & %s) != %s); /* %s.%s  %s */\n'%(addr,self._opt_hex(mask),self._opt_hex(data),module_name,register_name,comments)
+            elif op == '!':
+                self.cfile+='\twhile((readl(0x%08x) & %s) == %s); /* %s.%s  %s */\n'%(addr,self._opt_hex(mask),self._opt_hex(data),module_name,register_name,comments)
+            else:
+                raise Exception('Invalid register operation "%s" specified for register 0x%08x, data=0x%08x, mask=0x%08x'%(op,addr,data,mask))        
                 
     def registers_setup (self, reg_sets,clk,num_rbl_regs): #clk is an instance of ezynq_clk.EzynqClk
         self.sections.append('registers_setup')
@@ -69,71 +81,66 @@ inline void register_setup(void)
         self.cfile+='}\n\n'
 
     def pll_setup (self, reg_sets,clk): #clk is an instance of ezynq_clk.EzynqClk
-        pll_status_comment=clk.clk_register_set.get_register_comments('pll_status')
-        pll_arm=clk.clk_register_set.get_bitfield_address_mask_comments('pll_status','arm_pll_lock')
-        pll_ddr=clk.clk_register_set.get_bitfield_address_mask_comments('pll_status','ddr_pll_lock')
-        pll_io= clk.clk_register_set.get_bitfield_address_mask_comments('pll_status', 'io_pll_lock')
-        address=pll_arm[0]
-        mask=0
-        pll_used=clk.get_plls_used()
-        for pll,  pll_tuple in zip(['ARM','DDR','IO'],[pll_arm,pll_ddr,pll_io]):
-            if pll in pll_used:
-                mask |= pll_tuple[1]
-        if mask==0 :
-            print 'No PLLs are used, skipping generating pll_setup()'
-            return    
         self.sections.append('pll_setup')
-        self.cfile+='''/* Wait for PLLs locked: %s */        
+        self.cfile+='''/* Wait for PLLs locked:*/        
 inline void pll_setup(void)
 {
-\t/* Wait for all PLLs locked */
-\twhile ((readl (0x%x) & 0x%x) != 0x%x); /* slcr.pll_status %s */
-\t/* release PLL bypass on each PLL */
-'''%(str(pll_used),address,mask,mask,pll_status_comment)
+\t/* Wait for all used PLLs locked, then  release PLL bypass on each PLL */
+'''
         self._add_reg_writes(reg_sets)            
         self.cfile+='}\n\n'
+
+    def uart_init (self, reg_sets,clk):
+        self.sections.append('uart_init')
+        self.cfile+='''/* Initilize UART to output debug info during boot */        
+inline void uart_init(void)
+{
+\t/* Wait for all used PLLs locked, then  release PLL bypass on each PLL */
+'''
+        self._add_reg_writes(reg_sets)            
+        self.cfile+='}\n\n'
+
+
         
     def dci_calibration (self, reg_sets,ddr): #ddr is an instance of ezynq_ddr.EzynqDDR
         if len(reg_sets)==0:
             print 'No DCI calibration register data is provided, skipping generating dci_calibration()'
             return
-        dci_status_comment=ddr.ddriob_register_set.get_register_comments('ddriob_dci_status')
-        address,mask,_=ddr.ddriob_register_set.get_bitfield_address_mask_comments('ddriob_dci_status','done')
         self.cfile+='''/* Calibrate DDR DCI, wait for completion */        
 inline void dci_calibration(void)
 {
-\t/* Toggle active-low DCI reset, initialize DCI calibration */
+\t/* Toggle active-low DCI reset, initialize DCI calibration, wait for DONE */
 '''
-        self._add_reg_writes(reg_sets)
-        self.cfile+='''\t/* Wait DCI calibration is DONE */
-\twhile ((readl (0x%x) & 0x%x) != 0x%x); /* slcr.ddriob_dci_status %s */
-'''%(address,mask,mask,dci_status_comment)
         self.cfile+='}\n\n'
         self.sections.append('dci_calibration')
+
 
     def ddr_start (self, reg_sets,ddr): #ddr is an instance of ezynq_ddr.EzynqDDR
         if len(reg_sets)==0:
             print 'No DDR start data is provided, skipping generating ddr_start()'
             return
-        ddrc_status_comment=ddr.ddrc_register_set.get_register_comments('mode_sts_reg')
-        address,mask,_=ddr.ddrc_register_set.get_bitfield_address_mask_comments('mode_sts_reg','ddrc_reg_operating_mode')
         self.cfile+='''/* Start DDRC, wait for initialization complete */        
 inline void ddr_start(void)
 {
-\t/* Release DDRC active-low reset */
 '''
         self._add_reg_writes(reg_sets)
-        self.cfile+='''\t/* DDRC operation mode is INITIALIZED */
-\twhile ((readl (0x%x) & 0x%x) == 0); /* ddrc.mode_sts_reg %s */
-'''%(address,mask,ddrc_status_comment)
         self.cfile+='}\n\n'
         self.sections.append('ddr_start')
 
+
     def make_lowlevel_init (self):
+            
+
         self.cfile+='''/* Initialize clocks, DDR memory, copy OCM to DDR */        
 void lowlevel_init(void)
 {
-/*
+'''
+        if 'uart_init' in self.sections:
+            self.cfile+='''/* Initialize UART fdro debug information output */        
+\tuart_init();
+'''
+            
+        self.cfile+='''/*
    Unlock SLCR and write PLL and clocks registers as the code is now running in the OCM and no
    peripherals are needed
  */  
