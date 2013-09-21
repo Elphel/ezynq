@@ -66,8 +66,63 @@ class EzynqUBoot:
                 self.cfile+='\twhile((readl(0x%08x) & %s) == %s); /* %s.%s  %s */\n'%(addr,self._opt_hex(mask),self._opt_hex(data),module_name,register_name,comments)
             else:
                 raise Exception('Invalid register operation "%s" specified for register 0x%08x, data=0x%08x, mask=0x%08x'%(op,addr,data,mask))        
+    def make_slcr_lock_unlock(self, reg_sets):
+        self.sections.append('slcr_lock_unlock_setup')
+        self.cfile+="""
+/* Lock SLCR registers - may be called after everything is done. */        
+void lock_slcr(void) /*not to conflict with another slcr_lock() in u-boot
+{
+"""
+        self._add_reg_writes(reg_sets[:1])        
+        self.cfile+="""}
+        
+/* Unlock SLCR registers - SHOULD be called first before writing any SLCR registers. */        
+void unlock_slcr(void) /*not to conflict with another slcr_unlock() in u-boot
+{
+"""
+        self._add_reg_writes(reg_sets[1:])        
+        self.cfile+='}\n'
+
+    def make_led_on_off(self, reg_sets):
+        self.sections.append('led_on_off')
+        self.cfile+="""
+/* Turn LED on/off for debugging of the early stages of boot process. */        
+void led_on_off(int on) /*not to conflict with another slcr_lock() in u-boot
+{
+"""
+        self.cfile+='\tif (on)'
+        self._add_reg_writes(reg_sets[1:])
+        self.cfile+='\telse'
+        self._add_reg_writes(reg_sets[:1])
+        self.cfile+='}\n'
+     
+#make_led_on_off     
+# void led_off(void){
+#     writel(0x00000200, &slcr_base->mio_pin[47]); /* LED off */
+# }
+# void led_on(void){
+#     writel(0x00001201, &slcr_base->mio_pin[47]);  /* LED on */
+# }
+# 
+# void poll_fifo_empty(void){
+#     while ((readl(&uart1_base->channel_sts) & 0x8) ==0) ; /* wait transmitter buffer is empty */
+# }
+# 
+# void poll_putc(int d){
+#     led_off();
+#     while ((readl(&uart1_base->channel_sts) & 0x10) !=0) ; /* wait transmitter buffer is not full */
+#     led_on();
+#     writel(d, &uart1_base->tx_rx_fifo);
+# }
+# void poll_puts(char * line){
+#     int i=0;
+#     while (line[i]!=0) poll_putc(line[i++]);
+# }
+     
+     
+     
                 
-    def registers_setup (self, reg_sets,clk,num_rbl_regs): #clk is an instance of ezynq_clk.EzynqClk
+    def registers_setup(self, reg_sets,clk,num_rbl_regs): #clk is an instance of ezynq_clk.EzynqClk
         self.sections.append('registers_setup')
         self.cfile+="""
 /*
@@ -141,9 +196,15 @@ void lowlevel_init(void)
 '''
             
         self.cfile+='''/*
-   Unlock SLCR and write PLL and clocks registers as the code is now running in the OCM and no
-   peripherals are needed
- */  
+   Unlock SLCR
+ */
+\tunlock_slcr();
+
+/*
+   Write PLL and clocks registers as the code is now completely loaded to the OCM and no
+   peripherals are needed immediately 
+ */
+   
 \tregister_setup();
 
 /*
@@ -207,12 +268,13 @@ void lowlevel_init(void)
 \twritel(0x0, &slcr_base->ddr_urgent_sel);
 \t/* Urgent write, ports S2/S3 */
 \twritel(0xC, &slcr_base->ddr_urgent);
-\tzynq_slcr_lock();
+\tlock_slcr();
 /*
    This code was called from low OCM, so return should just get back correctly
  */
 }
 '''
+
     def output_c_file(self,cname):
         if not cname:
             return

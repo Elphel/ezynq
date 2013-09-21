@@ -348,7 +348,7 @@ else:
 
 #initialize clocks
 # unlock slcr - it is locked by RBL, but attempt to unlock in RBL will fail (and hang the system)
-reg_sets=clk.clocks_regs_setup(reg_sets,True,force)
+reg_sets=clk.clocks_regs_setup(reg_sets,force)
 segments.append({'TO':len(reg_sets),'RBL':False,'NAME':'CLK','TITLE':'Clock registers configuration'})
 #print 'Debug mode: CLK/PLL configuration by u-boot'
 reg_sets=clk.clocks_pll_bypass_off(reg_sets,force)
@@ -383,6 +383,26 @@ if raw_config_value('CONFIG_EZYNQ_SKIP_DDR', raw_configs) is None:
     reg_sets=ddr.ddr_start(reg_sets,False,False)
     segments.append({'TO':len(reg_sets),'RBL':False,'NAME':'DDR_START','TITLE':'DDR initialization start'})
 
+# Generate lock/unlock SLCR to be used in u-boot
+reg_sets_lock_unlock=clk.generate_lock_unlock()
+#print reg_sets[len(reg_sets)-1]
+reg_sets.extend (reg_sets_lock_unlock) # just to be listed, not to be loaded
+segments.append({'TO':len(reg_sets),'RBL':False,'NAME':'SLCR_LOCK_UNLOCK','TITLE':'SLCR lock/unlock registers - listed out of sequence'})
+
+try:
+    led_mio_pin=int (raw_config_value('CONFIG_EZYNQ_LED_DEBUG', raw_configs),0)
+    reg_sets_led=mio_regs.generate_led_off_on(led_mio_pin)
+    reg_sets.extend (reg_sets_led) # just to be listed, not to be loaded
+    segments.append({'TO':len(reg_sets),'RBL':False,'NAME':'LED','TITLE':'registers/data to turn on/off debug LED - listed out of sequence'})
+except:
+    led_mio_pin=None 
+#    def generate_led_off_on(self, mio_pin):
+#CONFIG_EZYNQ_LED_DEBUG=47 # toggle LED during boot
+#CONFIG_EZYNQ_BOOT_DEBUG
+
+#print reg_sets_lock_unlock[0]
+#print reg_sets_lock_unlock[1]
+
 # make reg_sets data cumulative
 reg_sets=ezynq_registers.accumulate_reg_data(reg_sets)
 num_rbl_regs=0
@@ -410,6 +430,7 @@ for segment in segments:
                                            segment['TITLE']+" (%s)"%(('U-BOOT','RBL')[segment['RBL']]),
                                            show_bit_fields, show_comments, filter_fields)
 #   print segment['TITLE']+" (%s)"%(('U-BOOT','RBL')[segment['RBL']]), start,end
+
     ezynq_registers.print_html_registers(f,
                                           reg_sets[:end],
                                           start,
@@ -457,6 +478,12 @@ if args.outfile:
 #     segments.append({'TO':len(reg_sets),'RBL':False,'NAME':'DDR_START','TITLE':'DDR initialization start'})
 
 u_boot=ezynq_uboot.EzynqUBoot(args.verbosity)
+
+if 'SLCR_LOCK_UNLOCK' in segment_dict: 
+    u_boot.make_slcr_lock_unlock (reg_sets[segment_dict['SLCR_LOCK_UNLOCK']['FROM']:segment_dict['SLCR_LOCK_UNLOCK']['TO']])
+if 'LED' in segment_dict: 
+    u_boot.make_led_on_off(reg_sets[segment_dict['LED']['FROM']:segment_dict['LED']['TO']])
+
 if 'CLK' in segment_dict: 
     u_boot.registers_setup (reg_sets[segment_dict['CLK']['FROM']:segment_dict['CLK']['TO']],clk,num_rbl_regs)
 if 'PLL' in segment_dict: 

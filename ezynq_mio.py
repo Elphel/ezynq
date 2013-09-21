@@ -287,6 +287,18 @@ class EzynqMIO:
 
 #        self.DDRIOB_DEFS=ezynq_ddriob_def.DDRIOB_DEFS
 #        self.DDR_CFG_DEFS=ezynq_ddrcfg_defs.DDR_CFG_DEFS
+    def generate_led_off_on(self, mio_pin):
+        # generate code to be included in u-boot for debugging early boot stages
+        led_register_set=  ezynq_registers.EzynqRegisters(self.MIO_PINS_DEFS,0,[])
+        led_register_set.set_bitfields('mio_pin_%02i'%mio_pin, ( # output 0 - LED off
+                                                     ('pullup',          0),
+                                                     ('tri_enable',      0))) # ,force,warn)
+        led_register_set.flush()
+        led_register_set.set_bitfields('mio_pin_%02i'%mio_pin, ( # input+pullup LED on
+                                                     ('pullup',          1),
+                                                     ('tri_enable',      1))) # ,force,warn)
+        return led_register_set.get_register_sets(sort_addr=True,apply_new=True)
+
     def parse_config_mio(self,raw_configs):
         attrib_suffix='ATTRIB'
         options = {}

@@ -92,6 +92,36 @@ class EzynqClk:
         self.clk_dict={}
         for c in CLK_TEMPLATE:
             self.clk_dict[c['NAME']]=c
+    def generate_lock_unlock(self):
+        # generate code to be included in u-boot to unlock SLCR before using it.
+        # Should never be used in RBL - it will reset the system
+        lock_register_set=  ezynq_registers.EzynqRegisters(self.SLCR_CLK_DEFS,0,[])
+        lock_register_set.set_word('slcr_lock',0x767b)
+        lock_register_set.flush()
+        lock_register_set.set_word('slcr_unlock',0xdf0d)
+        return lock_register_set.get_register_sets(sort_addr=True,apply_new=True)
+  
+        
+#Unlock SLCR (if the code is running after RBL) - stage 0 of PLL setup     
+    def slcr_unlock(self):
+        clk_register_set=self.clk_register_set
+        if self.verbosity>0 :
+            print 'Unlocking SLCR'
+        clk_register_set.set_word('slcr_unlock',0xdf0d)
+    def slcr_lock(self):
+        clk_register_set=self.clk_register_set
+        if self.verbosity>0 :
+            print 'Unlocking SLCR'
+        clk_register_set.set_word('slcr_lock',0x767b)
+
+#     def clocks_regs_setup(self,current_reg_sets,unlock_needed=True,force=False,warn=False):
+#         clk_register_set=self.clk_register_set
+#         clk_register_set.set_initial_state(current_reg_sets, True)# start from the current registers state
+#         if unlock_needed:
+#             self.slcr_unlock()
+#             clk_register_set.flush() # close previous register settings
+#             
+            
     def parse_parameters(self,raw_configs):
         self.features.parse_features(raw_configs)
     def check_missing_features(self):
@@ -416,12 +446,10 @@ class EzynqClk:
     def get_new_register_sets(self):
         return self.clk_register_set.get_register_sets(True,True)
 
-    def clocks_regs_setup(self,current_reg_sets,unlock_needed=True,force=False,warn=False):
+
+    def clocks_regs_setup(self,current_reg_sets,force=False,warn=False):
         clk_register_set=self.clk_register_set
         clk_register_set.set_initial_state(current_reg_sets, True)# start from the current registers state
-        if unlock_needed:
-            self.slcr_unlock()
-            clk_register_set.flush() # close previous register settings
 # Bypass used PLL-s - stage 1 of PLL setup     
         self.clocks_pll_bypass(force=False,warn=False)
         clk_register_set.flush() # close previous register settings
@@ -438,12 +466,6 @@ class EzynqClk:
         self.clocks_program(force=False,warn=False)
         return self.get_new_register_sets()
 
-#Unlock SLCR (if the code is running after RBL) - stage 0 of PLL setup     
-    def slcr_unlock(self):
-        clk_register_set=self.clk_register_set
-        if self.verbosity>0 :
-            print 'Unlocking SLCR'
-        clk_register_set.set_word('slcr_unlock',0xdf0d)
   
 #Bypass used PLL-s - stage 1 of PLL setup     
     def clocks_pll_bypass(self,force=False,warn=False):
