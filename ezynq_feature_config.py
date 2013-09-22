@@ -29,8 +29,8 @@ class EzynqFeatures:
             'ERR_NOT_A_FLOAT':     'Value is not a float',
             'ERR_NOT_A_BOOLEAN':   'Value is not a boolean'
             }
-    BOOLEANS=(('0','FALSE','DISABLE','DISABLED','N'),
-              ('1','TRUE', 'ENABLE','ENABLED','Y'))
+    BOOLEANS=(('0','FALSE','DISABLE','DISABLED','N','OFF'),
+              ('1','TRUE', 'ENABLE','ENABLED','Y','ON'))
 #  defines - a list, order determines HTML output order
 #  Each element has fields:
 #  'NAME' - unique name to access this parameter
@@ -146,9 +146,10 @@ class EzynqFeatures:
                     all_set=False
                     print "Configuration file is missing mandatory parameter "+self.defs[name]['CONF_NAME']+': '+self.defs[name]['DESCRIPTION']
                 else:
+                    if not self.defs[name]['DEFAULT'] is None:
                     # use default parameter
 #                    print 'Adding default : ',name,'=', self.defs[name]['DEFAULT']
-                    self.pars[name]=self.defs[name]['DEFAULT']
+                        self.pars[name]=self.defs[name]['DEFAULT']
         return all_set
     def get_par_names(self):
 #        name_offs=sorted([(name,self.registers[name]['OFFS']) for name in self.registers], key = lambda l: l[1])
@@ -173,6 +174,16 @@ class EzynqFeatures:
             return self.defs[name]['DESCRIPTION']
         except:
             raise Exception (name+' not found in self.defs') # should not happen with wrong data, program bug
+
+    def get_par_value_or_none(self,name):
+        try:
+            return self.pars[name]
+        except:
+            try: 
+                _=self.defs[name]['CONF_NAME']
+            except:    
+                raise Exception (name+' not found in self.defs') # should not happen with wrong data, program bug
+            return 
 
     def get_par_value(self,name):
         try:
@@ -222,6 +233,10 @@ class EzynqFeatures:
     def is_specified(self,name): # directly specified
         return name in self.defined
 
+    def undefine_parameter(self,name):
+        if name in self.pars:
+            self.pars[name]=None
+
     
     def set_calculated_value(self,name,value,force=True):
         if (not force) and (name in self.defined):
@@ -255,11 +270,14 @@ class EzynqFeatures:
 #            name=    self.config_names[conf_name]
             feature= self.defs[name]
             value=   self.get_par_value(name)
-            if isinstance(value,int):
-                if (feature['TYPE']=='H'):
-                    value=hex(value)
-                else:
-                    value=str(value)
+            if value is None:
+                value='None'
+            else:    
+                if isinstance(value,int):
+                    if (feature['TYPE']=='H'):
+                        value=hex(value)
+                    else:
+                        value=str(value)
             try:
                 target_value=self.get_par_target(name)
                 if isinstance(target_value,int):

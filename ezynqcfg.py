@@ -21,6 +21,7 @@ __version__ = "3.0+"
 __maintainer__ = "Andrey Filippov"
 __email__ = "andrey@elphel.com"
 __status__ = "Development"
+import os
 import struct
 import argparse # http://docs.python.org/2/howto/argparse.html
 
@@ -289,6 +290,7 @@ permit_undefined_bits=False
 force=True #False
 warn_notfit=True # False
 regs_masked=[]
+u_boot=ezynq_uboot.EzynqUBoot(raw_configs,args.verbosity)
 
 mio_regs=ezynq_mio.EzynqMIO(args.verbosity,QUALIFIER_CHAR,[],permit_undefined_bits) # does not use regs_masked
 mio_regs.process_mio(raw_configs,WARN)      # does not use regs_masked
@@ -312,32 +314,39 @@ ddr_mhz=clk.get_ddr_mhz()
     
         
 if MIO_HTML:
-    f=open(MIO_HTML,'w')
+    html_file=open(MIO_HTML,'w')
+    print 'Generating HTML output',os.path.abspath(MIO_HTML)
 else:
-    f=False
-
+    html_file=False
+u_boot.html_list_features(html_file)
 #output_slcr_lock(registers,f,False,MIO_HTML_MASK) #prohibited by RBL
-mio_regs.output_mio(f,MIO_HTML_MASK)
+mio_regs.output_mio(html_file,MIO_HTML_MASK)
 #  def process_mio(self,raw_configs,warn):
 #  def output_mio(self,f,MIO_HTML_MASK)
 #  setregs_mio(self,current_reg_sets,force=True):
 
-clk.html_list_clocks(f)
+clk.html_list_clocks(html_file)
 
     
 #output_mio(registers,f,mio,MIO_HTML_MASK)
 ddr.calculate_dependent_pars(ddr_mhz)
 ddr.pre_validate() # before applying default values (some timings should be undefined, not defaults)
 ddr.check_missing_features() #and apply default values
-ddr.html_list_features(f) #verify /fix values after defaults are applied
+ddr.html_list_features(html_file) #verify /fix values after defaults are applied
 
 #clk.calculate_dependent_pars()
-clk.html_list_features(f)
+clk.html_list_features(html_file)
 
 reg_sets=[]
 segments=[]
 reg_sets=mio_regs.setregs_mio(reg_sets,force) # reg Sets include now MIO
 segments.append({'TO':len(reg_sets),'RBL':True,'NAME':'MIO','TITLE':'MIO registers configuration'})
+led_debug_mio_pin= u_boot.features.get_par_value_or_none('LED_DEBUG')
+if not led_debug_mio_pin is None:
+    led_cp_1=u_boot.features.get_par_value_or_none('LED_CHECKPOINT_1')
+    if not led_cp_1 is None:
+        reg_sets=mio_regs.rbl_led_on_off(led_debug_mio_pin, led_cp_1, reg_sets)
+        segments.append({'TO':len(reg_sets),'RBL':True,'NAME':'RBL_LED','TITLE':'Setting debug LED during RBL to '+('OFF','ON')[led_cp_1]})
 #adding ddr registers
 if raw_config_value('CONFIG_EZYNQ_SKIP_DDR', raw_configs) is None:        
     ddr.ddr_init_memory(reg_sets,False,False)
@@ -353,11 +362,10 @@ segments.append({'TO':len(reg_sets),'RBL':False,'NAME':'CLK','TITLE':'Clock regi
 #print 'Debug mode: CLK/PLL configuration by u-boot'
 reg_sets=clk.clocks_pll_bypass_off(reg_sets,force)
 segments.append({'TO':len(reg_sets),'RBL':False,'NAME':'PLL','TITLE':'Registers to switch to PLL'})
-if not raw_config_value('CONFIG_EZYNQ_BOOT_DEBUG', raw_configs) is None:
+if u_boot.features.get_par_value_or_none('BOOT_DEBUG'):
     uart=ezynq_uart.EzynqUART()
     uart.parse_parameters(raw_configs,used_mio_interfaces,False)
     uart.check_missing_features()
-    
     uart_channel=uart.channel
     if not uart_channel is None:
         try:
@@ -372,11 +380,15 @@ else:
     uart_channel=None
 
 if not uart_channel is None:
-    uart.html_list_features(f)
-    # Generate UART initialization, putc and wait FIFO empty code
+    uart.html_list_features(html_file)
 
     reg_sets=uart.setup_uart(reg_sets,force=False,warn=False)
     segments.append({'TO':len(reg_sets),'RBL':False,'NAME':'UART_INIT','TITLE':'Registers to initialize UART'})
+    
+    reg_sets_uart_extra=uart.set_uart_codes()
+    reg_sets.extend (reg_sets_uart_extra) # just to be listed, not to be loaded
+    segments.append({'TO':len(reg_sets),'RBL':False,'NAME':'UART_XMIT','TITLE':'UART register tests sets to output debug data'})
+    
 if raw_config_value('CONFIG_EZYNQ_SKIP_DDR', raw_configs) is None:
     reg_sets=ddr.ddr_dci_calibrate(reg_sets,False,False)
     segments.append({'TO':len(reg_sets),'RBL':False,'NAME':'DCI','TITLE':'DDR DCI Calibration'})
@@ -389,13 +401,10 @@ reg_sets_lock_unlock=clk.generate_lock_unlock()
 reg_sets.extend (reg_sets_lock_unlock) # just to be listed, not to be loaded
 segments.append({'TO':len(reg_sets),'RBL':False,'NAME':'SLCR_LOCK_UNLOCK','TITLE':'SLCR lock/unlock registers - listed out of sequence'})
 
-try:
-    led_mio_pin=int (raw_config_value('CONFIG_EZYNQ_LED_DEBUG', raw_configs),0)
-    reg_sets_led=mio_regs.generate_led_off_on(led_mio_pin)
+if not led_debug_mio_pin is None: 
+    reg_sets_led=mio_regs.generate_led_off_on(led_debug_mio_pin)
     reg_sets.extend (reg_sets_led) # just to be listed, not to be loaded
     segments.append({'TO':len(reg_sets),'RBL':False,'NAME':'LED','TITLE':'registers/data to turn on/off debug LED - listed out of sequence'})
-except:
-    led_mio_pin=None 
 #    def generate_led_off_on(self, mio_pin):
 #CONFIG_EZYNQ_LED_DEBUG=47 # toggle LED during boot
 #CONFIG_EZYNQ_BOOT_DEBUG
@@ -426,27 +435,27 @@ for segment in segments:
     show_comments=    MIO_HTML_MASK & 0x200
     filter_fields=not MIO_HTML_MASK & 0x400
     all_used_fields= False
-    ezynq_registers.print_html_reg_header(f,
+    ezynq_registers.print_html_reg_header(html_file,
                                            segment['TITLE']+" (%s)"%(('U-BOOT','RBL')[segment['RBL']]),
                                            show_bit_fields, show_comments, filter_fields)
 #   print segment['TITLE']+" (%s)"%(('U-BOOT','RBL')[segment['RBL']]), start,end
 
-    ezynq_registers.print_html_registers(f,
+    ezynq_registers.print_html_registers(html_file,
                                           reg_sets[:end],
                                           start,
                                           show_bit_fields,
                                           show_comments,
                                           filter_fields,
                                           all_used_fields)
-    ezynq_registers.print_html_reg_footer(f)
+    ezynq_registers.print_html_reg_footer(html_file)
 
-if f:
-    f.write('<h4>Total number of registers set up in the RBL header is <b>'+str(num_rbl_regs)+"</b> of maximal 256</h4>")
+if html_file:
+    html_file.write('<h4>Total number of registers set up in the RBL header is <b>'+str(num_rbl_regs)+"</b> of maximal 256</h4>")
     if num_rbl_regs<len(reg_sets):
-        f.write('<h4>Number of registers set up in u-boot is <b>'+str(len(reg_sets)-num_rbl_regs)+"</b></h4>")
+        html_file.write('<h4>Number of registers set up in u-boot is <b>'+str(len(reg_sets)-num_rbl_regs)+"</b></h4>")
 #
 if MIO_HTML:
-    f.close
+    html_file.close
 #if args.verbosity >= 1:
 #    print registers
 image =[ 0 for k in range (0x8c0/4)]
@@ -476,9 +485,7 @@ if args.outfile:
 #     segments.append({'TO':len(reg_sets),'RBL':False,'NAME':'UART_INIT','TITLE':'Registers to initialize UART'})
 #     segments.append({'TO':len(reg_sets),'RBL':False,'NAME':'DCI','TITLE':'DDR DCI Calibration'})
 #     segments.append({'TO':len(reg_sets),'RBL':False,'NAME':'DDR_START','TITLE':'DDR initialization start'})
-
-u_boot=ezynq_uboot.EzynqUBoot(args.verbosity)
-
+#CONFIG_EZYNQ_UART_DEBUG_USE_LED
 if 'SLCR_LOCK_UNLOCK' in segment_dict: 
     u_boot.make_slcr_lock_unlock (reg_sets[segment_dict['SLCR_LOCK_UNLOCK']['FROM']:segment_dict['SLCR_LOCK_UNLOCK']['TO']])
 if 'LED' in segment_dict: 
@@ -489,7 +496,12 @@ if 'CLK' in segment_dict:
 if 'PLL' in segment_dict: 
     u_boot.pll_setup (reg_sets[segment_dict['PLL']['FROM']:segment_dict['PLL']['TO']],clk)
 if 'UART_INIT' in segment_dict: 
-    u_boot.uart_init (reg_sets[segment_dict['UART_INIT']['FROM']:segment_dict['UART_INIT']['TO']],clk)
+    u_boot.uart_init (reg_sets[segment_dict['UART_INIT']['FROM']:segment_dict['UART_INIT']['TO']])
+if 'UART_XMIT' in segment_dict: 
+    u_boot.uart_transmit (reg_sets[segment_dict['UART_XMIT']['FROM']:segment_dict['UART_XMIT']['TO']])
+    u_boot.make_ddrc_register_dump()
+    u_boot.make_slcr_register_dump()
+#if not u_boot.features.get_par_value_or_none('BOOT_DEBUG') is None:
     
 if 'DCI' in segment_dict: 
     u_boot.dci_calibration(reg_sets[segment_dict['DCI']['FROM']:segment_dict['DCI']['TO']],ddr)

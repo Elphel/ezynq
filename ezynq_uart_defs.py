@@ -131,6 +131,12 @@ UART_DEFS={ #not all fields are defined currently
                   'rful':                   {'r':( 2, 2),'d':0,'m':'R',  'c':'Receiver FIFO full (continuous)'},
                   'rempty':                 {'r':( 1, 1),'d':0,'m':'R',  'c':'Receiver FIFO empty (continuous)'},
                   'rtrig':                  {'r':( 0, 0),'d':0,'m':'R',  'c':'Receiver FIFO level >= preset RTRIG value (continuous)'}}},
+
+      'tx_rx_fifo':            {'OFFS': 0x030,'DFLT':0,'RW':'RW',
+                                   'COMMENTS':'TX/RX FIFO character data write/read',
+                                   'FIELDS':{
+                  'reserved':               {'r':( 8,31),'d':0},
+                  'fifo':                   {'r':( 0, 7),'d':0,  'c':'read/write FIFO character data'}}},
            
       'baud_rate_div':            {'OFFS': 0x034,'DFLT':0xf,'RW':'RW',
                                    'COMMENTS':'Number of bit sample periods minus 1',

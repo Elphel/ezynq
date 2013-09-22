@@ -299,6 +299,16 @@ class EzynqMIO:
                                                      ('tri_enable',      1))) # ,force,warn)
         return led_register_set.get_register_sets(sort_addr=True,apply_new=True)
 
+    def rbl_led_on_off(self, mio_pin, led_on, reg_sets):
+        # generate code to be included in RBL register setup
+        if led_on:
+            led_on=1
+        led_register_set=  ezynq_registers.EzynqRegisters(self.MIO_PINS_DEFS,0,reg_sets)
+        led_register_set.set_bitfields('mio_pin_%02i'%mio_pin, ( # output 0 - LED off
+                                                     ('pullup',          1-led_on),
+                                                     ('tri_enable',      1-led_on))) # ,force,warn)
+        return led_register_set.get_register_sets(sort_addr=True,apply_new=True)
+
     def parse_config_mio(self,raw_configs):
         attrib_suffix='ATTRIB'
         options = {}

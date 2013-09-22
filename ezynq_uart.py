@@ -45,12 +45,12 @@ class EzynqUART:
             self.channel=None
             return
         self.channel=max(uarts)
-        self.features=ezynq_feature_config.EzynqFeatures(self.UART_CFG_DEFS,self.channel) #DDR_CFG_DEFS
+        self.features=ezynq_feature_config.EzynqFeatures(self.UART_CFG_DEFS,self.channel)
         self.features.parse_features(raw_configs)
         if len(uarts)>1:
             if 'DEBUG_CHANNEL' in self.features.pars:
                 self.channel=self.features.pars['DEBUG_CHANNEL']
-                self.features=ezynq_feature_config.EzynqFeatures(self.UART_CFG_DEFS,self.channel) #DDR_CFG_DEFS
+                self.features=ezynq_feature_config.EzynqFeatures(self.UART_CFG_DEFS,self.channel)
                 self.features.parse_features(raw_configs)
         self.uart_register_set=  ezynq_registers.EzynqRegisters(self.UART_DEFS,self.channel,[],permit_undefined_bits)
         self.slcr_register_set=  ezynq_registers.EzynqRegisters(self.SLCR_CLK_DEFS,0,[],permit_undefined_bits)
@@ -98,7 +98,23 @@ class EzynqUART:
         self.bdiv,self.cd,self.baud_rate=get_bdiv_cd_baud(self.baud_rate,min_bdiv)
         self.features.set_calculated_value('BAUD_RATE',self.baud_rate,force=True)
         
-
+    # these instructions will be usen to generate C code.
+    # when defined here (as register writes/tests) they will appear in the overall list
+    # of registers (HTML file)
+    
+    def set_uart_codes(self):
+        uart_extra_set=  ezynq_registers.EzynqRegisters(self.UART_DEFS,self.channel,[])
+        # wait transmitter FIFO empty (use before proceeding to risky of reboot code )
+        uart_extra_set.wait_reg_field_values('channel_sts',  # Channel status
+                                               (('tempty',    1)), True) # Transmitter FIFO empty (continuous)
+        uart_extra_set.flush() # to separate codes, not to combine in one write
+        # wait transmitter FIFO not full (OK to  put more characters)
+        uart_extra_set.wait_reg_field_values('channel_sts',  # Channel status
+                                               (('tful',    0)), True) # Transmitter FIFO full (continuous)
+        uart_extra_set.flush()
+        uart_extra_set.set_bitfields('tx_rx_fifo',( # TX/RX FIFO character data write/read
+                                                ('fifo',  self.cd)),True) # read/write FIFO character data
+        return uart_extra_set.get_register_sets(sort_addr=True,apply_new=True)
 
     def setup_uart(self,current_reg_sets,force=False,warn=False):    
         
@@ -157,89 +173,3 @@ class EzynqUART:
                                                 ('rxres',    0)), True, warn)
         return uart_register_set.get_register_sets(sort_addr=True,apply_new=True)
     
-#         
-# 
-#       'channel_sts':              {'OFFS': 0x02c,'DFLT':0x0,'RW':'R',
-#                                    'COMMENTS':'Channel status',
-#                                    'FIELDS':{
-#                   'reserved1':              {'r':(15,31),'d':0,'m':'R'},
-#                   'tnful':                  {'r':(14,14),'d':0,'m':'R',  'c':'Transmitter FIFO nearly full'},
-#                   'ttrig':                  {'r':(13,13),'d':0,'m':'R',  'c':'Transmitter FIFO level >= preset TTRIG value'},
-#                   'fdelt':                  {'r':(12,12),'d':0,'m':'R',  'c':'Receiver FIFO level >= preset FDEL value'},
-#                   'tactive':                {'r':(11,11),'d':0,'m':'R',  'c':'Transmitter active'},
-#                   'ractive':                {'r':(10,10),'d':0,'m':'R',  'c':'Receiver active'},
-#                   'reserved2':              {'r':( 9, 9),'d':0,'m':'R',  'c':''},
-#                   'reserved3':              {'r':( 8, 8),'d':0,'m':'R',  'c':''},
-#                   'reserved4':              {'r':( 7, 7),'d':0,'m':'R',  'c':''},
-#                   'reserved5':              {'r':( 6, 6),'d':0,'m':'R',  'c':''},
-#                   'reserved6':              {'r':( 5, 5),'d':0,'m':'R',  'c':''},
-#                   'tful':                   {'r':( 4, 4),'d':0,'m':'R',  'c':'Transmitter FIFO full (continuous)'},
-#                   'tempty':                 {'r':( 3, 3),'d':0,'m':'R',  'c':'Transmitter FIFO empty (continuous)'},
-#                   'rful':                   {'r':( 2, 2),'d':0,'m':'R',  'c':'Receiver FIFO full (continuous)'},
-#                   'rempty':                 {'r':( 1, 1),'d':0,'m':'R',  'c':'Receiver FIFO empty (continuous)'},
-#                   'rtrig':                  {'r':( 0, 0),'d':0,'m':'R',  'c':'Receiver FIFO level >= preset RTRIG value (continuous)'}}},
-           
-#        'uart_rst_ctrl':            {'OFFS': 0x228,'DFLT':0,'RW':'RW', # Never set
-#                                    'COMMENTS':'UART software reset control for reference clock and CPU_1x (AMBA) clock domains',
-#                                    'FIELDS':{
-#                   'reserved':                 {'r':( 4,31),'d':0, 'c':'reserved'},
-#                   'uart1_ref_rst':            {'r':( 3, 3),'d':0, 'c':'UART 1 reference clock domain reset: 0 - normal, 1 - reset'},
-#                   'uart0_ref_rst':            {'r':( 2, 2),'d':0, 'c':'UART 0 reference clock domain reset: 0 - normal, 1 - reset'},
-#                   'uart1_cpu1x_rst':          {'r':( 1, 1),'d':0, 'c':'UART 1 CPU_1x clock domain (AMBA) reset: 0 - normal, 1 - reset'},
-#                   'uart0_cpu1x_rst':          {'r':( 0, 0),'d':0, 'c':'UART 0 CPU_1x clock domain (AMBA) reset: 0 - normal, 1 - reset'}}},
-
- 
-#MIN_SAMPLES_PER_BIT
-
-#         clk_register_set.wait_reg_field_values('pll_status',tuple(bits), True, warn)
-# 
-#         if 'DDR' in self.pll_fdivs:
-#             clk_register_set.set_bitfields('ddr_pll_ctrl',(('pll_bypass_force',  0),
-#                                                            ('pll_bypass_qual',   0)),force,warn)
-
-
-
-
-#     writel(0x0000000f, &slcr_base->uart_rst_ctrl); /* UART reset on */
-# 
-# //&slcr_base->uart_rst_ctrl
-# //    writel(0x0000000f, &slcr_base->uart_rst_ctrl); /* UART reset on */
-#     /* delay ??? move reset on earlier?*/
-#     writel(0x00000000, &slcr_base->uart_rst_ctrl); /* UART reset off */
-# 
-# /* uart 1 */
-#     writel(0x00000020, &uart1_base->mode);     /* UART character frame */
-# /* a. Disable the Rx path: set uart.Control_reg0 [RXEN] = 0 and [RXDIS] = 1.
-#    b. Disable the Txpath: set uart.Control_reg0 [TXEN] = 0 and [TXDIS] = 1. */
-#     writel(0x00000028, &uart1_base->control); /*a,b */
-
-# /* c. Write the calculated CD value into the uart.Baud_rate_gen_reg0 [CD] bit field. */
-#     writel(12, &uart1_base->baud_rate_gen); /*c  - for 25MHz and 115200 CD=12, (BDIV+1)=18 */
-# /* d. Write the calculated BDIV value into the uart.Baud_rate_divider_reg0 [BDIV] bit value. */
-
-#     writel(17, &uart1_base->baud_rate_div); /*d  - for 25MHz and 115200 CD=12, (BDIV+1)=18 */
-#     writel(0x117, &uart1_base->control); /* restart and enable ug585v1.6.1. p 555 */
-#     writel(0x14, &uart1_base->control); /*just a delay - 1-st character is usually lost */
-
-
-
-
-
-#     def ddr_dci_calibrate(self,current_reg_sets,force=False,warn=False):
-#         ddriob_register_set=self.ddriob_register_set
-#         ddriob_register_set.set_initial_state(current_reg_sets, True)# start from the current registers state
-#         ddriob_register_set.set_bitfields('ddriob_dci_ctrl', ('reset',1),force,warn)        
-#         ddriob_register_set.flush() # close previous register settings
-#         ddriob_register_set.set_bitfields('ddriob_dci_ctrl', ('reset',0),force,warn)        
-#         ddriob_register_set.flush()# close previous register settings
-#         ddriob_register_set.set_bitfields('ddriob_dci_ctrl', (('reset', 1),
-#                                                               ('enable',1),
-#                                                               ('nref_opt1',0),
-#                                                               ('nref_opt2',0),
-#                                                               ('nref_opt4',1),
-#                                                               ('pref_opt2',0),
-#                                                               ('update_control',0)),force,warn)
-# # add wait for DCI calibration DONE
-#         ddriob_register_set.wait_reg_field_values('ddriob_dci_status',('done',1), True, warn)
-# 
-#         return ddriob_register_set.get_register_sets(True,True) # close previous register settings, return new result        
