@@ -653,8 +653,17 @@ class EzynqClk:
         sdi0_cpu_1x_clkact    = 'SDIO0' in self.iface_divs # 0x1
         gem1_cpu_1x_clkact    = 'GIGE1' in self.iface_divs # 0x1
         gem0_cpu_1x_clkact    = 'GIGE0' in self.iface_divs # 0x1
-        usb1_cpu_1x_clkact    = 'USB1'  in self.iface_divs # 0x1
-        usb0_cpu_1x_clkact    = 'USB1'  in self.iface_divs # 0x1
+        usb1_cpu_1x_clkact    = 0
+        usb0_cpu_1x_clkact    = 0
+        for iface in self.used_mio_interfaces:
+            if (iface['NAME']=='USB') and (iface['CHANNEL']==0) :
+                usb0_cpu_1x_clkact  = 1
+            if (iface['NAME']=='USB') and (iface['CHANNEL']==1) :
+                usb1_cpu_1x_clkact  = 1
+#         for ii in self.iface_divs:
+#             print ii
+#         for ii in self.used_mio_interfaces:    
+#             print ii
         dma_cpu_2x_clkact    = 1 # 0x1
         clk_register_set.set_bitfields('aper_clk_ctrl',( # AMBA peripherals clock control
  #                                                    ('reserved1',                       0),  #
