@@ -408,7 +408,7 @@ if not led_debug_mio_pin is None:
 #add code to check DDRC status (no commands in queue)    
 reg_sets_ddrc_sta=ddr.generate_command_queue_empty()
 reg_sets.extend (reg_sets_ddrc_sta) # just to be listed, not to be loaded
-segments.append({'TO':len(reg_sets),'RBL':False,'NAME':'DDRC_STA','TITLE':'resgister to test DDRC comamnd queue status - listed out of sequence'})
+segments.append({'TO':len(reg_sets),'RBL':False,'NAME':'DDRC_STA','TITLE':'register to test DDRC comamnd queue status - listed out of sequence'})
     
     
     
