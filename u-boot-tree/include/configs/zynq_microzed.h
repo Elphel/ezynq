@@ -38,6 +38,9 @@
 #include <configs/ezynq/ezynq_XC7Z010_1CLG400.h>
 #include <configs/ezynq/zed_ezynq.h>
 
+#define CONFIG_CMD_MEMTEST
+#undef CONFIG_EZYNQ_BOOT_DEBUG 
+
 /* twice slower */
 #undef CONFIG_ZYNQ_SERIAL_CLOCK0
 /*#define CONFIG_ZYNQ_SERIAL_CLOCK0	25000000*/
@@ -73,8 +76,8 @@
 
 /* undefs */
 /*#undef CONFIG_FS_FAT */
-#undef CONFIG_SUPPORT_VFAT
-#undef CONFIG_CMD_FAT
+/* #undef CONFIG_SUPPORT_VFAT */
+/* #undef CONFIG_CMD_FAT */
 /* http://lists.denx.de/pipermail/u-boot/2003-October/002631.html */
 #undef CONFIG_CMD_LOADB
 #undef CONFIG_CMD_LOADS
