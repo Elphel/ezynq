@@ -1,0 +1,11 @@
+#!/bin/bash
+export CROSS_COMPILE=arm-poky-linux-gnueabi- 
+export PATH=/opt/poky/1.4/sysroots/x86_64-pokysdk-linux/usr/bin/armv7a-vfp-neon-poky-linux-gnueabi/:$PATH
+make clean
+make zynq_microzed_config
+make include/autoconf.mk
+ezynq/ezynqcfg.py -c include/autoconf.mk --html u-boot.html -o boot_head.bin --html-mask 0x3ff --lowlevel arch/arm/cpu/armv7/zynq/lowlevel.c
+
+make
+
+cat boot_head.bin u-boot.bin > boot.bin
