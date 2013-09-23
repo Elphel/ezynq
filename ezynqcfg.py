@@ -301,7 +301,8 @@ ddr.parse_parameters(raw_configs)
 ddr_type=ddr.get_ddr_type()
 
 used_mio_interfaces=mio_regs.get_used_interfaces()
-
+#for iface in used_mio_interfaces:
+#    print iface
 #clk=ezynq_clk.EzynqClk(regs_masked,ddr_type,permit_undefined_bits=False,force=False,warn=False)
 clk=ezynq_clk.EzynqClk(args.verbosity,[],ddr_type,used_mio_interfaces,permit_undefined_bits,force,warn_notfit) # will it verify memory type is set?
 clk.parse_parameters(raw_configs)
@@ -524,4 +525,4 @@ if (args.lowlevel):
     
     u_boot.make_lowlevel_init()
     u_boot.output_c_file(args.lowlevel)
-#print u_boot.get_c_file()
+#    print u_boot.get_c_file()

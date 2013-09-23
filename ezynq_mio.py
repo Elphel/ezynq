@@ -280,13 +280,12 @@ ERROR_DEFS={
 
 class EzynqMIO:
     def __init__(self, verbosity, qualifier_char, regs_masked, permit_undefined_bits=False):
-        self.MIO_PINS_DEFS=  ezynq_slcr_clk_def.MIO_PINS_DEFS
+#        print ezynq_slcr_clk_def.MIO_PINS_DEFS
+        self.MIO_PINS_DEFS=  ezynq_slcr_clk_def.SLCR_DEFS #combined
         self.qualifier_char=qualifier_char
         self.verbosity=     verbosity
         self.slcr_register_set=  ezynq_registers.EzynqRegisters(self.MIO_PINS_DEFS,0,regs_masked,permit_undefined_bits)
 
-#        self.DDRIOB_DEFS=ezynq_ddriob_def.DDRIOB_DEFS
-#        self.DDR_CFG_DEFS=ezynq_ddrcfg_defs.DDR_CFG_DEFS
     def generate_led_off_on(self, mio_pin):
         # generate code to be included in u-boot for debugging early boot stages
         led_register_set=  ezynq_registers.EzynqRegisters(self.MIO_PINS_DEFS,0,[])
@@ -435,14 +434,6 @@ class EzynqMIO:
                             value='y'
                         else:
                             value=int(value)
-    #TODO: Value may be just 'y' if there is a single option
-    #Traceback (most recent call last):
-    #  File "./ezynq/ezynqcfg.py", line 455, in <module>
-    #    set_mio_interfaces(mio_interfaces, options)
-    #  File "./ezynq/ezynqcfg.py", line 369, in set_mio_interfaces
-    #    anypin=int(option['INTERFACE_GROUP'])
-    #ValueError: invalid literal for int() with base 10: 'y'
-                            
                             
                             
     #find if such pin name is defined for the interface
@@ -640,16 +631,6 @@ class EzynqMIO:
     #                print 'value=',value
                     mio[pin]['DATA_OUT']=value #Where is it used?
     
-#         ddriob_register_set=self.ddriob_register_set
-#         ddrc_register_set=  self.ddrc_register_set
-#         ddriob_register_set.set_initial_state(current_reg_sets, True)# start from the current registers state
-#         
-#         self.ddr_init_ddriob(force,warn) # will program to sequence 'MAIN'
-#         regs1=ddriob_register_set.get_register_sets(True,True)
-#         ddrc_register_set.set_initial_state(regs1, True)# add
-#         self.ddr_init_ddrc(force,warn) # will program to sequence 'MAIN'
-#         return ddrc_register_set.get_register_sets(True,True)
-
     
     
     
@@ -659,6 +640,24 @@ class EzynqMIO:
         self.slcr_register_set.set_initial_state(current_reg_sets, True)# start from the current registers state   
         for i,mio_pin in enumerate(self.mio):
             self.slcr_register_set.set_word('mio_pin_%02i'%i,mio_pin['VALUE'],force) # active low soft reset
+# Add other than MIO_PIN registers
+        used_ifaces=self.get_used_interfaces()
+        sdio_ctrl_pins=[{},{}]
+        for iface in used_ifaces:
+            if iface['NAME'] == 'SDIO_CD':
+                sdio_ctrl_pins[iface['CHANNEL']]['CD'] = iface['PIN']
+            elif iface['NAME'] == 'SDIO_WP':
+                sdio_ctrl_pins[iface['CHANNEL']]['WP'] = iface['PIN']
+        for n, ch in enumerate(sdio_ctrl_pins):
+            if ch:
+                if 'CD' in ch:
+                    self.slcr_register_set.set_bitfields('sd%i_wp_cd_sel'%n, ( #SDIO x CD and WP source select
+                                                         ('sdio%i_ce_sel'%n,  ch['CD'])),force)
+                if 'WP' in ch:
+                    self.slcr_register_set.set_bitfields('sd%i_wp_cd_sel'%n, ( #SDIO x CD and WP source select
+                                                         ('sdio%i_wp_sel'%n,  ch['WP'])),force)
+
+            
         return self.slcr_register_set.get_register_sets(True,True)
     
     # Just add to the HTML output

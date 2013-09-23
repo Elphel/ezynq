@@ -1,4 +1,5 @@
 CONFIG_EZYNQ_BOOT_DEBUG = y # configure UARTx and send register dumps there
+CONFIG_EZYNQ_LOCK_SLCR = 0
 CONFIG_EZYNQ_LED_DEBUG = 47 # toggle LED during boot
 CONFIG_EZYNQ_UART_DEBUG_USE_LED = y # turn on/off LED while waiting for transmit FIFO not full
 

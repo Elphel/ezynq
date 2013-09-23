@@ -26,6 +26,8 @@ import os
 import ezynq_feature_config
 #Use 'TYPE':'I' for decimal output, 'H' - for hex. On input both are accepted
 UBOOT_CFG_DEFS=[
+    {'NAME':'LOCK_SLCR',          'CONF_NAME':'CONFIG_EZYNQ_LOCK_SLCR','TYPE':'B','MANDATORY':False,'DERIVED':False,'DEFAULT':True,
+                'DESCRIPTION':'Lock SLCR after boot'},              
     {'NAME':'BOOT_DEBUG',         'CONF_NAME':'CONFIG_EZYNQ_BOOT_DEBUG','TYPE':'B','MANDATORY':False,'DERIVED':False,'DEFAULT':False,
                 'DESCRIPTION':'Enable debug features during boot'},              
     {'NAME':'LED_DEBUG',          'CONF_NAME':'CONFIG_EZYNQ_LED_DEBUG','TYPE':'I','MANDATORY':False,'DERIVED':False,'DEFAULT':None,
@@ -514,11 +516,14 @@ void lowlevel_init(void)
             self.cfile+='\tuart_wait_tx_fifo_empty(); /* u-boot may re-program UART differently, wait all is sent before getting there */\n'
 #uart_wait_tx_fifo_empty() - add if u-boot debug is on
         self._cp_led('LED_CHECKPOINT_12') # Before leaving lowlevel_init()
-        self.cfile+='''/* Lock SLCR back after everything with it is done */
+#LOCK_SLCR        
+        if self.features.get_par_value_or_none('LOCK_SLCR') is False:
+            self.cfile+='/* Leaving SLCR registers UNLOCKED */\n'
+        else:            
+            self.cfile+='''/* Lock SLCR back after everything with it is done */
 \tlock_slcr();
-/*
-   This code was called from low OCM, so return should just get back correctly
- */
+'''
+        self.cfile+='''/* This code was called from low OCM, so return should just get back correctly */
 }
 '''
 

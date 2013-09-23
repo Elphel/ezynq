@@ -167,8 +167,8 @@ SLCR_CLK_DEFS={ #not all fields are defined currently
                   'spi0_cpu_1x_clkact':       {'r':(14,14),'d':0x1,   'c':'SPI0 AMBA clock control (1- enabled, 0- disabled)'},       # 0x0
                   'reserved2':                {'r':(13,13),'d':0,     'c':'reserved'},
                   'reserved3':                {'r':(12,12),'d':0,     'c':'reserved'},
-                  'sdi1_cpu_1x_clkact':       {'r':(11,11),'d':0x1,   'c':'SDI1 AMBA clock control (1- enabled, 0- disabled)'},       # 0x0
-                  'sdi0_cpu_1x_clkact':       {'r':(10,10),'d':0x1,   'c':'SDI0 AMBA clock control (1- enabled, 0- disabled)'},       # 0x1
+                  'sdi1_cpu_1x_clkact':       {'r':(11,11),'d':0x1,   'c':'SDIO 1 AMBA clock control (1- enabled, 0- disabled)'},       # 0x0
+                  'sdi0_cpu_1x_clkact':       {'r':(10,10),'d':0x1,   'c':'SDI0 0 AMBA clock control (1- enabled, 0- disabled)'},       # 0x1
                   'reserved4':                {'r':( 9, 9),'d':0,     'c':'reserved'},
                   'reserved5':                {'r':( 8, 8),'d':0,     'c':'reserved'},
                   'gem1_cpu_1x_clkact':       {'r':( 7, 7),'d':0x1,   'c':'Gigabit Ethernet 1 AMBA clock control (1- enabled, 0- disabled)'}, # 0x0
@@ -659,7 +659,7 @@ SLCR_CLK_DEFS={ #not all fields are defined currently
                                    'COMMENTS':'Boot mode strapping pins state',
                                    'FIELDS':{
                   'reserved':                 {'r':( 5,31),'d':0,          'c':'reserved'},
-                  'pll_bypass':               {'r':( 4, 4),'d':0, 'm':'R', 'c':'1 PLL is enabled, outputs routed to clock generators, 0 - PLLs are diusabled and bypassed'}, 
+                  'pll_bypass':               {'r':( 4, 4),'d':0, 'm':'R', 'c':'1 PLL is enabled, outputs routed to clock generators, 0 - PLLs are disabled and bypassed'}, 
                   'boot_mode':                {'r':( 0, 3),       'm':'R', 'c':'boot mode pins as sampled'}}},
       'apu_ctrl':                 {'OFFS': 0x300,'DFLT':0,'RW':'RW', #  Never set
                                    'COMMENTS':'APU control',
@@ -721,6 +721,22 @@ SLCR_CLK_DEFS={ #not all fields are defined currently
                                    'FIELDS':{
                   'reserved':                 {'r':( 1,31),'d':0,         'c':'reserved'},
                   'dfi_cal_st':               {'r':( 0, 3),'d':0,'m':'R', 'c':'Not clear'}}},
+
+      'sd0_wp_cd_sel':           {'OFFS': 0x830,'RW':'RW', #
+                                   'COMMENTS':'SDIO 0 CD and WP source select',
+                                   'FIELDS':{
+                  'reserved1':                {'r':(22,31),'d':0,         'c':'reserved'},
+                  'sdio0_ce_sel':             {'r':(16,21),'d':0,         'c':'Select MIO pin (any but 7,8) as a source for CD (>53 - EMIO)'},
+                  'reserved2':                {'r':( 6,15),'d':0,         'c':'reserved'},
+                  'sdio0_wp_sel':             {'r':( 0, 5),'d':0,         'c':'Select MIO pin (any but 7,8) as a source for WP (>53 - EMIO)'}}},
+
+      'sd1_wp_cd_sel':           {'OFFS': 0x834,'RW':'RW', #
+                                   'COMMENTS':'SDIO 1 CD and WP source select',
+                                   'FIELDS':{
+                  'reserved1':                {'r':(22,31),'d':0,         'c':'reserved'},
+                  'sdio1_ce_sel':             {'r':(16,21),'d':0,         'c':'Select MIO pin (any but 7,8) as a source for CD (>53 - EMIO)'},
+                  'reserved2':                {'r':( 6,15),'d':0,         'c':'reserved'},
+                  'sdio1_wp_sel':             {'r':( 0, 5),'d':0,         'c':'Select MIO pin (any but 7,8) as a source for WP (>53 - EMIO)'}}},
                   
     }
 MIO_PINS_DEFS={'mio_pin_%02i'%i:{'OFFS': 0x700+4*i,
@@ -741,6 +757,7 @@ MIO_PINS_DEFS={'mio_pin_%02i'%i:{'OFFS': 0x700+4*i,
                                for i in range (54)}   
 MIO_PINS_DEFS['BASE_ADDR']=(0xF8000000,) # SLCR
 MIO_PINS_DEFS['MODULE_NAME']=('slcr',)
+SLCR_DEFS=    dict(MIO_PINS_DEFS.items()+SLCR_CLK_DEFS.items()) # combine.
     
 #UG585: table 25-6: multiplier (PLL_FDIV), PLL_CP, PLL_RES, LOCK_CNT
 PLL_PARS=(( 13,    2,6,750),

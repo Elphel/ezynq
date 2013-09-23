@@ -649,8 +649,8 @@ class EzynqClk:
         can0_cpu_1x_clkact    = 'CAN0'  in self.iface_divs # 0x1
         spi1_cpu_1x_clkact    = 'SPI1'  in self.iface_divs # 0x1
         spi0_cpu_1x_clkact    = 'SPI0'  in self.iface_divs # 0x1
-        sdi1_cpu_1x_clkact    = 'SDI1'  in self.iface_divs # 0x1
-        sdi0_cpu_1x_clkact    = 'SDI0'  in self.iface_divs # 0x1
+        sdi1_cpu_1x_clkact    = 'SDIO1' in self.iface_divs # 0x1
+        sdi0_cpu_1x_clkact    = 'SDIO0' in self.iface_divs # 0x1
         gem1_cpu_1x_clkact    = 'GIGE1' in self.iface_divs # 0x1
         gem0_cpu_1x_clkact    = 'GIGE0' in self.iface_divs # 0x1
         usb1_cpu_1x_clkact    = 'USB1'  in self.iface_divs # 0x1

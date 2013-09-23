@@ -27,6 +27,7 @@
 
 /* Boot debug setup */
 #define CONFIG_EZYNQ_BOOT_DEBUG            /* configure UARTx and send register dumps there.*/
+#define CONFIG_EZYNQ_LOCK_SLCR         OFF /* Lock SLCR registers when all is done. */
 #define CONFIG_EZYNQ_LED_DEBUG          47 /* toggle LED during boot */
 #define CONFIG_EZYNQ_UART_DEBUG_USE_LED    /* turn on/off LED while waiting for transmit FIFO not full */
 
@@ -63,6 +64,13 @@
 #define CONFIG_EZYNQ_MIO_UART_1           48 //#  8+4*N
 /* LED will be OFF */
 #define CONFIG_EZYNQ_MIO_INOUT_47   OUT
+#define CONFIG_EZYNQ_MIO_PULLUP_EN_40
+#define CONFIG_EZYNQ_MIO_PULLUP_EN_41
+#define CONFIG_EZYNQ_MIO_PULLUP_EN_42
+#define CONFIG_EZYNQ_MIO_PULLUP_EN_43
+#define CONFIG_EZYNQ_MIO_PULLUP_EN_44
+#define CONFIG_EZYNQ_MIO_PULLUP_EN_45
+#define CONFIG_EZYNQ_MIO_PULLUP_EN_46
 
 /*
 
