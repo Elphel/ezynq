@@ -47,15 +47,15 @@ DDRC_DEFS={ #not all fields are defined currently
     'hpr_reg':                 {'OFFS': 0x008,'DFLT':0x03C0780F,'RW':'RW','FIELDS':{ #0x3c0780f
                   'reg_ddrc_hpr_xact_run_length':     {'r':(22,25),'d':0xF,'c':'HPR queue transactions to be served after going critical'},
                   'reg_ddrc_hpr_max_starve_x32':      {'r':(11,21),'d':0xF,'c':'Number of 32x clocks HPR may be starved before going critical'},
-                  'reg_ddrc_hpr_min_non_critical_x32':{'r':( 0,10),'d':0xF,'c':'Number off 32x clocks HPR queue is guaranteed to be non-critical'}}},
+                  'reg_ddrc_hpr_min_non_critical_x32':{'r':( 0,10),'d':0xF,'c':'Number of 32x clocks HPR queue is guaranteed to be non-critical'}}},
     'lpr_reg':                 {'OFFS': 0x00C,'DFLT':0x03C0780F,'RW':'RW','FIELDS':{ #0x2001001
                   'reg_ddrc_lpr_xact_run_length':     {'r':(22,25),'d':0xF,'c':'LPR queue transactions to be served after going critical'}, # 0x8
                   'reg_ddrc_lpr_max_starve_x32':      {'r':(11,21),'d':0xF,'c':'Number of 32x clocks LPR may be starved before going critical'}, # 0x2
-                  'reg_ddrc_lpr_min_non_critical_x32':{'r':( 0,10),'d':0xF,'c':'Number off 32x clocks LPR queue is guaranteed to be non-critical'}}}, #0x1
+                  'reg_ddrc_lpr_min_non_critical_x32':{'r':( 0,10),'d':0xF,'c':'Number of 32x clocks LPR queue is guaranteed to be non-critical'}}}, #0x1
     'wr_reg':                  {'OFFS': 0x010,'DFLT':0x0007F80F,'RW':'RW','FIELDS':{ #0x14001
                   'reg_ddrc_w_max_starve_x32':        {'r':(15,25),'d':0xF,'c':'Number of 32x clocks write queue may be starved before going critical'},#0 x2 # opposite sequence from HPR,LPR
                   'reg_ddrc_w_xact_run_length':       {'r':(11,14),'d':0xF,'c':'write queue transactions to be served after going critical'}, # 0x8
-                  'reg_ddrc_w_min_non_critical_x32':  {'r':( 0,10),'d':0xF,'c':'Number off 32x clocks write queue is guaranteed to be non-critical'}}}, # 0x2
+                  'reg_ddrc_w_min_non_critical_x32':  {'r':( 0,10),'d':0xF,'c':'Number of 32x clocks write queue is guaranteed to be non-critical'}}}, # 0x2
     'dram_param_reg0':         {'OFFS': 0x014,'DFLT':0x00041016,'RW':'RW','FIELDS':{ # 0x4281a
                   'reg_ddrc_post_selfref_gap_x32':    {'r':(14,20),'d':0x10,'c':'DRAM-related, minimal time after self refresh'}, #0x10
                   'reg_ddrc_t_rfc_min':               {'r':( 6,15),'d':0x40,'c':'Dynamic, tRFC'}, #0xa0

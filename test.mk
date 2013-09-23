@@ -107,7 +107,7 @@ CONFIG_EZYNQ_MIO_UART_1=48 #  8+4*N
 #RBL header parameters
 CONFIG_EZYNQ_BOOT_USERDEF=           0x1234567 # will be saved in the file header
 CONFIG_EZYNQ_BOOT_OCM_OFFSET=        0x8C0   # start of OCM data relative to the flash image start >=0x8C0, 63-bytes aligned
-CONFIG_EZYNQ_BOOT_OCM_IMAGE_LENGTH=  0#0x30000 # number of bytes to load to the OCM memory, <= 0x30000 
+CONFIG_EZYNQ_BOOT_OCM_IMAGE_LENGTH=  0x30000 # number of bytes to load to the OCM memory, <= 0x30000 
 CONFIG_EZYNQ_START_EXEC=             0x00 # start of execution address 
 
 

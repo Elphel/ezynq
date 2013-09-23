@@ -40,6 +40,7 @@ parser.add_argument('--html', help='Generate HTML map of MIO, save to the specif
 parser.add_argument('--html-mask', help='Bit mask of what data to include in the HTML MIO map')
 #parser.add_argument('-i', '--include',   help='Generate include file for u-boot')
 parser.add_argument('-l', '--lowlevel',   help='path to the lowlevel.c file to be generated for u-boot')
+parser.add_argument('-u', '--uboot',      help='path to the u-boot.bin to get it\'s length (second pass, when u-boot.bin is already generated)')
 
 args = parser.parse_args()
 #print args
@@ -324,14 +325,12 @@ mio_regs.output_mio(html_file,MIO_HTML_MASK)
 #  def process_mio(self,raw_configs,warn):
 #  def output_mio(self,f,MIO_HTML_MASK)
 #  setregs_mio(self,current_reg_sets,force=True):
-
 clk.html_list_clocks(html_file)
 
-    
-#output_mio(registers,f,mio,MIO_HTML_MASK)
 ddr.calculate_dependent_pars(ddr_mhz)
 ddr.pre_validate() # before applying default values (some timings should be undefined, not defaults)
 ddr.check_missing_features() #and apply default values
+
 ddr.html_list_features(html_file) #verify /fix values after defaults are applied
 
 #clk.calculate_dependent_pars()
@@ -435,36 +434,32 @@ for index,segment in enumerate(segments):
     segment_dict[segment['NAME']]=segment
 #for index,segment in enumerate(segments):
 #    print index,':', segment    
-for segment in segments:
-    start=segment['FROM']
-    end=segment['TO']    
-    show_bit_fields= (MIO_HTML_MASK & 0x100,MIO_HTML_MASK & 0x800)[segment['NAME']=='MIO']
-    show_comments=    MIO_HTML_MASK & 0x200
-    filter_fields=not MIO_HTML_MASK & 0x400
-    all_used_fields= False
-    ezynq_registers.print_html_reg_header(html_file,
-                                           segment['TITLE']+" (%s)"%(('U-BOOT','RBL')[segment['RBL']]),
-                                           show_bit_fields, show_comments, filter_fields)
-#   print segment['TITLE']+" (%s)"%(('U-BOOT','RBL')[segment['RBL']]), start,end
-
-    ezynq_registers.print_html_registers(html_file,
-                                          reg_sets[:end],
-                                          start,
-                                          show_bit_fields,
-                                          show_comments,
-                                          filter_fields,
-                                          all_used_fields)
-    ezynq_registers.print_html_reg_footer(html_file)
-
 if html_file:
+    for segment in segments:
+        start=segment['FROM']
+        end=segment['TO']    
+        show_bit_fields= (MIO_HTML_MASK & 0x100,MIO_HTML_MASK & 0x800)[segment['NAME']=='MIO']
+        show_comments=    MIO_HTML_MASK & 0x200
+        filter_fields=not MIO_HTML_MASK & 0x400
+        all_used_fields= False
+        ezynq_registers.print_html_reg_header(html_file,
+                                               segment['TITLE']+" (%s)"%(('U-BOOT','RBL')[segment['RBL']]),
+                                               show_bit_fields, show_comments, filter_fields)
+    #   print segment['TITLE']+" (%s)"%(('U-BOOT','RBL')[segment['RBL']]), start,end
+    
+        ezynq_registers.print_html_registers(html_file,
+                                              reg_sets[:end],
+                                              start,
+                                              show_bit_fields,
+                                              show_comments,
+                                              filter_fields,
+                                              all_used_fields)
+        ezynq_registers.print_html_reg_footer(html_file)
     html_file.write('<h4>Total number of registers set up in the RBL header is <b>'+str(num_rbl_regs)+"</b> of maximal 256</h4>")
     if num_rbl_regs<len(reg_sets):
         html_file.write('<h4>Number of registers set up in u-boot is <b>'+str(len(reg_sets)-num_rbl_regs)+"</b></h4>")
-#
-if MIO_HTML:
     html_file.close
-#if args.verbosity >= 1:
-#    print registers
+
 image =[ 0 for k in range (0x8c0/4)]
 
 #image_generator (image, registers, user_def,start_offset,ocm_len,start_exec)
@@ -472,53 +467,61 @@ image =[ 0 for k in range (0x8c0/4)]
 #CONFIG_EZYNQ_BOOT_OCM_OFFSET=        0x8C0   # start of OCM data relative to the flash image start >=0x8C0, 63-bytes aligned
 #CONFIG_EZYNQ_BOOT_OCM_IMAGE_LENGTH=  0x30000 # number of bytes to load to the OCM memory, <= 0x30000 
 #CONFIG_EZYNQ_START_EXEC=             0x20 # number of bytes to load to the OCM memory, <= 0x30000 
-
+if (args.uboot):
+    try:
+        uboot_image_len=os.path.getsize(args.uboot)
+        print 'Using %s to get image length - it is %i (0x%x) bytes'%(os.path.abspath(args.uboot),uboot_image_len,uboot_image_len)
+    except:
+        print 'Specified u-boot.bin file: %s (%s) not found'%(args.uboot,os.path.abspath(args.uboot))
+else:    
+    uboot_image_len=int(raw_options['CONFIG_EZYNQ_BOOT_OCM_IMAGE_LENGTH'],0)
+    print 'No u-boot.bin path specified, using provided CONFIG_EZYNQ_BOOT_OCM_IMAGE_LENGTH as image size of %i (0x%x) bytes for the RBL header'%(uboot_image_len,uboot_image_len)
+             
 image_generator (image,
                  reg_sets[:num_rbl_regs], #
                  #registers,
                  raw_options,
                  int(raw_options['CONFIG_EZYNQ_BOOT_USERDEF'],0), # user_def
                  int(raw_options['CONFIG_EZYNQ_BOOT_OCM_OFFSET'],0), # ocm_offset,
-                 int(raw_options['CONFIG_EZYNQ_BOOT_OCM_IMAGE_LENGTH'],0), #ocm_len,
+                 uboot_image_len, #ocm_len,
                  int(raw_options['CONFIG_EZYNQ_START_EXEC'],0)) #start_exec)
 if args.outfile:
+    print 'Generating binary output ',os.path.abspath(args.outfile)
     write_image(image,args.outfile)
+if (args.lowlevel):
+    # segments.append({'TO':len(reg_sets),'RBL':True,'NAME':'MIO','TITLE':'MIO registers configuration'})
+    #     segments.append({'TO':len(reg_sets),'RBL':True,'NAME':'DDR0','TITLE':'DDR registers configuration'})
     
-# segments.append({'TO':len(reg_sets),'RBL':True,'NAME':'MIO','TITLE':'MIO registers configuration'})
-#     segments.append({'TO':len(reg_sets),'RBL':True,'NAME':'DDR0','TITLE':'DDR registers configuration'})
-
-# segments.append({'TO':len(reg_sets),'RBL':False,'NAME':'CLK','TITLE':'Clock registers configuration'})
-# segments.append({'TO':len(reg_sets),'RBL':False,'NAME':'PLL','TITLE':'Registers to switch to PLL'})
-#     segments.append({'TO':len(reg_sets),'RBL':False,'NAME':'UART_INIT','TITLE':'Registers to initialize UART'})
-#     segments.append({'TO':len(reg_sets),'RBL':False,'NAME':'DCI','TITLE':'DDR DCI Calibration'})
-#     segments.append({'TO':len(reg_sets),'RBL':False,'NAME':'DDR_START','TITLE':'DDR initialization start'})
-#CONFIG_EZYNQ_UART_DEBUG_USE_LED
-if 'SLCR_LOCK_UNLOCK' in segment_dict: 
-    u_boot.make_slcr_lock_unlock (reg_sets[segment_dict['SLCR_LOCK_UNLOCK']['FROM']:segment_dict['SLCR_LOCK_UNLOCK']['TO']])
-if 'LED' in segment_dict: 
-    u_boot.make_led_on_off(reg_sets[segment_dict['LED']['FROM']:segment_dict['LED']['TO']])
-
-if 'CLK' in segment_dict: 
-    u_boot.registers_setup (reg_sets[segment_dict['CLK']['FROM']:segment_dict['CLK']['TO']],clk,num_rbl_regs)
-if 'PLL' in segment_dict: 
-    u_boot.pll_setup (reg_sets[segment_dict['PLL']['FROM']:segment_dict['PLL']['TO']],clk)
-if 'UART_INIT' in segment_dict: 
-    u_boot.uart_init (reg_sets[segment_dict['UART_INIT']['FROM']:segment_dict['UART_INIT']['TO']])
-if 'UART_XMIT' in segment_dict: 
-    u_boot.uart_transmit (reg_sets[segment_dict['UART_XMIT']['FROM']:segment_dict['UART_XMIT']['TO']])
-    u_boot.make_ddrc_register_dump()
-    u_boot.make_slcr_register_dump()
-#if not u_boot.features.get_par_value_or_none('BOOT_DEBUG') is None:
+    # segments.append({'TO':len(reg_sets),'RBL':False,'NAME':'CLK','TITLE':'Clock registers configuration'})
+    # segments.append({'TO':len(reg_sets),'RBL':False,'NAME':'PLL','TITLE':'Registers to switch to PLL'})
+    #     segments.append({'TO':len(reg_sets),'RBL':False,'NAME':'UART_INIT','TITLE':'Registers to initialize UART'})
+    #     segments.append({'TO':len(reg_sets),'RBL':False,'NAME':'DCI','TITLE':'DDR DCI Calibration'})
+    #     segments.append({'TO':len(reg_sets),'RBL':False,'NAME':'DDR_START','TITLE':'DDR initialization start'})
+    #CONFIG_EZYNQ_UART_DEBUG_USE_LED
+    if 'SLCR_LOCK_UNLOCK' in segment_dict: 
+        u_boot.make_slcr_lock_unlock (reg_sets[segment_dict['SLCR_LOCK_UNLOCK']['FROM']:segment_dict['SLCR_LOCK_UNLOCK']['TO']])
+    if 'LED' in segment_dict: 
+        u_boot.make_led_on_off(reg_sets[segment_dict['LED']['FROM']:segment_dict['LED']['TO']])
     
-if 'DCI' in segment_dict: 
-    u_boot.dci_calibration(reg_sets[segment_dict['DCI']['FROM']:segment_dict['DCI']['TO']])
-if 'DDR_START' in segment_dict: 
-    u_boot.ddr_start      (reg_sets[segment_dict['DDR_START']['FROM']:segment_dict['DDR_START']['TO']])
-if 'DDRC_STA' in segment_dict: 
-    u_boot.ddrc_wait_empty_queue(reg_sets[segment_dict['DDRC_STA']['FROM']:segment_dict['DDRC_STA']['TO']])
+    if 'CLK' in segment_dict: 
+        u_boot.registers_setup (reg_sets[segment_dict['CLK']['FROM']:segment_dict['CLK']['TO']],clk,num_rbl_regs)
+    if 'PLL' in segment_dict: 
+        u_boot.pll_setup (reg_sets[segment_dict['PLL']['FROM']:segment_dict['PLL']['TO']],clk)
+    if 'UART_INIT' in segment_dict: 
+        u_boot.uart_init (reg_sets[segment_dict['UART_INIT']['FROM']:segment_dict['UART_INIT']['TO']])
+    if 'UART_XMIT' in segment_dict: 
+        u_boot.uart_transmit (reg_sets[segment_dict['UART_XMIT']['FROM']:segment_dict['UART_XMIT']['TO']])
+        u_boot.make_ddrc_register_dump()
+        u_boot.make_slcr_register_dump()
+    #if not u_boot.features.get_par_value_or_none('BOOT_DEBUG') is None:
+        
+    if 'DCI' in segment_dict: 
+        u_boot.dci_calibration(reg_sets[segment_dict['DCI']['FROM']:segment_dict['DCI']['TO']])
+    if 'DDR_START' in segment_dict: 
+        u_boot.ddr_start      (reg_sets[segment_dict['DDR_START']['FROM']:segment_dict['DDR_START']['TO']])
+    if 'DDRC_STA' in segment_dict: 
+        u_boot.ddrc_wait_empty_queue(reg_sets[segment_dict['DDRC_STA']['FROM']:segment_dict['DDRC_STA']['TO']])
     
-#segments.append({'TO':len(reg_sets),'RBL':False,'NAME':'DDRC_STA','TITLE':'resgister to test DDRC comamnd queue status - listed out of sequence'})
-    
-u_boot.make_lowlevel_init()
-u_boot.output_c_file(args.lowlevel)
+    u_boot.make_lowlevel_init()
+    u_boot.output_c_file(args.lowlevel)
 #print u_boot.get_c_file()

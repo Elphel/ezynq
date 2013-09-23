@@ -376,6 +376,8 @@ class EzynqClk:
         return set([pll for pll in self.pll_fdivs])
           
     def html_list_clocks(self,html_file):
+        if not html_file:
+            return
         def list_with_children(name):
             result = [name]
             for kid_name in self.iface_divs:

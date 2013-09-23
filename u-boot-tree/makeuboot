@@ -4,8 +4,11 @@ export PATH=/opt/poky/1.4/sysroots/x86_64-pokysdk-linux/usr/bin/armv7a-vfp-neon-
 make clean
 make zynq_microzed_config
 make include/autoconf.mk
+echo "Running ezynqcfg.py for the first time - u-boot.bin length is not known yet, generating arch/arm/cpu/armv7/zynq/lowlevel.c"
 ezynq/ezynqcfg.py -c include/autoconf.mk --html u-boot.html -o boot_head.bin --html-mask 0x3ff --lowlevel arch/arm/cpu/armv7/zynq/lowlevel.c
 
 make
 
+echo "Running ezynqcfg.py for the second time - u-boot.bin length is known and will be used in the RBL header"
+ezynq/ezynqcfg.py -c include/autoconf.mk -o boot_head.bin --uboot u-boot.bin
 cat boot_head.bin u-boot.bin > boot.bin
