@@ -330,14 +330,15 @@ void dump_ddrc_regs(void)
     def make_slcr_register_dump(self):
         self.sections.append('slcr_dump')
         self.cfile+='''/* Dump all SLCR */        
-void dump_slxr_regs(void)
+void dump_slcr_regs(void)
 {
 \tuart_dump_regs(0xf8000000, 0xf8000b74, 16);
 \tuart_puts("\\r\\n");
+}
 
 '''
         
-    def dci_calibration (self, reg_sets,ddr): #ddr is an instance of ezynq_ddr.EzynqDDR
+    def dci_calibration (self, reg_sets):
         if len(reg_sets)==0:
             print 'No DCI calibration register data is provided, skipping generating dci_calibration()'
             return
@@ -346,11 +347,12 @@ inline void dci_calibration(void)
 {
 \t/* Toggle active-low DCI reset, initialize DCI calibration, wait for DONE */
 '''
+        self._add_reg_writes(reg_sets)
         self.cfile+='}\n\n'
         self.sections.append('dci_calibration')
 
 
-    def ddr_start (self, reg_sets,ddr): #ddr is an instance of ezynq_ddr.EzynqDDR
+    def ddr_start (self, reg_sets):
         if len(reg_sets)==0:
             print 'No DDR start data is provided, skipping generating ddr_start()'
             return
@@ -362,6 +364,17 @@ inline void ddr_start(void)
         self.cfile+='}\n\n'
         self.sections.append('ddr_start')
 
+    def ddrc_wait_empty_queue (self,reg_sets):
+        if len(reg_sets)==0:
+            print 'No DDR start data is provided, skipping generating ddrc_status()'
+            return
+        self.cfile+='''/* Verify there are no commands in DDRC queue pending */        
+inline void ddrc_wait_queue_empty(void)
+{
+'''
+        self._add_reg_writes(reg_sets)
+        self.cfile+='}\n\n'
+        self.sections.append('ddrc_status')
 
     def _cp_led(self,name):
         led_cp=self.features.get_par_value_or_none(name)
@@ -407,10 +420,10 @@ void lowlevel_init(void)
         self._cp_led('LED_CHECKPOINT_5') # After UART is programmed
         
         if self.features.get_par_value_or_none('DUMP_SLCR_EARLY'):
-            self.cfile+='\tuart_puts("SLCR registers before DCI/DDR initialization\\r\\n")\n'
+            self.cfile+='\tuart_puts("SLCR registers before DCI/DDR initialization\\r\\n");\n'
             self.cfile+='\tdump_slcr_regs(); /*Dump all SLCR registers before DCI/DDR initialization */\n'
         if self.features.get_par_value_or_none('DUMP_DDRC_EARLY'):
-            self.cfile+='\tuart_puts("DDRC registers before DCI/DDR initialization\\r\\n")\n'
+            self.cfile+='\tuart_puts("DDRC registers before DCI/DDR initialization\\r\\n");\n'
             self.cfile+='\tdump_ddrc_regs(); /*Dump all DDRC registers before DCI/DDR initialization */\n'
         self.cfile+='''/*
    Calibrate DDR DCI impedance and wait for completion
@@ -427,10 +440,10 @@ void lowlevel_init(void)
 '''
         self._cp_led('LED_CHECKPOINT_7') # After DDR is initialized
         if self.features.get_par_value_or_none('DUMP_SLCR_LATE'):
-            self.cfile+='\tuart_puts("SLCR registers after DCI/DDR initialization\\r\\n")\n'
+            self.cfile+='\tuart_puts("SLCR registers after DCI/DDR initialization\\r\\n");\n'
             self.cfile+='\tdump_slcr_regs(); /*Dump all SLCR registers after DCI/DDR initialization */\n'
         if self.features.get_par_value_or_none('DUMP_DDRC_LATE'):
-            self.cfile+='\tuart_puts("DDRC registers after DCI/DDR initialization\\r\\n")\n'
+            self.cfile+='\tuart_puts("DDRC registers after DCI/DDR initialization\\r\\n");\n'
             self.cfile+='\tdump_ddrc_regs(); /*Dump all DDRC registers after DCI/DDR initialization */\n'
         self.cfile+='''/*
    Copy 3 pages of OCM from 0x00000.0x2ffff to DDR 0x4000000.0x402ffff
@@ -440,9 +453,8 @@ void lowlevel_init(void)
 \twhile (s< ((int *)0x30000)) *d++=*s++;
 
 '''
-# CONFIG_EZYNQ_LED_CHECKPOINT_10 = OFF # Before relocation down to address 0
-# CONFIG_EZYNQ_LED_CHECKPOINT_11 = ON  # After relocation down to address 0
-# CONFIG_EZYNQ_LED_CHECKPOINT_12 = OFF # Before leaving lowlevel_init()
+        self.cfile+='\tddrc_wait_queue_empty(); /* Wait no commands are pending in DDRC queue */\n'            
+
         self._cp_led('LED_CHECKPOINT_8') # Before relocation to DDR (to 0x4000000+ )
         self.cfile+='''/*
    Now jump to the same instruction in the DDR copy of the currently executed code in OCM
@@ -452,6 +464,8 @@ void lowlevel_init(void)
 \tasm("add pc, pc, #0x4000000" );
 
 '''
+# seems some delay is needed before remapping DDR memory
+        self.cfile+='\tddrc_wait_queue_empty(); /* seems some delay is needed here before remapping DDR memory */\n'            
         self._cp_led('LED_CHECKPOINT_9') # After relocation to DDR (to 0x4000000+ )
         self.cfile+='''/*
    Remap DDR to zero, FILTERSTART
@@ -479,6 +493,9 @@ void lowlevel_init(void)
 \ts= (int *) 0x4000000;
 \td= (int *) 0;
 \twhile (d < ((int *) 0x30000)) *d++=*s++;
+
+\tddrc_wait_queue_empty(); /* Wait no commands are pending in DDRC queue */   
+
 /*
    Continue with the original low-level init, Now we have 2 copies of the code again,
    currently executing somewhere above 0x4000000. But as soon as we will return
@@ -493,6 +510,9 @@ void lowlevel_init(void)
 \t/* Urgent write, ports S2/S3 */
 \twritel(0xC, &slcr_base->ddr_urgent);
 '''
+        if 'uart_xmit' in self.sections:
+            self.cfile+='\tuart_wait_tx_fifo_empty(); /* u-boot may re-program UART differently, wait all is sent before getting there */\n'
+#uart_wait_tx_fifo_empty() - add if u-boot debug is on
         self._cp_led('LED_CHECKPOINT_12') # Before leaving lowlevel_init()
         self.cfile+='''/* Lock SLCR back after everything with it is done */
 \tlock_slcr();

@@ -28,6 +28,7 @@ import ezynq_registers
 import ezynq_ddrcfg_defs
 import ezynq_feature_config
 import ezynq_ddriob_def
+import ezynq_slcr_clk_def
 def set_random_bits(old,d,bits):
     data = 0
     mask = 0
@@ -44,7 +45,14 @@ class EzynqDDR:
         self.features=ezynq_feature_config.EzynqFeatures(self.DDR_CFG_DEFS,0) #DDR_CFG_DEFS
         self.ddrc_register_set=  ezynq_registers.EzynqRegisters(self.DDRC_DEFS,0,regs_masked,permit_undefined_bits)
         self.ddriob_register_set=ezynq_registers.EzynqRegisters(self.DDRIOB_DEFS,0,regs_masked,permit_undefined_bits)
-        
+    
+    def generate_command_queue_empty(self):
+        # generate code to be included in u-boot for testing DDR command queue
+        reg_set=  ezynq_registers.EzynqRegisters(ezynq_slcr_clk_def.SLCR_CLK_DEFS,0,[])
+        reg_set.wait_reg_field_values('ddr_cmd_sta',  # DDR Command queue state
+                                               (('cmd_q_empty',    0)), True) # 0 - no commands for DDRC are queued, 1 - commands pending
+        return reg_set.get_register_sets(sort_addr=True,apply_new=True)
+    
         
     def parse_parameters(self,raw_configs):
         self.features.parse_features(raw_configs)

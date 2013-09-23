@@ -699,11 +699,11 @@ SLCR_CLK_DEFS={ #not all fields are defined currently
                                    'FIELDS':{
                   'reserved':                 {'r':( 1,31),'d':0, 'c':'reserved'},
                   'start_ref':                {'r':( 0, 0),'d':0, 'c':'1 - Start Refresh (self-clearing). Only needed if auto refresh is disabled in reg_ddrc_dis_auto_refresh'}}},
-      'ddr_cmd_sta':              {'OFFS': 0x618,'DFLT':0,'RO':'RW',
+      'ddr_cmd_sta':              {'OFFS': 0x618,'DFLT':0,'RW':'RO',
                                    'COMMENTS':'DDR Command queue state',
                                    'FIELDS':{
                   'reserved':                 {'r':( 1,31),'d':0, 'c':'reserved'},
-                  'vmd_q_empty':              {'r':( 0, 0),'d':0, 'm':'R', 'c':'0 - no commands fro DDRC are queued, 1 - commands pending'}}},
+                  'cmd_q_empty':              {'r':( 0, 0),'d':0, 'm':'R', 'c':'0 - no commands for DDRC are queued, 1 - commands pending'}}},
       'ddr_urgent_sel':           {'OFFS': 0x61c,'DFLT':0,'RW':'RW',
                                    'COMMENTS':'DDR Urgent select',
                                    'FIELDS':{

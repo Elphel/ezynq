@@ -893,7 +893,7 @@ class EzynqClk:
 
 # reg  uart_clk_ctrl, offs=0x154 dflt:0x3f03 actual: 0xa02
         if 'UART' in self.iface_divs:
-            print self.iface_divs['UART']
+#            print self.iface_divs['UART']
             if self.iface_divs['UART']['PLL']=='ARM':     
                 uart_srcsel= 2
             elif self.iface_divs['UART']['PLL']=='DDR':     

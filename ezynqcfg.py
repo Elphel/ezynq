@@ -354,7 +354,6 @@ if raw_config_value('CONFIG_EZYNQ_SKIP_DDR', raw_configs) is None:
     segments.append({'TO':len(reg_sets),'RBL':True,'NAME':'DDR0','TITLE':'DDR registers configuration'})
 else:
     print 'Debug mode: skipping DDR-related configuration'
-
 #initialize clocks
 # unlock slcr - it is locked by RBL, but attempt to unlock in RBL will fail (and hang the system)
 reg_sets=clk.clocks_regs_setup(reg_sets,force)
@@ -405,6 +404,14 @@ if not led_debug_mio_pin is None:
     reg_sets_led=mio_regs.generate_led_off_on(led_debug_mio_pin)
     reg_sets.extend (reg_sets_led) # just to be listed, not to be loaded
     segments.append({'TO':len(reg_sets),'RBL':False,'NAME':'LED','TITLE':'registers/data to turn on/off debug LED - listed out of sequence'})
+
+#add code to check DDRC status (no commands in queue)    
+reg_sets_ddrc_sta=ddr.generate_command_queue_empty()
+reg_sets.extend (reg_sets_ddrc_sta) # just to be listed, not to be loaded
+segments.append({'TO':len(reg_sets),'RBL':False,'NAME':'DDRC_STA','TITLE':'resgister to test DDRC comamnd queue status - listed out of sequence'})
+    
+    
+    
 #    def generate_led_off_on(self, mio_pin):
 #CONFIG_EZYNQ_LED_DEBUG=47 # toggle LED during boot
 #CONFIG_EZYNQ_BOOT_DEBUG
@@ -504,9 +511,14 @@ if 'UART_XMIT' in segment_dict:
 #if not u_boot.features.get_par_value_or_none('BOOT_DEBUG') is None:
     
 if 'DCI' in segment_dict: 
-    u_boot.dci_calibration(reg_sets[segment_dict['DCI']['FROM']:segment_dict['DCI']['TO']],ddr)
-if 'DDR' in segment_dict: 
-    u_boot.ddr_start      (reg_sets[segment_dict['DDR']['FROM']:segment_dict['DDR']['TO']],ddr)
+    u_boot.dci_calibration(reg_sets[segment_dict['DCI']['FROM']:segment_dict['DCI']['TO']])
+if 'DDR_START' in segment_dict: 
+    u_boot.ddr_start      (reg_sets[segment_dict['DDR_START']['FROM']:segment_dict['DDR_START']['TO']])
+if 'DDRC_STA' in segment_dict: 
+    u_boot.ddrc_wait_empty_queue(reg_sets[segment_dict['DDRC_STA']['FROM']:segment_dict['DDRC_STA']['TO']])
+    
+#segments.append({'TO':len(reg_sets),'RBL':False,'NAME':'DDRC_STA','TITLE':'resgister to test DDRC comamnd queue status - listed out of sequence'})
+    
 u_boot.make_lowlevel_init()
 u_boot.output_c_file(args.lowlevel)
 #print u_boot.get_c_file()

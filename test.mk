@@ -10,10 +10,10 @@ CONFIG_EZYNQ_DUMP_DDRC_LATE = y # Dump DDRC registers after DDR memory is initia
 #Turning LED on/off at different stages of the boot process. Requires CONFIG_EZYNQ_LED_DEBUG to be set
 #If defined, each can be 0,1, ON or OFF
 CONFIG_EZYNQ_LED_CHECKPOINT_1  = ON  # in RBL setup, as soon as MIO is programmed 
-#CONFIG_EZYNQ_LED_CHECKPOINT_2  = OFF # First after getting to user code 
-#CONFIG_EZYNQ_LED_CHECKPOINT_3  = ON  # After setting clock registers 
-#CONFIG_EZYNQ_LED_CHECKPOINT_4  = OFF # After PLL bypass is OFF
-#CONFIG_EZYNQ_LED_CHECKPOINT_5  = ON  # After UART is programmed
+CONFIG_EZYNQ_LED_CHECKPOINT_2  = OFF # First after getting to user code 
+CONFIG_EZYNQ_LED_CHECKPOINT_3  = ON  # After setting clock registers 
+CONFIG_EZYNQ_LED_CHECKPOINT_4  = OFF # After PLL bypass is OFF
+CONFIG_EZYNQ_LED_CHECKPOINT_5  = ON  # After UART is programmed
 CONFIG_EZYNQ_LED_CHECKPOINT_6  = OFF # After DCI is calibrated
 CONFIG_EZYNQ_LED_CHECKPOINT_7  = ON  # After DDR is initialized
 CONFIG_EZYNQ_LED_CHECKPOINT_8  = OFF # Before relocation to DDR (to 0x4000000+ )
