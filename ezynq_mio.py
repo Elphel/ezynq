@@ -23,8 +23,10 @@ __maintainer__ = "Andrey Filippov"
 __email__ = "andrey@elphel.com"
 __status__ = "Development"
 import ezynq_registers
-import ezynq_feature_config
+#import ezynq_feature_config
 import ezynq_slcr_clk_def
+MIO_ATTRIBS=['SLOW','FAST','PULLUP','NOPULLUP']
+
 MIO_TEMPLATES = {
   'QUADSPI':(
      {'NAME':'CS0',  'TRISTATE':False, 'FAST':True, 'PULLUP':True,  'L0':1, 'L1':0, 'L2':0, 'L3':0, 'PINS':((1,), (0,))},
@@ -307,9 +309,9 @@ class EzynqMIO:
                                                      ('pullup',          1-led_on),
                                                      ('tri_enable',      1-led_on))) # ,force,warn)
         return led_register_set.get_register_sets(sort_addr=True,apply_new=True)
-
+#MIO_ATTRIBS=['SLOW','FAST','PULLUP','NOPULLUP']
     def parse_config_mio(self,raw_configs):
-        attrib_suffix='ATTRIB'
+#        attrib_suffix='ATTRIB'
         options = {}
         for line in raw_configs:
             option = line['KEY']
@@ -320,8 +322,10 @@ class EzynqMIO:
                     options[option]={}
                 if not isinstance(options[option],dict): # make a former value a value in a dictionary
                     options[option]={'INTERFACE_GROUP':options[option]}
-                if qualifier==attrib_suffix:
-                    value=str(value).upper()
+#                if qualifier==attrib_suffix:
+                if qualifier.upper() in MIO_ATTRIBS:
+#                    value=str(value).upper()
+                    value=qualifier.upper()
                     try:
                         options[option]['ATTRIBS'].add(value)
                     except:
