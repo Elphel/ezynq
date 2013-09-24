@@ -5,7 +5,7 @@ make clean
 make zynq_microzed_config
 make include/autoconf.mk
 echo "Running ezynqcfg.py for the first time - u-boot.bin length is not known yet, generating arch/arm/cpu/armv7/zynq/lowlevel.c"
-ezynq/ezynqcfg.py -c include/autoconf.mk --html u-boot.html -o boot_head.bin --html-mask 0x3ff --lowlevel arch/arm/cpu/armv7/zynq/lowlevel.c
+ezynq/ezynqcfg.py -c include/autoconf.mk --html u-boot.html -o boot_head.bin --html-mask 0x3ff --lowlevel arch/arm/cpu/armv7/zynq/ezynq.c
 
 make
 
