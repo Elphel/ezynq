@@ -523,6 +523,6 @@ if (args.lowlevel):
     if 'DDRC_STA' in segment_dict: 
         u_boot.ddrc_wait_empty_queue(reg_sets[segment_dict['DDRC_STA']['FROM']:segment_dict['DDRC_STA']['TO']])
     
-    u_boot.make_lowlevel_init()
+    u_boot.make_arch_cpu_init()
     u_boot.output_c_file(args.lowlevel)
 #    print u_boot.get_c_file()

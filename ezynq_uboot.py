@@ -162,14 +162,14 @@ class EzynqUBoot:
         self.sections.append('slcr_lock_unlock_setup')
         self.cfile+="""
 /* Lock SLCR registers - may be called after everything is done. */        
-void lock_slcr(void)
+inline void lock_slcr(void)
 {
 """
         self._add_reg_writes(reg_sets[:1])        
         self.cfile+="""}
         
 /* Unlock SLCR registers - SHOULD be called first before writing any SLCR registers. */        
-void unlock_slcr(void)
+inline void unlock_slcr(void)
 {
 """
         self._add_reg_writes(reg_sets[1:])        
@@ -237,7 +237,7 @@ inline void uart_init(void)
             comments=''
         self.cfile+='''/* Wait FIFO is empty (call before getting to risky for reboot code
    to make sure all output has been actually sent  */        
-void uart_wait_tx_fifo_empty(void)
+inline void uart_wait_tx_fifo_empty(void)
 {
 '''
         self._add_reg_writes([reg_sets[0]])
@@ -387,11 +387,11 @@ inline void ddrc_wait_queue_empty(void)
             else:
                 self.cfile+='\tdebug_led_off(); /* Turn debug LED OFF */\n'    
     
-    def make_lowlevel_init (self):
+    def make_arch_cpu_init (self):
             
 
         self.cfile+='''/* Initialize clocks, DDR memory, copy OCM to DDR */        
-void lowlevel_init(void)
+int arch_cpu_init(void)
 {
 /* Unlock SLCR */
 \tunlock_slcr();
@@ -518,19 +518,20 @@ void lowlevel_init(void)
         self._cp_led('LED_CHECKPOINT_12') # Before leaving lowlevel_init()
 #LOCK_SLCR        
         if self.features.get_par_value_or_none('LOCK_SLCR') is False:
-            self.cfile+='/* Leaving SLCR registers UNLOCKED */\n'
+            self.cfile+='/* Leaving SLCR registers UNLOCKED according setting of %s */\n'%self.features.get_par_confname('LOCK_SLCR')
         else:            
             self.cfile+='''/* Lock SLCR back after everything with it is done */
 \tlock_slcr();
 '''
         self.cfile+='''/* This code was called from low OCM, so return should just get back correctly */
+\treturn 0;        
 }
 '''
 
     def output_c_file(self,cname):
         if not cname:
             return
-        print 'Writing generated u-boot lowlevel() function to ',os.path.abspath(cname)
+        print 'Writing generated u-boot arch_cpu_init() function to ',os.path.abspath(cname)
         c_out_file=open(cname,'w')
         c_out_file.write(self.cfile)
         c_out_file.close()

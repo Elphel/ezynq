@@ -33,7 +33,7 @@ COBJS-y	+= cpu.o
 COBJS-y	+= ddrc.o
 COBJS-y	+= slcr.o
 ifneq ($(CONFIG_EZYNQ),)
-COBJS-y	+= lowlevel.o
+COBJS-y	+= ezynq.o
 endif
 
 
