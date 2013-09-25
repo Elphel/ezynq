@@ -52,7 +52,7 @@ done
 
 echo "Step 4: Creating initenv script"
 if [ -f $INITENV ]; then
-    read -p "Overwrite initenv? (y/n) " yn
+    read -p "Overwrite an already existing initenv? (y/n) " yn
     if [ ! $yn = "y" ]; then
       OVERWRITE_INITENV=0;
     fi
@@ -65,7 +65,10 @@ export PATH=$COMPILE_PATH/:\$PATH" > $INITENV
 fi
 
 if [ ! -d $COMPILE_PATH ] ; then
-  echo "  WARNING: Please edit initenv according to your cross compiler path"
+  echo "  WARNING: Please update initenv with your cross compiler path"
 fi
 
-echo "DONE"
+echo "DONE. 
+FURTHER INSTRUCTIONS (TO GENERATE BOOT.BIN):
+  cd u-boot-xlnx
+  ./makeuboot"
