@@ -216,7 +216,7 @@ inline void pll_setup(void)
         self.cfile+='}\n\n'
 
     def make_resets (self, reg_sets):
-         self.sections.append('resets')
+        self.sections.append('resets')
         self.cfile+='''/* Reset defined peripherals */        
 inline void reset_peripherals(void)
 {
