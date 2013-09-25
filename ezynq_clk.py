@@ -393,24 +393,28 @@ class EzynqClk:
         html_file.write('<h2>System PLL (input clock - %.3f MHz)</h2>'%self.f_in)
         html_file.write('<table border="1">')
         html_file.write('  <tr><th>PLL name</th><th>Frequency</th><th>FDIV</th></tr>\n')
+        row_class="even"
         for pll_name in ('ARM','DDR','IO'):
+            if row_class=="odd": row_class="even" 
+            else:                row_class="odd"            
             name=pll_name+' PLL'
             if pll_name in self.pll_fdivs:
                 freq=self.f_in*self.pll_fdivs[pll_name]
     #            html_file.write('  <tr><th>'+name+'</th><td>'+('%.3f MHz'%freq)+'</td><td>'+str(self.pll_fdivs[pll_name])+'</td></tr>\n')
-                html_file.write('  <tr><th>%s</th><td>%.3f MHz</td><td>%s</td></tr>\n'%(name,freq,str(self.pll_fdivs[pll_name])))
+                html_file.write('  <tr class="'+row_class+'"><td><b>%s</b></td><td>%.3f MHz</td><td>%s</td></tr>\n'%(name,freq,str(self.pll_fdivs[pll_name])))
             else:
-                html_file.write('  <tr><th>%s</th><td colspan="2" align="center">Unused</td></tr>\n'%name)
+                html_file.write('  <tr class="'+row_class+'"><td><b>%s</b></td><td colspan="2" align="center">Unused</td></tr>\n'%name)
                     
         html_file.write('</table>')
 
         html_file.write('<h2>System Clocks</h2>')
-        html_file.write('<table border="1">')
+        html_file.write('<table>')
         html_file.write('  <tr><th>Name</th><th>Frequency</th><th>Target</th><th>Error</th><th>PLL</th><th>div 1</th><th>div 2</th><th>Config. name</th><th>Comments</th></tr>\n')
 
 #TODO - show secondary clocks together with the main ones (frequency only if different from source. Use rowspan
 #   self.iface_divs[name]={'SOURCE':source,'VALUE':value, 'FREQ':frequency} #no 'PLL' field   
 #CLK_TEMPLATE
+        row_class="even"
         for line in CLK_TEMPLATE:
             name=line['NAME']
             if (name in self.iface_divs) and ('PLL' in self.iface_divs[name]):
@@ -427,13 +431,17 @@ class EzynqClk:
                 except:
                     div2='-'
                 children=list_with_children(name)
-                html_file.write('  <tr><th>%s</th><td>%.3f MHz</td><td>%.3f MHz</td><td>%.2f%%</td><td>%s</td><td>%i</td><td>%s</td><td>%s</td><td>%s</td></tr>'%(
+                if row_class=="odd": row_class="even" 
+                else:                row_class="odd"
+                html_file.write('  <tr class="'+row_class+'"><td><b>%s</b></td><td>%.3f MHz</td><td>%.3f MHz</td><td>%.2f%%</td><td>%s</td><td>%i</td><td>%s</td><td>%s</td><td>%s</td></tr>'%(
                                           name,        freq,           target,     100*rel_err,    pll,        div1,     div2, conf_name,   description))
                 html_file.write('  </tr>')
                 for kid_name in children[1:]:
                     kid_freq=self.iface_divs[kid_name]['FREQ']
                     source=self.iface_divs[kid_name]['SOURCE']
-                    html_file.write('  <tr><th>%s</th><td>%.3f MHz</td><td colspan="7" align="center">Derived from %s</td></tr>'%(kid_name, kid_freq,source))
+                    if row_class=="odd": row_class="even" 
+                    else:                row_class="odd"
+                    html_file.write('  <tr class="'+row_class+'"><td><b>%s</b></td><td>%.3f MHz</td><td colspan="7" align="center" style="text-align:center;">Derived from %s</td></tr>'%(kid_name, kid_freq,source))
 #                if len(children)>1:
 #                    print name, "has children=",children
 #            elif name in self.iface_divs:

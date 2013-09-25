@@ -32,7 +32,7 @@ def print_html_reg_header(html_file, title='',show_bit_fields=True, show_comment
     if show_bit_fields:
         html_file.write('<tr><th>Address/<br/>bit field</th><th>Register name/<br>Bit field name</th><th>R/W</th><th>Value</th><th>Previous<br/>Value</th><th>Default</th>\n')
     else:
-        html_file.write('<tr><th>Address</th><th>Register name</th><th>R/W</th><th>Value</th><th>Default</th>\n')
+        html_file.write('<tr><th>Address</th><th>Register name</th><th>R/W</th><th>Value</th><th>Previous<br/>Value</th><th>Default</th>\n')
     if show_comments:
         html_file.write('<th>Comments</th>')
     html_file.write('</tr>')
@@ -52,6 +52,7 @@ def print_html_registers(html_file, reg_sets, from_index, show_bit_fields=True, 
 
 #            new_sets.append((addr,data,mask,self.module_name,register_name,self.registers[register_name]))
     current_reg_state={} #address: (data,mask)
+    row_class="even"
     for index, (op,addr, data, mask, module_name, register_name, r_def) in enumerate (reg_sets):
 #        if (op != 's'):
 #            continue # TODO: add handling of test conditions later  
@@ -87,28 +88,29 @@ def print_html_registers(html_file, reg_sets, from_index, show_bit_fields=True, 
             if index<from_index: # just accumulate previous history of the register mask/values, no output
                 continue
 
-            html_file.write('<tr>\n')
             try:
                 comments=r_def['COMMENTS']
             except:
                 comments=''    
 
             if show_bit_fields:
+                html_file.write('<tr class="special"><b>\n')
                 if op == 's':
-                    html_file.write('  <th>0x%8x</th><th>%s.%s</th><th>%s</th><th>%s</th><th>%s</th><th>%s</th>'%
+                    html_file.write('  <td>0x%8x</td><td>%s.%s</td><td>%s</td><td>%s</td><td>%s</td><td>%s</td>'%
                                          (addr, module_name,register_name,rw,   opt_hex(new_data), prev_sdata,    opt_hex(dflt_data)))
                 elif op == '=':
-                    html_file.write('  <th>0x%8x</th><th>%s.%s</th><th colspan="4">Wait for (reg & %s) == %s</th>'%
+                    html_file.write('  <td>0x%8x</td><td>%s.%s</td><td colspan="4">Wait for (reg & %s) == %s</td>'%
                                          (addr, module_name,register_name, opt_hex(mask), opt_hex(data)))
                 elif op == '!':
-                    html_file.write('  <th>0x%8x</th><th>%s.%s</th><th colspan="4">Wait for (reg & %s) != %s</th>'%
+                    html_file.write('  <td>0x%8x</td><td>%s.%s</td><td colspan="4">Wait for (reg & %s) != %s</td>'%
                                          (addr, module_name,register_name,  opt_hex(mask), opt_hex(data)))
                 else:
                     raise Exception ('Invalid register operation: %s for register 0x%08x'%(op,addr))    
                 if show_comments:
-                    html_file.write('<th>%s</th>'%comments)
-                html_file.write('\n</tr>\n')
+                    html_file.write('<td>%s</td>'%comments)
+                html_file.write('\n</b></tr>\n')
                 if 'FIELDS' in r_def:
+                    row_class="even"
                     #sort bit fields
                     for f_name in [pair[0] for pair in sorted([(nam,r_def['FIELDS'][nam]['r'][0]) for nam in r_def['FIELDS']], key = lambda rr: -rr[1])]:
                         field=r_def['FIELDS'][f_name]
@@ -127,13 +129,19 @@ def print_html_registers(html_file, reg_sets, from_index, show_bit_fields=True, 
                                 f_prev=(old_data & f_mask) >> r[0]
                                 field_prev=('-', opt_hex(f_prev))[prev_sdata!='-']
                                 modified=f_data != f_prev
-                                html_file.write('  <tr><td>%i:%i</td><td>%s</td><td>%s</td><td>%s%s%s</td><td>%s</td><td>%s</td>'%
+                                if row_class=="odd": row_class="even" 
+                                else:                row_class="odd"
+                                html_file.write('  <tr class="'+row_class+'"><td>%i:%i</td><td>%s</td><td>%s</td><td>%s%s%s</td><td>%s</td><td>%s</td>'%
                                                         (r[0],r[1],   f_name,     f_rw,('','<b>')[modified],opt_hex(f_data),('','</b>')[modified],field_prev,opt_hex(f_dflt)))
                             elif op == '=':
-                                html_file.write('  <tr><td>%i:%i</td><td>%s</td><td colspan="4">Wait for bit(s) == %s</th>'%
+                                if row_class=="odd": row_class="even" 
+                                else:                row_class="odd"
+                                html_file.write('  <tr class="'+row_class+'"><td>%i:%i</td><td>%s</td><td colspan="4">Wait for bit(s) == %s</td>'%
                                                         (r[0],r[1],  f_name,                                   opt_hex(f_data)))
                             elif op == '!':
-                                html_file.write('  <tr><td>%i:%i</td><td>%s</td><td colspan="4">Wait for bit(s) != %s</th>'%
+                                if row_class=="odd": row_class="even" 
+                                else:                row_class="odd"
+                                html_file.write('  <tr class="'+row_class+'"><td>%i:%i</td><td>%s</td><td colspan="4">Wait for bit(s) != %s</td>'%
                                                         (r[0],r[1],  f_name,                                   opt_hex(f_data)))
     
                             else:
@@ -147,14 +155,17 @@ def print_html_registers(html_file, reg_sets, from_index, show_bit_fields=True, 
                                 html_file.write('<td>%s</td>'%f_comments)
                             html_file.write('\n</tr>\n')
             else:
+                if row_class=="odd": row_class="even" 
+                else:                row_class="odd"                
+                html_file.write('<tr class="'+row_class+'">\n')
                 if op == 's':
-                    html_file.write('  <th>0x%8x</th><td>%s.%s</td><td>%s</td><td><b>%s</b></td><td>%s</td><td>%s</td>'%
+                    html_file.write('  <td><b>0x%8x</b></td><td>%s.%s</td><td>%s</td><td><b>%s</b></td><td>%s</td><td>%s</td>'%
                                          (addr, module_name,register_name,rw,opt_hex(new_data),    prev_sdata, opt_hex(dflt_data)))
                 elif op == '=':
-                    html_file.write('  <th>0x%8x</th><td>%s.%s</td><tdcolspan="4"><b>Wait for (reg & %s) == %s</b></td>'%
+                    html_file.write('  <td><b>0x%8x</b></td><td>%s.%s</td><tdcolspan="4"><b>Wait for (reg & %s) == %s</b></td>'%
                                           (addr, module_name,register_name,opt_hex(mask),opt_hex(data)))
                 elif op == '!':
-                    html_file.write('  <th>0x%8x</th><td>%s.%s</td><tdcolspan="4"><b>Wait for (reg & %s) != %s</b></td>'%
+                    html_file.write('  <td><b>0x%8x</b></td><td>%s.%s</td><tdcolspan="4"><b>Wait for (reg & %s) != %s</b></td>'%
                                           (addr, module_name,register_name,opt_hex(mask),opt_hex(data)))
                 else:
                     raise Exception ('Invalid register operation: %s for register 0x%08x'%(op,addr))    

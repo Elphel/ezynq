@@ -688,8 +688,11 @@ class EzynqMIO:
         for c in self.mio_interfaces:
             f.write('<th>'+c['NAME']+'<br/>'+c['PRINT_CHANNEL']+'&nbsp;</th>')
         f.write('  </tr>\n')
+        row_class="even"
         for pinnum,mio_pin in enumerate(self.mio):
-            f.write('<th>'+str(pinnum)+'</th>')
+            if row_class=="odd": row_class="even" 
+            else:                row_class="odd"
+            f.write('<tr class="'+row_class+'"><td><b>'+str(pinnum)+'</b></td>')
             if MIO_HTML_MASK & 1:
                 f.write('<td>'+hex(mio_pin['ADDR'])+'</td>')
             if MIO_HTML_MASK & 2:

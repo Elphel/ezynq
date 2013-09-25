@@ -266,6 +266,7 @@ class EzynqFeatures:
         html_file.write('<tr><th>Configuration name</th><th>Value (Target)</th><th>Type/<br/>Choices</th><th>Mandatory</th><th>Origin</th><th>Default</th><th>Description</th></tr>\n')
 #        print  self.get_par_names()
 #        for name in self.pars:
+        row_class="even"
         for name in self.get_par_names():
 #            name=    self.config_names[conf_name]
             feature= self.defs[name]
@@ -307,8 +308,9 @@ class EzynqFeatures:
 
 #            if name=='BAUD_RATE':
 #                print value
-
-            html_file.write('<tr><th>'+feature['CONF_NAME']+'</th><td>'+str(value)+'</td><td>'+par_type+
+            if row_class=="odd": row_class="even" 
+            else:                row_class="odd"
+            html_file.write('<tr class="'+row_class+'"><td><b>'+feature['CONF_NAME']+'</b></td><td>'+str(value)+'</td><td>'+par_type+
                             '</td><td>'+('-','Y')[feature['MANDATORY']]+'</td><td>'+origin+'</td><td>'+str(feature['DEFAULT'])+'</td><td>'+feature['DESCRIPTION']+'</td></tr>\n')
         html_file.write('</table>\n')
 

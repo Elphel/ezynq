@@ -318,6 +318,56 @@ ddr_mhz=clk.get_ddr_mhz()
 if MIO_HTML:
     html_file=open(MIO_HTML,'w')
     print 'Generating HTML output',os.path.abspath(MIO_HTML)
+    html_file.write('''<html>
+<head>
+    <title>ZYNQ CONFIGURATION</title>
+    <style>
+        html{
+          font-family: Arial;
+          font-size: 0.8em;
+        }
+        
+        table{
+          border-collapse:collapse;
+          border-radius: 3px;
+        }
+        
+        th, td{
+          text-align: left;
+          padding: 3px 10px 3px 10px;
+          border-radius: 0px;
+          border: 1px solid rgba(180,180,180,0.5)
+        }
+        
+        th {
+          background-color: rgba(100,200,100,0.5);
+        }
+        
+        .even {
+            background-color: rgba(235,235,235,0.5);
+        }
+        
+        .odd {
+            background-color: rgba(255,255,255,0.5);
+        }
+        
+        .special {
+            background-color: rgba(150,250,150,0.5);
+        }
+        
+        select {
+            border: 1px solid rgba(200,200,200,1);
+            border-radius: 2px;
+            font-family: Arial;
+            font-size: 1em;
+            background-color: rgba(200,200,200,0.5);
+            margin: 0px;
+            padding: 1px;
+        }
+    </style>
+</head>
+<body>''')
+    
 else:
     html_file=False
 u_boot.html_list_features(html_file)
@@ -463,6 +513,9 @@ if html_file:
     html_file.write('<h4>Total number of registers set up in the RBL header is <b>'+str(num_rbl_regs)+"</b> of maximal 256</h4>")
     if num_rbl_regs<len(reg_sets):
         html_file.write('<h4>Number of registers set up in u-boot is <b>'+str(len(reg_sets)-num_rbl_regs)+"</b></h4>")
+        
+    html_file.write("\n</body>\n"
+                    "</html>")
     html_file.close
 
 image =[ 0 for k in range (0x8c0/4)]
