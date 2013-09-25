@@ -205,12 +205,21 @@ inline void register_setup(void)
         self._add_reg_writes(reg_sets)        
         self.cfile+='}\n\n'
 
-    def pll_setup (self, reg_sets,clk): #clk is an instance of ezynq_clk.EzynqClk
+    def pll_setup (self, reg_sets):
         self.sections.append('pll_setup')
-        self.cfile+='''/* Wait for PLLs locked:*/        
+        self.cfile+='''/* Wait for PLLs locked */        
 inline void pll_setup(void)
 {
 \t/* Wait for all used PLLs locked, then  release PLL bypass on each PLL */
+'''
+        self._add_reg_writes(reg_sets)            
+        self.cfile+='}\n\n'
+
+    def make_resets (self, reg_sets):
+         self.sections.append('resets')
+        self.cfile+='''/* Reset defined peripherals */        
+inline void reset_peripherals(void)
+{
 '''
         self._add_reg_writes(reg_sets)            
         self.cfile+='}\n\n'
@@ -407,53 +416,32 @@ int arch_cpu_init(void)
 '''
         self._cp_led('LED_CHECKPOINT_3') # After setting clock registers
 
-        self.cfile+='''/*
-   Wait PLLs locked and turn off bypass - all clocks should have specified values now
- */  
-\tpll_setup();
-
-'''
+        self.cfile+='\tpll_setup();         /* Wait PLLs locked and turn off bypass - all clocks should have specified values now */ \n'
+        self.cfile+='\treset_peripherals(); /* Reset defined peripherals */\n'
         self._cp_led('LED_CHECKPOINT_4') # After PLL bypass is OFF
         if 'uart_init' in self.sections:
-            self.cfile+='''/* Initialize UART for debug information output */        
-\tuart_init();
-
-'''
+            self.cfile+='\tuart_init();         /* Initialize UART for debug information output */\n'
         self._cp_led('LED_CHECKPOINT_5') # After UART is programmed
-        
         if self.features.get_par_value_or_none('DUMP_SLCR_EARLY'):
             self.cfile+='\tuart_puts("SLCR registers before DCI/DDR initialization\\r\\n");\n'
-            self.cfile+='\tdump_slcr_regs(); /*Dump all SLCR registers before DCI/DDR initialization */\n'
+            self.cfile+='\tdump_slcr_regs();    /* Dump all SLCR registers before DCI/DDR initialization */\n'
         if self.features.get_par_value_or_none('DUMP_DDRC_EARLY'):
             self.cfile+='\tuart_puts("DDRC registers before DCI/DDR initialization\\r\\n");\n'
-            self.cfile+='\tdump_ddrc_regs(); /*Dump all DDRC registers before DCI/DDR initialization */\n'
-        self.cfile+='''/*
-   Calibrate DDR DCI impedance and wait for completion
- */  
-\tdci_calibration();
-
-'''
+            self.cfile+='\tdump_ddrc_regs();    /* Dump all DDRC registers before DCI/DDR initialization */\n'
+        self.cfile+='\tdci_calibration();   /* Calibrate DDR DCI impedance and wait for completion */\n'  
         self._cp_led('LED_CHECKPOINT_6') # After DCI is calibrated
-        self.cfile+='''/*
-   Remove soft reset from DDR controller - that starts initialization. Wait for completion
- */  
-\tddr_start();
-
-'''
+        self.cfile+='\tddr_start();         /* Remove soft reset from DDR controller - this will start initialization. Wait for completion */\n'  
         self._cp_led('LED_CHECKPOINT_7') # After DDR is initialized
         if self.features.get_par_value_or_none('DUMP_SLCR_LATE'):
             self.cfile+='\tuart_puts("SLCR registers after DCI/DDR initialization\\r\\n");\n'
-            self.cfile+='\tdump_slcr_regs(); /*Dump all SLCR registers after DCI/DDR initialization */\n'
+            self.cfile+='\tdump_slcr_regs();    /* Dump all SLCR registers after DCI/DDR initialization */\n'
         if self.features.get_par_value_or_none('DUMP_DDRC_LATE'):
             self.cfile+='\tuart_puts("DDRC registers after DCI/DDR initialization\\r\\n");\n'
-            self.cfile+='\tdump_ddrc_regs(); /*Dump all DDRC registers after DCI/DDR initialization */\n'
-        self.cfile+='''/*
-   Copy 3 pages of OCM from 0x00000.0x2ffff to DDR 0x4000000.0x402ffff
- */  
+            self.cfile+='\tdump_ddrc_regs();    /* Dump all DDRC registers after DCI/DDR initialization */\n'
+        self.cfile+='''/* Copy 3 pages of OCM from 0x00000.0x2ffff to DDR 0x4000000.0x402ffff*/  
 \tint * s= (int *) 0;
 \tint * d= (int *) 0x4000000;
 \twhile (s< ((int *)0x30000)) *d++=*s++;
-
 '''
         self.cfile+='\tddrc_wait_queue_empty(); /* Wait no commands are pending in DDRC queue */\n'            
 
@@ -469,13 +457,8 @@ int arch_cpu_init(void)
 # seems some delay is needed before remapping DDR memory
         self.cfile+='\tddrc_wait_queue_empty(); /* seems some delay is needed here before remapping DDR memory */\n'            
         self._cp_led('LED_CHECKPOINT_9') # After relocation to DDR (to 0x4000000+ )
-        self.cfile+='''/*
-   Remap DDR to zero, FILTERSTART
- */
-\twritel(0, &scu_base->filter_start);
-/*
-   Device config APB, unlock the PCAP
- */
+        self.cfile+='\twritel(0, &scu_base->filter_start); /* Remap DDR to zero, FILTERSTART */\n'
+        self.cfile+='''/* Device config APB, unlock the PCAP */
 \twritel(0x757BDF0D, &devcfg_base->unlock);
 \twritel(0xFFFFFFFF, &devcfg_base->rom_shadow);
 '''

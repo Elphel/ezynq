@@ -119,22 +119,23 @@ class EzynqUART:
     def setup_uart(self,current_reg_sets,force=False,warn=False):    
         
         uart_register_set=self.uart_register_set
-        slcr_register_set=self.slcr_register_set
-        slcr_register_set.set_initial_state(current_reg_sets, True)# start from the current registers state
-        slcr_register_set.set_bitfields('uart_rst_ctrl',( # dflt=0
-                                                ('uart1_ref_rst',   self.channel==1), # UART 1 reference clock domain reset: 0 - normal, 1 - reset
-                                                ('uart0_ref_rst',   self.channel==0), # UART 0 reference clock domain reset: 0 - normal, 1 - reset
-                                                ('uart1_cpu1x_rst', self.channel==1), # UART 1 CPU_1x clock domain (AMBA) reset: 0 - normal, 1 - reset
-                                                ('uart0_cpu1x_rst', self.channel==0)),force,warn) #UART 0 CPU_1x clock domain (AMBA) reset: 0 - normal, 1 - reset
-        slcr_register_set.flush()
-        slcr_register_set.set_bitfields('uart_rst_ctrl',( # dflt=0
-                                                ('uart1_ref_rst',   0), # UART 1 reference clock domain reset: 0 - normal, 1 - reset
-                                                ('uart0_ref_rst',   0), # UART 0 reference clock domain reset: 0 - normal, 1 - reset
-                                                ('uart1_cpu1x_rst', 0), # UART 1 CPU_1x clock domain (AMBA) reset: 0 - normal, 1 - reset
-                                                ('uart0_cpu1x_rst', 0)),force,warn) #UART 0 CPU_1x clock domain (AMBA) reset: 0 - normal, 1 - reset
-        reg_sets=slcr_register_set.get_register_sets(sort_addr=True,apply_new=True)
+        
+#         slcr_register_set=self.slcr_register_set
+#         slcr_register_set.set_initial_state(current_reg_sets, True)# start from the current registers state
+#         slcr_register_set.set_bitfields('uart_rst_ctrl',( # dflt=0
+#                                                 ('uart1_ref_rst',   self.channel==1), # UART 1 reference clock domain reset: 0 - normal, 1 - reset
+#                                                 ('uart0_ref_rst',   self.channel==0), # UART 0 reference clock domain reset: 0 - normal, 1 - reset
+#                                                 ('uart1_cpu1x_rst', self.channel==1), # UART 1 CPU_1x clock domain (AMBA) reset: 0 - normal, 1 - reset
+#                                                 ('uart0_cpu1x_rst', self.channel==0)),force,warn) #UART 0 CPU_1x clock domain (AMBA) reset: 0 - normal, 1 - reset
+#         slcr_register_set.flush()
+#         slcr_register_set.set_bitfields('uart_rst_ctrl',( # dflt=0
+#                                                 ('uart1_ref_rst',   0), # UART 1 reference clock domain reset: 0 - normal, 1 - reset
+#                                                 ('uart0_ref_rst',   0), # UART 0 reference clock domain reset: 0 - normal, 1 - reset
+#                                                 ('uart1_cpu1x_rst', 0), # UART 1 CPU_1x clock domain (AMBA) reset: 0 - normal, 1 - reset
+#                                                 ('uart0_cpu1x_rst', 0)),force,warn) #UART 0 CPU_1x clock domain (AMBA) reset: 0 - normal, 1 - reset
+#         reg_sets=slcr_register_set.get_register_sets(sort_addr=True,apply_new=True)
 
-        uart_register_set.set_initial_state(reg_sets, True)# start from the current registers state
+        uart_register_set.set_initial_state(current_reg_sets, True)# start from the current registers state
         uart_register_set.set_bitfields('mode',( # dflt=4
                                                 ('chmode',   0), # Channel Mode: 0 - normal, 1 - auto echo, 2 - local loopback, 3 - remote loopback
                                                 ('nbstop',   0), # Number of stop bits: 0 - 1 stop bit, 1 - 1.5 stop bits, 2 - 2 stop bits, 3 - reserved

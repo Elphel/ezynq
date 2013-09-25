@@ -503,13 +503,13 @@ SLCR_CLK_DEFS={ #not all fields are defined currently
                                    'COMMENTS':'Central interconnect software reset control',
                                    'FIELDS':{
                   'reserved':                 {'r':( 1,31),'d':0, 'c':'reserved'},
-                  'ddr_rst':                  {'r':( 0, 0),'d':0, 'c':'Central interconnect reset: 0 - normal, 1 - reset. Make sure AXI does not have outstanding transactions and the bus is idle'}}},
+                  'topsw_rst':                {'r':( 0, 0),'d':0, 'c':'Central interconnect reset: 0 - normal, 1 - reset. Make sure AXI does not have outstanding transactions and the bus is idle'}}},
 
       'dmac_rst_ctrl':            {'OFFS': 0x20c,'DFLT':0,'RW':'RW', # Never set
                                    'COMMENTS':'DMA controller software reset control',
                                    'FIELDS':{
                   'reserved':                 {'r':( 1,31),'d':0, 'c':'reserved'},
-                  'ddr_rst':                  {'r':( 0, 0),'d':0, 'c':'DMA controller reset: 0 - normal, 1 - reset (and write enable DMAC trust zone register)'}}},
+                  'dmac_rst':                 {'r':( 0, 0),'d':0, 'c':'DMA controller reset: 0 - normal, 1 - reset (and write enable DMAC trust zone register)'}}},
     
       'usb_rst_ctrl':             {'OFFS': 0x210,'DFLT':0,'RW':'RW', # Never set
                                    'COMMENTS':'USB software reset control',
@@ -549,7 +549,7 @@ SLCR_CLK_DEFS={ #not all fields are defined currently
                   'spi1_cpu1x_rst':           {'r':( 1, 1),'d':0, 'c':'SPI 1 CPU_1x clock domain reset: 0 - normal, 1 - reset'},
                   'spi0_cpu1x_rst':           {'r':( 0, 0),'d':0, 'c':'SPI 0 CPU_1x clock domain reset: 0 - normal, 1 - reset'}}},
 
-      'cam_rst_ctrl':             {'OFFS': 0x220,'DFLT':0,'RW':'RW', # Never set
+      'can_rst_ctrl':             {'OFFS': 0x220,'DFLT':0,'RW':'RW', # Never set
                                    'COMMENTS':'CAN software reset control',
                                    'FIELDS':{
                   'reserved1':                {'r':( 4,31),'d':0, 'c':'reserved'},
@@ -580,15 +580,15 @@ SLCR_CLK_DEFS={ #not all fields are defined currently
                   'reserved':                 {'r':( 1,31),'d':0, 'c':'reserved'},
                   'gpio_cpu1x_rst':           {'r':( 0, 0),'d':0, 'c':'GPIO 0 CPU_1x clock domain (AMBA) reset: 0 - normal, 1 - reset'}}},
 
-      'lqspi_rst_ctrl':           {'OFFS': 0x230,'DFLT':0,'RW':'RW', # Never set
+      'qspi_rst_ctrl':            {'OFFS': 0x230,'DFLT':0,'RW':'RW', # Never set
                                    'COMMENTS':'Quad SPI software reset control for reference clock and CPU_1x (AMBA) clock domains',
                                    'FIELDS':{
                   'reserved':                 {'r':( 2,31),'d':0, 'c':'reserved'},
                   'qspi_ref_rst':             {'r':( 1, 1),'d':0, 'c':'QSPI reference clock domain reset: 0 - normal, 1 - reset'},
-                  'lqspi_cpu1x_rst':          {'r':( 0, 0),'d':0, 'c':'QSPI CPU_1x clock domain reset: 0 - normal, 1 - reset'}}},
+                  'qspi_cpu1x_rst':           {'r':( 0, 0),'d':0, 'c':'QSPI CPU_1x clock domain reset: 0 - normal, 1 - reset'}}},
 
       'smc_rst_ctrl':             {'OFFS': 0x234,'DFLT':0,'RW':'RW', # Never set
-                                   'COMMENTS':'Quad SPI software reset control for reference clock and CPU_1x (AMBA) clock domains',
+                                   'COMMENTS':'SMS software reset control for reference clock and CPU_1x (AMBA) clock domains',
                                    'FIELDS':{
                   'reserved':                 {'r':( 2,31),'d':0, 'c':'reserved'},
                   'smc_ref_rst':              {'r':( 1, 1),'d':0, 'c':'SMC reference clock domain reset: 0 - normal, 1 - reset'},
@@ -780,3 +780,38 @@ PLL_PARS=(( 13,    2,6,750),
           ((37,40),2,12,250),
           ((41,47),3,12,250),
           ((48,66),3,12,250))
+
+RESETS= {'DMA': ({'REG':'dmac_rst_ctrl','FIELDS':({'FIELD_NAME':'dmac_rst',        'RST':1,'OFF':0},)},),
+         'USB': ({'REG':'usb_rst_ctrl', 'FIELDS':({'FIELD_NAME':'usb0_cpu1x_rst',  'RST':1,'OFF':0},)},
+                 {'REG':'usb_rst_ctrl', 'FIELDS':({'FIELD_NAME':'usb1_cpu1x_rst',  'RST':1,'OFF':0},)} ),
+         'ETH': ({'REG':'gem_rst_ctrl', 'FIELDS':({'FIELD_NAME':'gem0_ref_rst',    'RST':1,'OFF':0},
+                                                  {'FIELD_NAME':'gem0_rx_rst',     'RST':1,'OFF':0},
+                                                  {'FIELD_NAME':'gem0_cpu1x_rst',  'RST':1,'OFF':0} )},
+                 {'REG':'gem_rst_ctrl', 'FIELDS':({'FIELD_NAME':'gem1_ref_rst',    'RST':1,'OFF':0},
+                                                  {'FIELD_NAME':'gem1_rx_rst',     'RST':1,'OFF':0},
+                                                  {'FIELD_NAME':'gem1_cpu1x_rst',  'RST':1,'OFF':0})}),
+         'SDIO':({'REG':'sdio_rst_ctrl','FIELDS':({'FIELD_NAME':'sdio0_ref_rst',   'RST':1,'OFF':0},
+                                                  {'FIELD_NAME':'sdio0_cpu1x_rst', 'RST':1,'OFF':0} )},
+                 {'REG':'sdio_rst_ctrl','FIELDS':({'FIELD_NAME':'sdio1_ref_rst',   'RST':1,'OFF':0},
+                                                  {'FIELD_NAME':'sdio1_cpu1x_rst', 'RST':1,'OFF':0} )} ),
+         'SPI': ({'REG':'spi_rst_ctrl', 'FIELDS':({'FIELD_NAME':'spi0_ref_rst',    'RST':1,'OFF':0},
+                                                  {'FIELD_NAME':'spi0_cpu1x_rst',  'RST':1,'OFF':0} )},
+                 {'REG':'spi_rst_ctrl', 'FIELDS':({'FIELD_NAME':'spi1_ref_rst',    'RST':1,'OFF':0},
+                                                  {'FIELD_NAME':'spi1_cpu1x_rst',  'RST':1,'OFF':0} )} ),
+         'CAN': ({'REG':'can_rst_ctrl', 'FIELDS':({'FIELD_NAME':'can0_cpu1x_rst',  'RST':1,'OFF':0},)},
+                 {'REG':'can_rst_ctrl', 'FIELDS':({'FIELD_NAME':'can1_cpu1x_rst',  'RST':1,'OFF':0},)} ),
+         'I2C': ({'REG':'i2c_rst_ctrl', 'FIELDS':({'FIELD_NAME':'i2c0_cpu1x_rst',  'RST':1,'OFF':0},)},
+                 {'REG':'i2c_rst_ctrl', 'FIELDS':({'FIELD_NAME':'i2c1_cpu1x_rst',  'RST':1,'OFF':0},)} ),
+         'UART':({'REG':'uart_rst_ctrl','FIELDS':({'FIELD_NAME':'uart0_ref_rst',   'RST':1,'OFF':0},
+                                                  {'FIELD_NAME':'uart0_cpu1x_rst', 'RST':1,'OFF':0} )},
+                 {'REG':'uart_rst_ctrl','FIELDS':({'FIELD_NAME':'uart1_ref_rst',   'RST':1,'OFF':0},
+                                                  {'FIELD_NAME':'uart1_cpu1x_rst', 'RST':1,'OFF':0} )} ),
+         'GPIO':({'REG':'gpio_rst_ctrl','FIELDS':({'FIELD_NAME':'gpio_cpu1x_rst',  'RST':1,'OFF':0},)},),
+         'QSPI':({'REG':'qspi_rst_ctrl','FIELDS':({'FIELD_NAME':'qspi_ref_rst',    'RST':1,'OFF':0},
+                                                  {'FIELD_NAME':'qspi_cpu1x_rst',  'RST':1,'OFF':0} )},),
+         'NAND':({'REG':'smc_rst_ctrl', 'FIELDS':({'FIELD_NAME':'smc_ref_rst',     'RST':1,'OFF':0},
+                                                  {'FIELD_NAME':'smc_cpu1x_rst',   'RST':1,'OFF':0} )},),
+         'NOR': ({'REG':'smc_rst_ctrl', 'FIELDS':({'FIELD_NAME':'smc_ref_rst',     'RST':1,'OFF':0},
+                                                  {'FIELD_NAME':'smc_cpu1x_rst',   'RST':1,'OFF':0} )},),
+         }
+
