@@ -563,6 +563,88 @@ class EzynqClk:
             clk_register_set.set_bitfields('arm_pll_ctrl',(('pll_bypass_force',  0),
                                                            ('pll_bypass_qual',   0)),force,warn)
         return self.get_new_register_sets()
+# reset instantiated peripherals
+
+    def reset_peripherals(self,current_reg_sets,force=False,warn=False):
+#        print ezynq_slcr_clk_def.RESETS
+        extra_interfaces=[{'NAME':'DMA'}]
+        used_interfaces=self.used_mio_interfaces+extra_interfaces
+        def set_resets(reset_on):
+            for iface in used_interfaces:
+                name=iface['NAME']
+                if name in ezynq_slcr_clk_def.RESETS:
+                    rst=ezynq_slcr_clk_def.RESETS[name]
+                    if len(rst)>1:
+                        rst=rst[iface['CHANNEL']]
+                    else:
+                        rst=rst[0]
+                    fields=[]
+                    for fld in rst['FIELDS']:
+#                        print name, fld
+                        fields.append((fld['FIELD_NAME'],fld[('OFF','RST')[reset_on]]))
+                    rst_register_set.set_bitfields(rst['REG'],tuple(fields),force,warn)       
+        rst_register_set=self.clk_register_set
+        rst_register_set.set_initial_state(current_reg_sets, True)# start from the current registers state
+        set_resets(True)
+        rst_register_set.flush()
+        set_resets(False)
+        return rst_register_set.get_register_sets(True,True)
+#
+# self.used_mio_interfaces
+#         uart_register_set=self.uart_register_set
+#         slcr_register_set=self.slcr_register_set
+#         slcr_register_set.set_initial_state(current_reg_sets, True)# start from the current registers state
+#         slcr_register_set.set_bitfields('uart_rst_ctrl',( # dflt=0
+#                                                 ('uart1_ref_rst',   self.channel==1), # UART 1 reference clock domain reset: 0 - normal, 1 - reset
+#                                                 ('uart0_ref_rst',   self.channel==0), # UART 0 reference clock domain reset: 0 - normal, 1 - reset
+#                                                 ('uart1_cpu1x_rst', self.channel==1), # UART 1 CPU_1x clock domain (AMBA) reset: 0 - normal, 1 - reset
+#                                                 ('uart0_cpu1x_rst', self.channel==0)),force,warn) #UART 0 CPU_1x clock domain (AMBA) reset: 0 - normal, 1 - reset
+#         slcr_register_set.flush()
+#         slcr_register_set.set_bitfields('uart_rst_ctrl',( # dflt=0
+#                                                 ('uart1_ref_rst',   0), # UART 1 reference clock domain reset: 0 - normal, 1 - reset
+#                                                 ('uart0_ref_rst',   0), # UART 0 reference clock domain reset: 0 - normal, 1 - reset
+#                                                 ('uart1_cpu1x_rst', 0), # UART 1 CPU_1x clock domain (AMBA) reset: 0 - normal, 1 - reset
+#                                                 ('uart0_cpu1x_rst', 0)),force,warn) #UART 0 CPU_1x clock domain (AMBA) reset: 0 - normal, 1 - reset
+#         reg_sets=slcr_register_set.get_register_sets(sort_addr=True,apply_new=True)
+
+# RESETS= {'DMA': ({'REG':'dmac_rst_ctrl','FIELDS':({'FIELD_NAME':'dmac_rst',        'RST':1,'OFF':0})}),
+#          'USB': ({'REG':'usb_rst_ctrl', 'FIELDS':({'FIELD_NAME':'usb0_cpu1x_rst',  'RST':1,'OFF':0})},
+#                  {'REG':'usb_rst_ctrl', 'FIELDS':({'FIELD_NAME':'usb1_cpu1x_rst',  'RST':1,'OFF':0})}),
+#          'ETH': ({'REG':'gem_rst_ctrl', 'FIELDS':({'FIELD_NAME':'gem0_ref_rst',    'RST':1,'OFF':0},
+#                                                   {'FIELD_NAME':'gem0_rx_rst',     'RST':1,'OFF':0},
+#                                                   {'FIELD_NAME':'gem0_cpu1x_rst',  'RST':1,'OFF':0})},
+#                  {'REG':'gem_rst_ctrl', 'FIELDS':({'FIELD_NAME':'gem1_ref_rst',    'RST':1,'OFF':0},
+#                                                   {'FIELD_NAME':'gem1_rx_rst',     'RST':1,'OFF':0},
+#                                                   {'FIELD_NAME':'gem1_cpu1x_rst',  'RST':1,'OFF':0})}),
+#          'SDIO':({'REG':'sdio_rst_ctrl','FIELDS':({'FIELD_NAME':'sdio0_ref_rst',   'RST':1,'OFF':0},
+#                                                   {'FIELD_NAME':'sdio0_cpu1x_rst', 'RST':1,'OFF':0})},
+#                  {'REG':'sdio_rst_ctrl','FIELDS':({'FIELD_NAME':'sdio1_ref_rst',   'RST':1,'OFF':0},
+#                                                   {'FIELD_NAME':'sdio1_cpu1x_rst', 'RST':1,'OFF':0})}),
+#          'SPI': ({'REG':'spi_rst_ctrl', 'FIELDS':({'FIELD_NAME':'spi0_ref_rst',    'RST':1,'OFF':0},
+#                                                   {'FIELD_NAME':'spi0_cpu1x_rst',  'RST':1,'OFF':0})},
+#                  {'REG':'spi_rst_ctrl', 'FIELDS':({'FIELD_NAME':'spi1_ref_rst',    'RST':1,'OFF':0},
+#                                                   {'FIELD_NAME':'spi1_cpu1x_rst',  'RST':1,'OFF':0})}),
+#          'CAN': ({'REG':'can_rst_ctrl', 'FIELDS':({'FIELD_NAME':'can0_cpu1x_rst',  'RST':1,'OFF':0})},
+#                  {'REG':'can_rst_ctrl', 'FIELDS':({'FIELD_NAME':'can1_cpu1x_rst',  'RST':1,'OFF':0})}),
+#          'I2C': ({'REG':'i2c_rst_ctrl', 'FIELDS':({'FIELD_NAME':'i2c0_cpu1x_rst',  'RST':1,'OFF':0})},
+#                  {'REG':'i2c_rst_ctrl', 'FIELDS':({'FIELD_NAME':'i2c1_cpu1x_rst',  'RST':1,'OFF':0})}),
+#          'UART':({'REG':'uart_rst_ctrl','FIELDS':({'FIELD_NAME':'uart0_ref_rst',   'RST':1,'OFF':0},
+#                                                   {'FIELD_NAME':'uart0_cpu1x_rst', 'RST':1,'OFF':0})},
+#                  {'REG':'uart_rst_ctrl','FIELDS':({'FIELD_NAME':'uart1_ref_rst',   'RST':1,'OFF':0},
+#                                                   {'FIELD_NAME':'uart1_cpu1x_rst', 'RST':1,'OFF':0})}),
+#          'GPIO':({'REG':'gpio_rst_ctrl','FIELDS':({'FIELD_NAME':'gpio_cpu1x_rst',  'RST':1,'OFF':0})}),
+#          'QSPI':({'REG':'qspi_rst_ctrl','FIELDS':({'FIELD_NAME':'qspi_ref_rst',    'RST':1,'OFF':0},
+#                                                   {'FIELD_NAME':'qspi_cpu1x_rst',  'RST':1,'OFF':0})}),
+#          'NAND':({'REG':'smc_rst_ctrl', 'FIELDS':({'FIELD_NAME':'smc_ref_rst',     'RST':1,'OFF':0},
+#                                                   {'FIELD_NAME':'smc_cpu1x_rst',   'RST':1,'OFF':0})}),
+#          'NOR': ({'REG':'smc_rst_ctrl', 'FIELDS':({'FIELD_NAME':'smc_ref_rst',     'RST':1,'OFF':0},
+#                                                   {'FIELD_NAME':'smc_cpu1x_rst',   'RST':1,'OFF':0})}),
+#          }
+
+
+
+
+
 
 
 #clocks setup 

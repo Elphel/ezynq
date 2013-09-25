@@ -361,6 +361,10 @@ segments.append({'TO':len(reg_sets),'RBL':False,'NAME':'CLK','TITLE':'Clock regi
 #print 'Debug mode: CLK/PLL configuration by u-boot'
 reg_sets=clk.clocks_pll_bypass_off(reg_sets,force)
 segments.append({'TO':len(reg_sets),'RBL':False,'NAME':'PLL','TITLE':'Registers to switch to PLL'})
+
+reg_sets=clk.reset_peripherals(reg_sets,force)
+segments.append({'TO':len(reg_sets),'RBL':False,'NAME':'RESETS','TITLE':'Resetting defined peripherals after clocks changed'})
+
 if u_boot.features.get_par_value_or_none('BOOT_DEBUG'):
     uart=ezynq_uart.EzynqUART()
     uart.parse_parameters(raw_configs,used_mio_interfaces,False)
@@ -490,15 +494,6 @@ if args.outfile:
     print 'Generating binary output ',os.path.abspath(args.outfile)
     write_image(image,args.outfile)
 if (args.lowlevel):
-    # segments.append({'TO':len(reg_sets),'RBL':True,'NAME':'MIO','TITLE':'MIO registers configuration'})
-    #     segments.append({'TO':len(reg_sets),'RBL':True,'NAME':'DDR0','TITLE':'DDR registers configuration'})
-    
-    # segments.append({'TO':len(reg_sets),'RBL':False,'NAME':'CLK','TITLE':'Clock registers configuration'})
-    # segments.append({'TO':len(reg_sets),'RBL':False,'NAME':'PLL','TITLE':'Registers to switch to PLL'})
-    #     segments.append({'TO':len(reg_sets),'RBL':False,'NAME':'UART_INIT','TITLE':'Registers to initialize UART'})
-    #     segments.append({'TO':len(reg_sets),'RBL':False,'NAME':'DCI','TITLE':'DDR DCI Calibration'})
-    #     segments.append({'TO':len(reg_sets),'RBL':False,'NAME':'DDR_START','TITLE':'DDR initialization start'})
-    #CONFIG_EZYNQ_UART_DEBUG_USE_LED
     if 'SLCR_LOCK_UNLOCK' in segment_dict: 
         u_boot.make_slcr_lock_unlock (reg_sets[segment_dict['SLCR_LOCK_UNLOCK']['FROM']:segment_dict['SLCR_LOCK_UNLOCK']['TO']])
     if 'LED' in segment_dict: 
@@ -507,7 +502,10 @@ if (args.lowlevel):
     if 'CLK' in segment_dict: 
         u_boot.registers_setup (reg_sets[segment_dict['CLK']['FROM']:segment_dict['CLK']['TO']],clk,num_rbl_regs)
     if 'PLL' in segment_dict: 
-        u_boot.pll_setup (reg_sets[segment_dict['PLL']['FROM']:segment_dict['PLL']['TO']],clk)
+        u_boot.pll_setup (reg_sets[segment_dict['PLL']['FROM']:segment_dict['PLL']['TO']])
+    if 'RESETS' in segment_dict:
+        u_boot.make_resets (reg_sets[segment_dict['RESETS']['FROM']:segment_dict['RESETS']['TO']])
+
     if 'UART_INIT' in segment_dict: 
         u_boot.uart_init (reg_sets[segment_dict['UART_INIT']['FROM']:segment_dict['UART_INIT']['TO']])
     if 'UART_XMIT' in segment_dict: 
