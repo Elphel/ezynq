@@ -15,7 +15,7 @@ SUFFIX=".orig"
 INITENV="initenv"
 OVERWRITE_INITENV=1
 CROSS_COMPILE="arm-poky-linux-gnueabi-"
-COMPILE_PATH="/opt/poky/1.4/sysroots/x86_64-pokysdk-linux/usr/bin/armv7a-vfp-neon-poky-linux-gnueabi/"
+COMPILE_PATH="/opt/poky/1.4/sysroots/x86_64-pokysdk-linux/usr/bin/armv7a-vfp-neon-poky-linux-gnueabi"
 
 echo "Step 1: Cloning Xilinx's u-boot repository (master-next branch)"
 if [ ! -d "$REPO_DIR_NAME/.git" ]; then
@@ -61,13 +61,11 @@ fi
 if [ $OVERWRITE_INITENV = 1 ] ; then
   echo "#!/bin/sh
 export CROSS_COMPILE=$CROSS_COMPILE
-export PATH=$COMPILE_PATH:\$PATH" > $INITENV
-  #exec permissions are not required for source
-  #chmod +x $INITENV 
+export PATH=$COMPILE_PATH/:\$PATH" > $INITENV
 fi
 
 if [ ! -d $COMPILE_PATH ] ; then
-  echo "  WARNING: Please edit initenv accordingly to your cross compiler path"
+  echo "  WARNING: Please edit initenv according to your cross compiler path"
 fi
 
 echo "DONE"
