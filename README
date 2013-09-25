@@ -64,7 +64,8 @@ the DRAM, not in the OCM. U-boot relocation functionality nicely skips actual re
 the source and destination addresses are the same) and the data memory is initialized when 192K
 OCM limit is not in effect anymore. 
 
-Installation
+INSTALLATION (see below for testing without u-boot installation)
+
 When Ezynq repository is cloned, there is install_uboot.sh script in the top directory. Running
 this script clones u-boot-xlnx and then adds links to the files in Ezynq sub-directory
 u-boot-tree from the corresponding directories of the u-boot-xlnx, that allows to update Ezynq
@@ -94,6 +95,14 @@ New files include:
   generating u-boot.bin, reruns ezynqcfg.py to include the length of the u-boot.bin into
   boot_head.bin and then combines boot_head.bin and u-bootbin into boot.bin with a simple
   'cat' command.
+ 
+ TESTING WITHOUT U-BOOT AND CROSS-COMPILER TOOLCHAIN
+ 
+ It is possible to try just the ezynqcfg.py script without building u-boot, no ARM toolchain
+ is required  
+ ./ezynqcfg.py -c test.mk --html test.html --html-mask 0x3ff --lowlevel ezynq.c
+ This command uses a demo test.mk that mimics include/autoconf.mk and generates test.html and
+ ezynq.c files  
  
 
 
