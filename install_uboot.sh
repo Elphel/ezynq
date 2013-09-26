@@ -40,7 +40,7 @@ SUFFIX=".orig"
 INITENV="initenv"
 OVERWRITE_INITENV=1
 CROSS_COMPILE="arm-poky-linux-gnueabi-"
-COMPILE_PATH="/opt/poky/1.4/sysroots/x86_64-pokysdk-linux/usr/bin/armv7a-vfp-neon-poky-linux-gnueabi"
+COMPILE_PATH="/opt/poky/1.4.2/sysroots/x86_64-pokysdk-linux/usr/bin/armv7a-vfp-neon-poky-linux-gnueabi"
 
 echo "Step 1: Cloning Xilinx's u-boot repository (master-next branch)"
 if [ ! -d "$REPO_DIR_NAME/.git" ]; then
