@@ -33,7 +33,8 @@ SCRIPTPATH=$(dirname "$SCRIPT")
 UBOOT_TREE="$SCRIPTPATH/u-boot-tree"
 CONFIGS="include/configs"
 EZYNQ="ezynq"
-REPO_DIR_NAME=u-boot-xlnx
+REPO_DIR_NAME="u-boot-xlnx"
+PATCH_NAME="u-boot-xlnx.patch"
 
 SUFFIX=".orig"
 
@@ -49,9 +50,9 @@ else
   echo "  Already there"
 fi
 
-echo "Step 2: Checking out u-boot version with the hash 'e1808144fdbc79159b72318e6eb8bcab03fd9bf4'"
+echo "Step 2: Checking out u-boot version with the hash 'bbd91fc9ae290c31dc52fd8322f43f67ddd39247'"
 cd "$REPO_DIR_NAME"
-git checkout e1808144fdbc79159b72318e6eb8bcab03fd9bf4
+git checkout bbd91fc9ae290c31dc52fd8322f43f67ddd39247
 
 echo "Step 3: Merging ezynq with u-boot"
 
@@ -60,20 +61,32 @@ if [ ! -h $EZYNQ ]; then
   ln -s $SCRIPTPATH $EZYNQ
 fi
 
-echo "Step 3b: Creating symbolic link for the 'ezynq' folder"
-if [ ! -h "$CONFIGS/$EZYNQ" ]; then
-  ln -s "$UBOOT_TREE/$CONFIGS/$EZYNQ" $CONFIGS
+# 
+# echo "Step 3b: Creating symbolic link for the 'ezynq' folder"
+# if [ ! -h "$CONFIGS/$EZYNQ" ]; then
+#   ln -s "$UBOOT_TREE/$CONFIGS/$EZYNQ" $CONFIGS
+# fi
+# 
+# echo "Step 3c: Creating symbolic links for separate files (a suffix is added to the originals)"
+# for SRC in $(find $UBOOT_TREE -type f -not -path "$UBOOT_TREE/$CONFIGS/$EZYNQ/*")
+# do
+#   LINK=$(echo $SRC | sed "s:^$UBOOT_TREE/::")
+#   #echo "$SRC | $LINK"
+#   if [ ! -h $LINK ]; then
+#     ln -s -S $SUFFIX $SRC $LINK
+#   fi
+# done
+
+echo "Step 3b: Creating a patch file"
+cd ..
+if [ ! -f $PATCH_NAME ]; then
+  diff -rubPB "$REPO_DIR_NAME" "$UBOOT_TREE" > "$PATCH_NAME"
 fi
 
-echo "Step 3c: Creating symbolic links for separate files (a suffix is added to the originals)"
-for SRC in $(find $UBOOT_TREE -type f -not -path "$UBOOT_TREE/$CONFIGS/$EZYNQ/*")
-do
-  LINK=$(echo $SRC | sed "s:^$UBOOT_TREE/::")
-  #echo "$SRC | $LINK"
-  if [ ! -h $LINK ]; then
-    ln -s -S $SUFFIX $SRC $LINK
-  fi
-done
+echo "Step 3c: Applying the patch"
+cd "$REPO_DIR_NAME"
+patch -r - -Np1 < "../$PATCH_NAME"
+chmod +x makeuboot
 
 echo "Step 4: Creating initenv script"
 if [ -f $INITENV ]; then
