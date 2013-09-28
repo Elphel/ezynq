@@ -61,32 +61,31 @@ if [ ! -h $EZYNQ ]; then
   ln -s $SCRIPTPATH $EZYNQ
 fi
 
-# 
-# echo "Step 3b: Creating symbolic link for the 'ezynq' folder"
-# if [ ! -h "$CONFIGS/$EZYNQ" ]; then
-#   ln -s "$UBOOT_TREE/$CONFIGS/$EZYNQ" $CONFIGS
-# fi
-# 
-# echo "Step 3c: Creating symbolic links for separate files (a suffix is added to the originals)"
-# for SRC in $(find $UBOOT_TREE -type f -not -path "$UBOOT_TREE/$CONFIGS/$EZYNQ/*")
-# do
-#   LINK=$(echo $SRC | sed "s:^$UBOOT_TREE/::")
-#   #echo "$SRC | $LINK"
-#   if [ ! -h $LINK ]; then
-#     ln -s -S $SUFFIX $SRC $LINK
-#   fi
-# done
-
-echo "Step 3b: Creating a patch file"
-cd ..
-if [ ! -f $PATCH_NAME ]; then
-  diff -rubPB "$REPO_DIR_NAME" "$UBOOT_TREE" > "$PATCH_NAME"
+echo "Step 3b: Creating symbolic link for the 'ezynq' folder"
+if [ ! -h "$CONFIGS/$EZYNQ" ]; then
+  ln -s "$UBOOT_TREE/$CONFIGS/$EZYNQ" $CONFIGS
 fi
 
-echo "Step 3c: Applying the patch"
-cd "$REPO_DIR_NAME"
-patch -r - -Np1 < "../$PATCH_NAME"
-chmod +x makeuboot
+echo "Step 3c: Creating symbolic links for separate files (a suffix is added to the originals)"
+for SRC in $(find $UBOOT_TREE -type f -not -path "$UBOOT_TREE/$CONFIGS/$EZYNQ/*")
+do
+  LINK=$(echo $SRC | sed "s:^$UBOOT_TREE/::")
+  #echo "$SRC | $LINK"
+  if [ ! -h $LINK ]; then
+    ln -s -S $SUFFIX $SRC $LINK
+  fi
+done
+
+# echo "Step 3b: Creating a patch file"
+# cd ..
+# if [ ! -f $PATCH_NAME ]; then
+#   diff -rubPB "$REPO_DIR_NAME" "$UBOOT_TREE" > "$PATCH_NAME"
+# fi
+# 
+# echo "Step 3c: Applying the patch"
+# cd "$REPO_DIR_NAME"
+# patch -r - -Np1 < "../$PATCH_NAME"
+# chmod +x makeuboot
 
 echo "Step 4: Creating initenv script"
 if [ -f $INITENV ]; then
