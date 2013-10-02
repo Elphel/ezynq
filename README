@@ -104,6 +104,11 @@ New files include:
  This command uses a demo test.mk that mimics include/autoconf.mk and generates test.html and
  ezynq.c files  
  
-
+KNOWN ISSUES
+1. USB does not work yet.
+2. Ethernet is not tested (on the board we have it does not work with provided images, so we
+   suspect a hardware problem.
+3. Bitstream loading is not tested, current code does not enable level shifters - it may be
+   more appropriate to do just before loading of the bitstream.
 
 
