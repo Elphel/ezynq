@@ -118,3 +118,9 @@ New files include:
    suspect a hardware problem.
 3. Bitstream loading is not tested, current code does not enable level shifters - it may be
    more appropriate to do just before loading of the bitstream.
+
+## Trademark notices
+
+Xilinx® and Zynq® are registered trademarks of Xilinx.
+
+Ezynq project is not endorsed by or affiliated with Xilinx Inc.
