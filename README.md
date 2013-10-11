@@ -114,9 +114,7 @@ New files include:
 
 ## Known issues
 1. USB does not work yet.
-2. Ethernet is not tested (on the board we have it does not work with provided images, so we
-   suspect a hardware problem.
-3. Bitstream loading is not tested, current code does not enable level shifters - it may be
+2. Bitstream loading is not tested, current code does not enable level shifters - it may be
    more appropriate to do just before loading of the bitstream.
 
 ## Trademark notices

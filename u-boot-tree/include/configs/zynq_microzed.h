@@ -22,10 +22,11 @@
 #define PHYS_SDRAM_1_SIZE (1024 * 1024 * 1024)
 
 #define CONFIG_ZYNQ_SERIAL_UART1
-#if 0
+#if 1
 #define CONFIG_ZYNQ_GEM0
 #define CONFIG_ZYNQ_GEM_PHY_ADDR0	0
 #endif
+
 #define CONFIG_SYS_NO_FLASH
 
 #define CONFIG_ZYNQ_SDHCI0
@@ -38,7 +39,7 @@
 #include <configs/ezynq/ezynq_XC7Z010_1CLG400.h>
 #include <configs/ezynq/zed_ezynq.h>
 
-#define CONFIG_CMD_MEMTEST
+//#define CONFIG_CMD_MEMTEST
 #undef CONFIG_EZYNQ_BOOT_DEBUG 
 
 /* twice slower */
@@ -97,6 +98,8 @@
 #undef CONFIG_CMD_CACHE
 
 #undef DEBUG
+#undef CONFIG_AUTO_COMPLETE
+#undef CONFIG_SYS_LONGHELP
 
 /* redefine env settings*/
 #undef CONFIG_EXTRA_ENV_SETTINGS
