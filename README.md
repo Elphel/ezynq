@@ -113,8 +113,10 @@ New files include:
 * [meta-ezynq](https://sourceforge.net/p/elphel/meta-ezynq) - recipes for Yocto Poky
 
 ## Known issues
-1. USB does not work yet.
-2. Bitstream loading is not tested, current code does not enable level shifters - it may be
+1. [works with u-boot-xlnx 'master'-branch] USB does not work yet.
+2. [FIXED] Ethernet is not tested (on the board we have it does not work with provided images, so we
+   suspect a hardware problem.
+3. Bitstream loading is not tested, current code does not enable level shifters - it may be
    more appropriate to do just before loading of the bitstream.
 
 ## Trademark notices
