@@ -22,7 +22,7 @@
 #define PHYS_SDRAM_1_SIZE (1024 * 1024 * 1024)
 
 #define CONFIG_ZYNQ_SERIAL_UART1
-#if 1
+#if 0
 #define CONFIG_ZYNQ_GEM0
 #define CONFIG_ZYNQ_GEM_PHY_ADDR0	0
 #endif
