@@ -121,6 +121,7 @@ CONFIG_EZYNQ_MIO_UART_1=48 #  8+4*N
 
 #CONFIG_EZYNQ_MIO_INOUT_7=          OUT # 'IN', 'BIDIR'
 CONFIG_EZYNQ_MIO_GPIO_OUT_7=       1 # Set selected GPIO output to 0/1
+CONFIG_EZYNQ_MIO_GPIO_OUT_47=      1 # Set selected GPIO output to 0/1
 
 
 

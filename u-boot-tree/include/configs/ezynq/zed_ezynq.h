@@ -58,16 +58,17 @@
 #define CONFIG_EZYNQ_MIO_ETH_MDIO__SLOW
 #define CONFIG_EZYNQ_MIO_USB_0__SLOW
 #define CONFIG_EZYNQ_MIO_USB_0__PULLUP
-#define CONFIG_EZYNQ_MIO_SDIO_0           40 // 16,28,40
+#define CONFIG_EZYNQ_MIO_SDIO_0           40  /* 16,28,40 */
 #define CONFIG_EZYNQ_MIO_SDIO_0__SLOW
 #define CONFIG_EZYNQ_MIO_SDIO_0__PULLUP
-#define CONFIG_EZYNQ_MIO_SDCD_0           46 //#any but 7,8
+#define CONFIG_EZYNQ_MIO_SDCD_0           46  /* any but 7,8  */
 #define CONFIG_EZYNQ_MIO_SDCD_0__PULLUP
-#define CONFIG_EZYNQ_MIO_SDWP_0           50 //#any but 7,8
+#define CONFIG_EZYNQ_MIO_SDWP_0           50  /* #any but 7,8  */
 #define CONFIG_EZYNQ_MIO_SDWP_0__PULLUP
-#define CONFIG_EZYNQ_MIO_UART_1           48 //#  8+4*N
+#define CONFIG_EZYNQ_MIO_UART_1           48  /* #  8+4*N  */
 /* LED will be OFF */
-#define CONFIG_EZYNQ_MIO_INOUT_47   OUT
+#define CONFIG_EZYNQ_MIO_INOUT_47   OUT       /* Make output, do not set data. Will be set after debug will be over */
+#define CONFIG_EZYNQ_MIO_GPIO_OUT_7=       1  /* Set selected GPIO output to 0/1 */
 
 /*
 Red LED - pullup, input - on,
