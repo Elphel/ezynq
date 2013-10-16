@@ -80,7 +80,8 @@ def print_html_registers(html_file, reg_sets, from_index, show_bit_fields=True, 
                     prev_sdata='-'
                 new_data=((old_data ^ data) & mask) ^ old_data
                 new_mask= old_mask | mask
-                current_reg_state[addr]=(new_data,new_mask)
+                if not 'FORCE_DFLT' in r_def: # do not save state if force default (always start from default value) is in effect
+                    current_reg_state[addr]=(new_data,new_mask)
             else:
                 new_data= data
                 new_mask= mask
@@ -179,7 +180,15 @@ def accumulate_reg_data(reg_sets,accumulate_mask=False):
     cumulative_regs=[() for _ in reg_sets]
     for index, (op, addr, data, mask, module_name, register_name, r_def) in enumerate (reg_sets):
         if (op == 's') and (addr in initial_state): # only accumulate register set operations, not wait for equal ('=') or wait for not-equal ('!')
-            old_data,old_mask=initial_state[addr]
+            if 'FORCE_DFLT' in r_def:
+                #is old_mask=0 enough? no need for old_data
+                try:
+                    old_data=r_def['DFLT']
+                except:
+                    old_data=0
+                old_mask=0
+            else:        
+                old_data,old_mask=initial_state[addr]
             data=((old_data ^ data) & mask) ^ old_data
             if accumulate_mask:
                 mask |= old_mask
@@ -232,6 +241,8 @@ class EzynqRegisters:
         
         
     def set_initial_state(self,added_reg_sets, init=True):
+#                    new_sets.append((op,addr,data,mask,self.module_name,register_name,self.defs[register_name]))
+
         if init:
             self.initial_state={}
             self.previous_reg_sets=[]
@@ -242,13 +253,12 @@ class EzynqRegisters:
         if not added_reg_sets:
             return
         self.previous_reg_sets+=added_reg_sets # appends, not overwrites
-        for op,addr,data,mask,_,_,_ in added_reg_sets: # Do not need to care about default values - they will have 0 in the mask bits.
+        for op,addr,data,mask,_,_,defs in added_reg_sets: # Do not need to care about default values - they will have 0 in the mask bits.
+            if 'FORCE_DFLT' in defs:
+                continue # do not use previous value, always use default value
             if (op == 's') and (addr in self.initial_state):
-#                old_data,old_mask=self.initial_state[addr]
                 old_data,_=self.initial_state[addr]
                 data=((old_data ^ data) & mask) ^ old_data
-#                mask |= old_mask
-#            self.initial_state[addr]=(data,mask)
             self.initial_state[addr]=(data,0) # ignoring old mask - only accumulating newly set bits in this set
             
     def get_reg_names(self):

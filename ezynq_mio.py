@@ -25,6 +25,7 @@ __status__ = "Development"
 import ezynq_registers
 #import ezynq_feature_config
 import ezynq_slcr_clk_def
+import ezynq_gpio_defs
 MIO_ATTRIBS=['SLOW','FAST','PULLUP','NOPULLUP']
 
 MIO_TEMPLATES = {
@@ -284,9 +285,11 @@ class EzynqMIO:
     def __init__(self, verbosity, qualifier_char, regs_masked, permit_undefined_bits=False):
 #        print ezynq_slcr_clk_def.MIO_PINS_DEFS
         self.MIO_PINS_DEFS=  ezynq_slcr_clk_def.SLCR_DEFS #combined
+        self.GPIO_DEFS=ezynq_gpio_defs.GPIO_DEFS
         self.qualifier_char=qualifier_char
         self.verbosity=     verbosity
         self.slcr_register_set=  ezynq_registers.EzynqRegisters(self.MIO_PINS_DEFS,0,regs_masked,permit_undefined_bits)
+        self.gpio_register_set=  ezynq_registers.EzynqRegisters(self.GPIO_DEFS,0,regs_masked,permit_undefined_bits)
 
     def generate_led_off_on(self, mio_pin):
         # generate code to be included in u-boot for debugging early boot stages
@@ -617,7 +620,7 @@ class EzynqMIO:
                         print 'Invalid MIO pin polarity in',attr['PREFIX']+str(pin),'=',value
                         print 'Polarity can only be IN, OUT or BIDIR'
                         exit (ERROR_DEFS['INOUT'])
-                    if (pin==7) or (pin==8) and (value!='OUT'):
+                    if ((pin==7) or (pin==8)) and (value!='OUT'):
                         print 'Invalid MIO pin polarity in',attr['PREFIX']+str(pin),'=',value
                         print 'Polarity for MIO pins 7 and 8 can only be OUT'
                         exit (ERROR_DEFS['INOUT'])
@@ -663,6 +666,42 @@ class EzynqMIO:
 
             
         return self.slcr_register_set.get_register_sets(True,True)
+
+    def setregs_gpio(self,current_reg_sets,force=True):
+        mask_data_regs_mio=('mask_data_0_lsw','mask_data_0_msw','mask_data_1_lsw','mask_data_1_msw');
+        self.slcr_register_set.set_initial_state(current_reg_sets, True)# start from the current registers state   
+        # first find out which groups of 16 pins are outputs (if any)
+        for i,mio_pin in enumerate(self.mio):
+            if ('DATA_OUT' in mio_pin) or (('INOUT' in mio_pin) and (mio_pin['INOUT'] != 'IN')):
+                break
+        else:
+            return current_reg_sets # no outputs to program
+        # 1. Program SLCR (should be already done, now just no clean up after debug LED unknown state)
+        for i,mio_pin in enumerate(self.mio):
+            if ('DATA_OUT' in mio_pin) or (('INOUT' in mio_pin) and (mio_pin['INOUT'] != 'IN')):
+                self.slcr_register_set.set_bitfields('mio_pin_%02i'%i,(('tri_enable',0),),force) # disable tristate
+        reg_sets=self.slcr_register_set.get_register_sets(True,True)
+        self.gpio_register_set.set_initial_state(reg_sets, True) #continuing with GPIO registers
+        # 2. set DIRM for outputs
+        for i,mio_pin in enumerate(self.mio):
+            if ('DATA_OUT' in mio_pin) or (('INOUT' in mio_pin) and (mio_pin['INOUT'] == 'OUT')):
+                    self.gpio_register_set.set_bitfields('dirm_%i'%(i/32),
+                                                     (('dirm_%02i'%i,1),),force) # direction - output               
+                
+        self.gpio_register_set.flush()
+        # 3. set data for outputs
+        for i,mio_pin in enumerate(self.mio):
+            if 'DATA_OUT' in mio_pin:
+                self.gpio_register_set.set_bitfields(mask_data_regs_mio[i/16],
+                                                     (('mask%02i'%i,0), # enable setting bit
+                                                      ('data%02i'%i,mio_pin['DATA_OUT']!=0)),force) # data to set
+        self.gpio_register_set.flush()
+        # 4. Output enable        
+        for i,mio_pin in enumerate(self.mio):
+            if ('DATA_OUT' in mio_pin) or (('INOUT' in mio_pin) and (mio_pin['INOUT'] == 'OUT')):
+                    self.gpio_register_set.set_bitfields('oen_%i'%(i/32),
+                                                     (('oe_%02i'%i,1),),force) # enable output               
+        return self.gpio_register_set.get_register_sets(True,True)
     
     # Just add to the HTML output
     def output_mio(self,f,MIO_HTML_MASK):

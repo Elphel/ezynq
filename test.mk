@@ -119,6 +119,10 @@ CONFIG_EZYNQ_MIO_UART_1=48 #  8+4*N
 #CONFIG_EZYNQ_MIO_GPIO_OUT_15=       1 # Set selected GPIO output to 0/1
 ## Boot image parameters
 
+#CONFIG_EZYNQ_MIO_INOUT_7=          OUT # 'IN', 'BIDIR'
+CONFIG_EZYNQ_MIO_GPIO_OUT_7=       1 # Set selected GPIO output to 0/1
+
+
 
 #RBL header parameters
 CONFIG_EZYNQ_BOOT_USERDEF=           0x1234567 # will be saved in the file header

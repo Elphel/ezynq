@@ -224,6 +224,15 @@ inline void reset_peripherals(void)
         self._add_reg_writes(reg_sets)            
         self.cfile+='}\n\n'
 
+    def gpio_out (self, reg_sets):
+        self.sections.append('gpio_out')
+        self.cfile+='''/* Setup GPIO outputs */        
+inline void setup_gpio_outputs(void)
+{
+'''
+        self._add_reg_writes(reg_sets)            
+        self.cfile+='}\n\n'
+
     def uart_init (self, reg_sets):
         self.sections.append('uart_init')
         self.cfile+='''/* Initilize UART to output debug info during boot */        
@@ -499,9 +508,14 @@ int arch_cpu_init(void)
             self.cfile+='\tuart_wait_tx_fifo_empty(); /* u-boot may re-program UART differently, wait all is sent before getting there */\n'
 #uart_wait_tx_fifo_empty() - add if u-boot debug is on
         self._cp_led('LED_CHECKPOINT_12') # Before leaving lowlevel_init()
+
+#Setup GPIO outputs (after LED debug is over)        
+        if 'gpio_out' in self.sections:
+            self.cfile+='\tsetup_gpio_outputs(); /* Setup GPIO outputs */\n'
+        
 #LOCK_SLCR        
         if self.features.get_par_value_or_none('LOCK_SLCR') is False:
-            self.cfile+='/* Leaving SLCR registers UNLOCKED according setting of %s */\n'%self.features.get_par_confname('LOCK_SLCR')
+            self.cfile+='/* Leaving SLCR registers UNLOCKED according to setting of %s */\n'%self.features.get_par_confname('LOCK_SLCR')
         else:            
             self.cfile+='''/* Lock SLCR back after everything with it is done */
 \tlock_slcr();

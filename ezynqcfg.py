@@ -448,6 +448,13 @@ if raw_config_value('CONFIG_EZYNQ_SKIP_DDR', raw_configs) is None:
     reg_sets=ddr.ddr_start(reg_sets,False,False)
     segments.append({'TO':len(reg_sets),'RBL':False,'NAME':'DDR_START','TITLE':'DDR initialization start'})
 
+
+#Set GPIO output pins    
+reg_sets=mio_regs.setregs_gpio(reg_sets)
+segments.append({'TO':len(reg_sets),'RBL':False,'NAME':'GPIO','TITLE':'GPIO outputs setup'})
+
+#    def setregs_gpio(self,current_reg_sets,force=True):
+
 # Generate lock/unlock SLCR to be used in u-boot
 reg_sets_lock_unlock=clk.generate_lock_unlock()
 #print reg_sets[len(reg_sets)-1]
@@ -464,6 +471,7 @@ reg_sets_ddrc_sta=ddr.generate_command_queue_empty()
 reg_sets.extend (reg_sets_ddrc_sta) # just to be listed, not to be loaded
 segments.append({'TO':len(reg_sets),'RBL':False,'NAME':'DDRC_STA','TITLE':'register to test DDRC comamnd queue status - listed out of sequence'})
     
+
     
     
 #    def generate_led_off_on(self, mio_pin):
@@ -492,7 +500,10 @@ for index,segment in enumerate(segments):
 if html_file:
     for segment in segments:
         start=segment['FROM']
-        end=segment['TO']    
+        end=segment['TO']
+#        print segment['NAME'],start,end
+        if (start==end):
+            continue # nothing in this section    
         show_bit_fields= (MIO_HTML_MASK & 0x100,MIO_HTML_MASK & 0x800)[segment['NAME']=='MIO']
         show_comments=    MIO_HTML_MASK & 0x200
         filter_fields=not MIO_HTML_MASK & 0x400
@@ -573,6 +584,10 @@ if (args.lowlevel):
         u_boot.ddr_start      (reg_sets[segment_dict['DDR_START']['FROM']:segment_dict['DDR_START']['TO']])
     if 'DDRC_STA' in segment_dict: 
         u_boot.ddrc_wait_empty_queue(reg_sets[segment_dict['DDRC_STA']['FROM']:segment_dict['DDRC_STA']['TO']])
+    if ('GPIO' in segment_dict) and (segment_dict['GPIO']['TO']>segment_dict['GPIO']['FROM']): 
+        u_boot.gpio_out(reg_sets[segment_dict['GPIO']['FROM']:segment_dict['GPIO']['TO']])
+
+#segments.append({'TO':len(reg_sets),'RBL':False,'NAME':'GPIO','TITLE':'GPIO outputs setup'})
     
     u_boot.make_arch_cpu_init()
     u_boot.output_c_file(args.lowlevel)
