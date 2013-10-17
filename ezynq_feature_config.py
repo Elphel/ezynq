@@ -116,7 +116,10 @@ class EzynqFeatures:
                 try:
                     value= int(value,0)
                 except:
-                    raise Exception(self.ERRORS['ERR_NOT_AN_INTEGER']+': '+line['VALUE'] +' is not a valid INTEGER value for parameter '+ conf_name)
+                    if value == 'Y':
+                        value=1
+                    else:    
+                        raise Exception(self.ERRORS['ERR_NOT_AN_INTEGER']+': '+line['VALUE'] +' is not a valid INTEGER value for parameter '+ conf_name)
             elif (feature['TYPE']=='F'):
                 try:
                     value= float(value)

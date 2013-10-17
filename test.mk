@@ -89,6 +89,9 @@ CONFIG_EZYNQ_MIO_UART_1=48 #  8+4*N
 #CONFIG_EZYNQ_MIO_TPUI= 2 # TODO
 #the following will be applied after devices above
 
+#CONFIG_EZYNQ_UART_DEBUG_CHANNEL=y # testing "1" transformed to "y"
+CONFIG_EZYNQ_UART1_BAUD_RATE=115200 # Default is 115200, so fo 155200 this is not needed
+
 #each of the interfaces above can have "__<pinname>" to mix same pins from different groups
 #"__<pinname>=-1" - remove specified pin from the interface (do not use it)
 #just for testing
