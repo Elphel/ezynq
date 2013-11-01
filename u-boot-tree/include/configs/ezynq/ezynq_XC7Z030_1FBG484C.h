@@ -13,8 +13,8 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston,
  * MA 02111-1307 USA
  */
-#ifndef __CONFIG_XC7Z010_1CLG400_H
-#define __CONFIG_XC7Z010_1CLG400_H
+#ifndef __CONFIG_XC7Z030_1FBG484C_H
+#define __CONFIG_XC7Z030_1FBG484C_H
 
 /* datasheet data for specific speed grades */
 #define CONFIG_EZYNQ_CLK_DS_PLL_MAX_1_MHZ     1600.0 /* Maximal PLL clock frequency for speed grade 1 (MHz) */
@@ -70,4 +70,4 @@
 #define CONFIG_EZYNQ_DDR_CLOCK_3_PROPOGATION_DELAY 160
 
 
-#endif /* __CONFIG_XC7Z010_1CLG400_H */
+#endif /* __CONFIG_XC7Z030_1FBG484C_H */
