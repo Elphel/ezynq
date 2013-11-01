@@ -1,7 +1,8 @@
  /*
  * (C) Copyright 2013 Elphel, Inc.
  *
- * Configuration for ezynq for Micron MT41K256M16RE125 DDR3L memory
+ * Configuration for ezynq for Micron MT41K256M16HA107 DDR3L memory
+ * backward compatible to Micron MT41K256M16RE125 (used in microzed, will keep settings initially)
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License as
@@ -16,7 +17,7 @@
 #ifndef __CONFIG_EZYNQ_MT41K256M16RE125_H
 #define __CONFIG_EZYNQ_MT41K256M16RE125_H
 
-#define CONFIG_EZYNQ_DDR_DS_PARTNO           MT41K256M16RE125 /* Memory part number  (currently not used - derive some parameters later) */
+#define CONFIG_EZYNQ_DDR_DS_PARTNO           MT41K256M16HA107 /* Memory part number  (currently not used - derive some parameters later) */
 /* CONFIG_EZYNQ_DDR_DS_MEMORY_TYPE will be redefined to DDR3 as Zynq is slow with DDR3 */
 #define CONFIG_EZYNQ_DDR_DS_MEMORY_TYPE      DDR3L  /* DDR memory type: DDR3 (1.5V), DDR3L (1.35V), DDR2 (1.8V), LPDDR2 (1.2V) */
 

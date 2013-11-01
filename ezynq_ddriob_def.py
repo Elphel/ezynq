@@ -181,7 +181,7 @@ DDRIOB_DEFS={ #not all fields are defined currently
                   'nref_opt4':                {'r':(11,13),'d':0,  'c':'DCI Calibration mode - use values in the Calibration Table'},   #1
                   'nref_opt2':                {'r':( 8,10),'d':0,  'c':'DCI Calibration mode - use values in the Calibration Table'},
                   'nref_opt1':                {'r':( 6, 7),'d':0,  'c':'DCI Calibration mode - use values in the Calibration Table'},
-                  'vrn_out':                  {'r':( 5, 5),'d':1,  'c':'Reserved'},   #1
+                  'vrn_out':                  {'r':( 5, 5),'d':1,  'c':'1 for silicon 1,2; unused (0) for silicon 3'},   #1
                   'vrp_out':                  {'r':( 4, 4),'d':0,  'c':'Reserved'},
                   'vrn_tri':                  {'r':( 3, 3),'d':0,  'c':'Reserved'},
                   'vrp_tri':                  {'r':( 2, 2),'d':0,  'c':'Reserved'},

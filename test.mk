@@ -154,9 +154,9 @@ CONFIG_EZYNQ_DDR_BANK_ADDR_MAP =    10       # DRAM address mapping: number of c
 CONFIG_EZYNQ_DDR_ARB_PAGE_BANK =    N        # Enable Arbiter prioritization based on page/bank match              
 CONFIG_EZYNQ_DDR_ECC =              Disabled # Enable ECC for the DDR memory
 CONFIG_EZYNQ_DDR_BUS_WIDTH =        32       # SoC DDR bus width
-CONFIG_EZYNQ_DDR_TRAIN_WRITE_LEVEL =0        # Automatically train write leveling during initialization
-CONFIG_EZYNQ_DDR_TRAIN_READ_GATE =  0        # Automatically train read gate timing during initialization
-CONFIG_EZYNQ_DDR_TRAIN_DATA_EYE =   0        # Automatically train data eye during initialization
+CONFIG_EZYNQ_DDR_TRAIN_WRITE_LEVEL =1        # Automatically train write leveling during initialization
+CONFIG_EZYNQ_DDR_TRAIN_READ_GATE =  1        # Automatically train read gate timing during initialization
+CONFIG_EZYNQ_DDR_TRAIN_DATA_EYE =   1        # Automatically train data eye during initialization
 CONFIG_EZYNQ_DDR_CLOCK_STOP_EN =    0        # Enable clock stop
 CONFIG_EZYNQ_DDR_USE_INTERNAL_VREF =0        # Use internal Vref
 
@@ -207,9 +207,9 @@ CONFIG_EZYNQ_DDR_DS_T_RRD            10.0 # ACTIVATE-to-ACTIVATE minimal command
 CONFIG_EZYNQ_DDR_DS_MRD =             4   # MODE REGISTER SET command period (in tCK)
 CONFIG_EZYNQ_DDR_DS_MOD =            12   # MODE REGISTER SET update delay (in tCK)              
 CONFIG_EZYNQ_DDR_DS_T_MOD =          15.0 # MODE REGISTER SET update delay  (ns).   
-CONFIG_EZYNQ_DDR_DS_T_WLMRD =        40.0 # Write leveling : time to the first DQS rising edge (ns).
+CONFIG_EZYNQ_DDR_DS_WLMRD =          40   # Write leveling : time to the first DQS rising edge (cycles).
 CONFIG_EZYNQ_DDR_DS_CKE =             3   # CKE min pulse width (in tCK)              
-CONFIG_EZYNQ_DDR_DS_T_CKE =           7.5 # CKE min pulse width (ns). # 5.625   
+CONFIG_EZYNQ_DDR_DS_T_CKE =           5.625 # CKE min pulse width (ns). # 7.5   
 CONFIG_EZYNQ_DDR_DS_CKSRE =           5   # Keep valid clock after self refresh/power down entry (in tCK)              
 CONFIG_EZYNQ_DDR_DS_T_CKSRE =        10.0 # Keep valid clock after self refresh/power down entry (ns).   
 CONFIG_EZYNQ_DDR_DS_CKSRX =           5   # Valid clock before self refresh, power down or reset exit (in tCK)              

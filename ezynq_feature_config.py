@@ -121,10 +121,13 @@ class EzynqFeatures:
                     else:    
                         raise Exception(self.ERRORS['ERR_NOT_AN_INTEGER']+': '+line['VALUE'] +' is not a valid INTEGER value for parameter '+ conf_name)
             elif (feature['TYPE']=='F'):
-                try:
-                    value= float(value)
-                except:
-                    raise Exception(self.ERRORS['ERR_NOT_A_FLOAT']+': '+line['VALUE'] +' is not a valid FLOAT value for parameter '+ conf_name)
+                if value == 'Y':
+                    value=1.0
+                else:    
+                    try:
+                        value= float(value)
+                    except:
+                        raise Exception(self.ERRORS['ERR_NOT_A_FLOAT']+': '+line['VALUE'] +' is not a valid FLOAT value for parameter '+ conf_name)
             elif (feature['TYPE']=='B'):
                 if value in self.BOOLEANS[1]:
                     value=True
@@ -136,6 +139,8 @@ class EzynqFeatures:
                     raise Exception(self.ERRORS['ERR_NOT_A_BOOLEAN']+': '+line['VALUE'] +' is not a valid boolean value for parameter '+ conf_name+
                                     '. Valid for "True" are:'+str(self.BOOLEANS[1])+', for "False" - '+str(self.BOOLEANS[0]))
             elif (feature['TYPE']=='T'):
+                if value == 'Y':
+                    value='1'
                 pass #keep string value
             self.pars[name]=value
             self.defined.add(name)
@@ -313,8 +318,12 @@ class EzynqFeatures:
 #                print value
             if row_class=="odd": row_class="even" 
             else:                row_class="odd"
+            if (feature['TYPE']=='H') and isinstance(feature['DEFAULT'],int) and (feature['DEFAULT']>9):
+                sDefault=hex(feature['DEFAULT'])
+            else:            
+                sDefault=str(feature['DEFAULT'])
             html_file.write('<tr class="'+row_class+'"><td><b>'+feature['CONF_NAME']+'</b></td><td>'+str(value)+'</td><td>'+par_type+
-                            '</td><td>'+('-','Y')[feature['MANDATORY']]+'</td><td>'+origin+'</td><td>'+str(feature['DEFAULT'])+'</td><td>'+feature['DESCRIPTION']+'</td></tr>\n')
+                            '</td><td>'+('-','Y')[feature['MANDATORY']]+'</td><td>'+origin+'</td><td>'+sDefault+'</td><td>'+feature['DESCRIPTION']+'</td></tr>\n')
         html_file.write('</table>\n')
 
         

@@ -72,7 +72,7 @@ DDRC_DEFS={ #not all fields are defined currently
                   'reg_ddrc_rd2pre':                  {'r':(23,27),'d': 0x6,'c':'Read to precharge in the same bank'},               #0x4
                   'reg_ddrc_pad_pd':                  {'r':(20,22),'d': 0x0,'c':'non-DFI only: pads in/out powersave, in clocks'},   #0x0
                   'reg_ddrc_t_xp':                    {'r':(15,19),'d': 0x2,'c':'tXP - power down exit to any operation'},           #0x4
-                  'reg_ddrc_wr2rd':                   {'r':(10,13),'d': 0x16,'c':'tWTR - write -to -read (clocks)'},                 #0xe
+                  'reg_ddrc_wr2rd':                   {'r':(10,14),'d': 0x16,'c':'tWTR - write -to -read (clocks)'},                 #0xe
                   'reg_ddrc_rd2wr':                   {'r':( 5, 9),'d': 0x8,'c':'tRTW - read -to -write (clocks)'},                  #0x7
                   'reg_ddrc_write_latency':           {'r':( 0, 4),'d': 0x4,'c':'one clock less than actual DDR write latency'}}},   #0x5
     'dram_param_reg3':         {'OFFS': 0x020,'DFLT':0x250882D0,'RW':'M','FIELDS':{ #272872d0
@@ -82,7 +82,7 @@ DDRC_DEFS={ #not all fields are defined currently
                   'reg_ddrc_read_latency':            {'r':(24,28),'d': 0x5,'c':'Read Latency, clocks'},                             # 0x7 
                   'reg_ddrc_en_dfi_dram_clk_disable': {'r':(23,23),'d': 0,'c':'Enables clock disable...'}, 
                   'reg_ddrc_mobile':                  {'r':(22,22),'d': 0,'c':'0 - DDR2/DDR3, 1 - LPDDR2'},                           
-                  'reg_ddrc_sdram':                   {'r':(21,21),'d': 0,'c':'reserved'},                                           # 0x1
+                  'reg_ddrc_sdram':                   {'r':(21,21),'d': 0,'c':'silicon 1,2: 1 - SDRAM, 0  - non-SDRAM. Silicon 3: 0'},# 0x1
                   'reg_ddrc_refresh_to_x32':          {'r':(16,20),'d': 0x8,'c':'Dynamic, "speculative refresh"'}, 
                   'reg_ddrc_t_rp':                    {'r':(12,15),'d': 0x8,'c':'tRP'},                                              # 0x7
                   'reg_ddrc_refresh_margin':          {'r':( 8,11),'d': 0x2,'c':'do refresh this cycles before timer expires'},
@@ -152,17 +152,17 @@ DDRC_DEFS={ #not all fields are defined currently
                   'reg_ddrc_addrmap_row_b0':          {'r':( 0, 3),'d':0x5,'c':'Selects address bits for row. addr. bit 0,  Valid 0..11, int. base=9'}}},                                          # 0x6
 
     'dram_odt_reg':            {'OFFS': 0x048,'DFLT':0x00000249,'RW':'RW','FIELDS':{  # 0x3c248
-                  'reg_ddrc_rank3_wr_odt':            {'r':(29,27),'d':0,'c':'reserved'},
+                  'reg_ddrc_rank3_wr_odt':            {'r':(29,27),'d':0,'c':'reserved'}, 
                   'reg_ddrc_rank3_rd_odt':            {'r':(24,26),'d':0,'c':'reserved'},  
                   'reg_ddrc_rank2_wr_odt':            {'r':(21,23),'d':0,'c':'reserved'},  
                   'reg_ddrc_rank2_rd_odt':            {'r':(18,20),'d':0,'c':'reserved'},  
                   'reg_phy_idle_local_odt':           {'r':(16,17),'d':0,'c':'2-bit drive ODT when OE is inactive and no read (power save)'}, # 0x3  
                   'reg_phy_wr_local_odt':             {'r':(14,15),'d':0,'c':'ODT strength during write leveling'},  #0x3 
                   'reg_phy_rd_local_odt':             {'r':(12,13),'d':0,'c':'ODT strength during read'},  
-                  'reg_ddrc_rank1_wr_odt':            {'r':( 9,11),'d':0x1,'c':'reserved'},  
-                  'reg_ddrc_rank1_rd_odt':            {'r':( 6, 8),'d':0x1,'c':'reserved'},  
-                  'reg_ddrc_rank0_wr_odt':            {'r':( 3, 5),'d':0x1,'c':'reserved'},   
-                  'reg_ddrc_rank0_rd_odt':            {'r':( 0, 2),'d':0x1,'c':'reserved'}}}, # 0x0
+                  'reg_ddrc_rank1_wr_odt':            {'r':( 9,11),'d':0x1,'c':'reserved, unused in silicon 3'},  
+                  'reg_ddrc_rank1_rd_odt':            {'r':( 6, 8),'d':0x1,'c':'reserved, unused in silicon 3'},  
+                  'reg_ddrc_rank0_wr_odt':            {'r':( 3, 5),'d':0x1,'c':'reserved, unused in silicon 3'},   
+                  'reg_ddrc_rank0_rd_odt':            {'r':( 0, 2),'d':0x0,'c':'reserved, unused in silicon 3'}}}, # 0x0
     'phy_dbg_reg':             {'OFFS': 0x04C,'DFLT':0x00000000,'RW':'R','FIELDS':{
                   'phy_reg_bc_fifo_re3':              {'r':(19,19),'d':0,'m':'R','c':'Debug read capture FIFO read enable for data slice 3'},   
                   'phy_reg_bc_fifo_we3':              {'r':(18,18),'d':0,'m':'R','c':'Debug read capture FIFO write enable for data slice 3'},   
@@ -202,8 +202,8 @@ DDRC_DEFS={ #not all fields are defined currently
                   'ddrc_reg_operating_mode':          {'r':( 0, 2),'d':0,'m':'R','c':'DDRC init, 1 - normal, 2 - power down, 3 - self refresh, >=4 - deep power down LPDDR2'}}}, 
     'dll_calib':               {'OFFS': 0x058,'DFLT':0x00000101,'RW':'RW','FIELDS':{ # 0x101
                   'reg_ddrc_dis_dll_calib':           {'r':(16,16),'d':0,'c':'Dynamic: 1- disable DLL_calib, 0 - issue DLL_calib periodically'},    
-                  'reg_ddrc_dll_calib_to_max_x1024':  {'r':( 8,15),'d':0x1,'c':'reserved'},      
-                  'reg_ddrc_dll_calib_to_min_x1024':  {'r':( 0, 7),'d':0x1,'c':'reserved'}}},
+                  'reg_ddrc_dll_calib_to_max_x1024':  {'r':( 8,15),'d':0x1,'c':'reserved, unused in silicon 3'},      
+                  'reg_ddrc_dll_calib_to_min_x1024':  {'r':( 0, 7),'d':0x1,'c':'reserved, unused in silicon 3'}}},
     'odt_delay_hold':          {'OFFS': 0x05C,'DFLT':0x00000023,'RW':'RW','FIELDS':{ # 0x5003
                   'reg_ddrc_wr_odt_hold':             {'r':(12,15),'d':0,'c':'(Cycles to hold ODT for write command-1). For burst4 - 2, for burst8 - 4'},                   # 0x5
                   'reg_ddrc_rd_odt_hold':             {'r':( 8,11),'d':0,'c':'unused'},    
@@ -486,59 +486,68 @@ DDRC_DEFS={ #not all fields are defined currently
 # Slice1: fifo_we_ratio_slice_1[10:0] = {Reg_6B[10:9],Reg_6A[18:10]}
 # Slice2: fifo_we_ratio_slice_2[10:0] = {Reg_6C[11:9],Reg_6B[18:11]}
 # Slice3: fifo_we_ratio_slice_3[10:0] = {phy_reg_rdlvl_fifowein_ratio_slice3_msb,Reg_6C[18:12]}
+
+#seems that Reg_6C is actually Reg_6D, Reg_6B should be Reg_6C, so:
+
+# Slice 0: fifo_we_ratio_slice_0[10:0] = {Reg_6A[9],Reg_69[18:9]}
+# Slice1: fifo_we_ratio_slice_1[10:0] = {Reg_6C[10:9],Reg_6A[18:10]}
+# Slice2: fifo_we_ratio_slice_2[10:0] = {Reg_6D[11:9],Reg_6C[18:11]}
+# Slice3: fifo_we_ratio_slice_3[10:0] = {phy_reg_rdlvl_fifowein_ratio_slice3_msb,Reg_6D[18:12]}
+
+
     'reg_69':                  {'OFFS': 0x1A4,'DFLT':0x000F0000,'RW':'R','COMMENTS':'Training results for data slice 0','FIELDS':{
-                  'phy_reg_status_fifo_w e_slave_dll_value': {'r':(20,28),'d':0,    'm':'R','c':'Delay of FIFO WE slave DLL'},      
-                  'phy_reg_rdlvl_fifowein_ratio':            {'r':( 9,19),'d':0x780,'m':'R','c':'Ratio by Read Gate training FSM'},      
-                  'reserved':                                {'r':( 0, 8),'d':0,    'm':'R','c':'reserved'}}},
-    'reg_6a':                  {'OFFS': 0x1A8,'DFLT':0x000F0000,'RW':'R','FIELDS':{
-                  'phy_reg_status_fifo_w e_slave_dll_value': {'r':(20,28),'d':0,    'm':'R','c':'Delay of FIFO WE slave DLL'},      
-                  'phy_reg_rdlvl_fifowein_ratio':            {'r':( 9,19),'d':0x780,'m':'R','c':'Ratio by Read Gate training FSM'},      
-                  'reserved':                                {'r':( 0, 8),'d':0,    'm':'R','c':'reserved'}}},
-    'reg_6b':                  {'OFFS': 0x1AC,'DFLT':0x000F0000,'RW':'R','FIELDS':{ #may be different bits/default values
-                  'phy_reg_status_fifo_w e_slave_dll_value': {'r':(20,28),'d':0,    'm':'R','c':'Delay of FIFO WE slave DLL'},      
-                  'phy_reg_rdlvl_fifowein_ratio':            {'r':( 9,19),'d':0x780,'m':'R','c':'Ratio by Read Gate training FSM'},      
-                  'reserved':                                {'r':( 0, 8),'d':0,    'm':'R','c':'reserved'}}},
+                  'phy_reg_status_fifo_we_slave_dll_value': {'r':(20,28),'d':0,    'm':'R','c':'Delay of FIFO WE slave DLL'},      
+                  'phy_reg_rdlvl_fifowein_ratio':           {'r':( 9,19),'d':0x780,'m':'R','c':'Ratio by Read Gate training FSM'},      
+                  'reserved':                               {'r':( 0, 8),'d':0,    'm':'R','c':'reserved'}}},
+    'reg_6a':                  {'OFFS': 0x1A8,'DFLT':0x000F0000,'RW':'R','COMMENTS':'Training results for data slice 1','FIELDS':{
+                  'phy_reg_status_fifo_we_slave_dll_value': {'r':(20,28),'d':0,    'm':'R','c':'Delay of FIFO WE slave DLL'},      
+                  'phy_reg_rdlvl_fifowein_ratio':           {'r':( 9,19),'d':0x780,'m':'R','c':'Ratio by Read Gate training FSM'},      
+                  'reserved':                               {'r':( 0, 8),'d':0,    'm':'R','c':'reserved'}}},
+#      'reg_6b':                  {'OFFS': 0x1AC,'DFLT':0x000F0000,'RW':'R','FIELDS':{ #may be different bits/default values
+#                    'phy_reg_status_fifo_we_slave_dll_value': {'r':(20,28),'d':0,    'm':'R','c':'Delay of FIFO WE slave DLL'},      
+#                    'phy_reg_rdlvl_fifowein_ratio':           {'r':( 9,19),'d':0x780,'m':'R','c':'Ratio by Read Gate training FSM'},      
+#                    'reserved':                               {'r':( 0, 8),'d':0,    'm':'R','c':'reserved'}}},
 #     u32 reserved8[1];              /* 0x1AC */
     'reg_6c':                  {'OFFS': 0x1B0,'DFLT':0x000F0000,'RW':'R','COMMENTS':'Training results for data slice 2','FIELDS':{
                   'phy_reg_status_fifo_we_slave_dll_value':{'r':(20,28),'d':0,    'm':'R','c':'Delay of FIFO WE slave DLL'},      
                   'phy_reg_rdlvl_fifowein_ratio':          {'r':( 9,19),'d':0x780,'m':'R','c':'Ratio by Read Gate training FSM'},      
                   'phy_reg_bist_err':                      {'r':( 0, 8),'d':0,    'm':'R','c':'Mismatch error from BIST checker, 1 bit per data slice'}}},
-    'reg_6d':                  {'OFFS': 0x1B4,'DFLT':0x000F0000,'RW':'R','FIELDS':{
+    'reg_6d':                  {'OFFS': 0x1B4,'DFLT':0x000F0000,'RW':'R','COMMENTS':'Training results for data slice 3','FIELDS':{
                   'phy_reg_status_fifo_we_slave_dll_value':{'r':(20,28),'d':0,    'm':'R','c':'Delay of FIFO WE slave DLL'},      
                   'phy_reg_rdlvl_fifowein_ratio':          {'r':( 9,19),'d':0x780,'m':'R','c':'Ratio by Read Gate training FSM'},      
                   'phy_reg_bist_err':                      {'r':( 0, 8),'d':0,    'm':'R','c':'Mismatch error from BIST checker, 1 bit per data slice'}}},
     'reg_6e':                  {'OFFS': 0x1B8,'RW':'R','COMMENTS':'Training results for data slice 0','FIELDS':{
-                  'phy_reg_status_fifo_we_slave_dll_value':{'r':(20,29),'d':0, 'm':'R','c':'Ratio generated by Read Data Eye training'},      
-                  'phy_reg_rdlvl_fifowein_ratio':          {'r':(10,19),'d':0, 'm':'R','c':'Ratio generated by Write Leveling for write data'},      
-                  'phy_reg_bist_err':                      {'r':( 0, 9),'d':0, 'm':'R','c':'Ratio generated by Write Leveling for write DQS'}}},
+                  'phy_reg_rdlvl_dqs_ratio':               {'r':(20,29),'d':0, 'm':'R','c':'Ratio generated by Read Data Eye training'},      
+                  'phy_reg_wrlvl_dq_ratio':                {'r':(10,19),'d':0, 'm':'R','c':'Ratio generated by Write Leveling for write data'},      
+                  'phy_reg_wrlvl_dqs_ratio':               {'r':( 0, 9),'d':0, 'm':'R','c':'Ratio generated by Write Leveling for write DQS'}}},
     'reg_6f':                  {'OFFS': 0x1BC,'RW':'R','COMMENTS':'Training results for data slice 1','FIELDS':{
-                  'phy_reg_status_fifo_we_slave_dll_value':{'r':(20,29),'d':0, 'm':'R','c':'Ratio generated by Read Data Eye training'},      
-                  'phy_reg_rdlvl_fifowein_ratio':          {'r':(10,19),'d':0, 'm':'R','c':'Ratio generated by Write Leveling for write data'},      
-                  'phy_reg_bist_err':                      {'r':( 0, 9),'d':0, 'm':'R','c':'Ratio generated by Write Leveling for write DQS'}}},
+                  'phy_reg_rdlvl_dqs_ratio':               {'r':(20,29),'d':0, 'm':'R','c':'Ratio generated by Read Data Eye training'},      
+                  'phy_reg_wrlvl_dq_ratio':                {'r':(10,19),'d':0, 'm':'R','c':'Ratio generated by Write Leveling for write data'},      
+                  'phy_reg_wrlvl_dqs_ratio':               {'r':( 0, 9),'d':0, 'm':'R','c':'Ratio generated by Write Leveling for write DQS'}}},
     'reg_70':                  {'OFFS': 0x1C0,'RW':'R','COMMENTS':'Training results for data slice 2','FIELDS':{
-                  'phy_reg_status_fifo_we_slave_dll_value':{'r':(20,29),'d':0, 'm':'R','c':'Ratio generated by Read Data Eye training'},      
-                  'phy_reg_rdlvl_fifowein_ratio':          {'r':(10,19),'d':0, 'm':'R','c':'Ratio generated by Write Leveling for write data'},      
-                  'phy_reg_bist_err':                      {'r':( 0, 9),'d':0, 'm':'R','c':'Ratio generated by Write Leveling for write DQS'}}},
+                  'phy_reg_rdlvl_dqs_ratio':               {'r':(20,29),'d':0, 'm':'R','c':'Ratio generated by Read Data Eye training'},      
+                  'phy_reg_wrlvl_dq_ratio':                {'r':(10,19),'d':0, 'm':'R','c':'Ratio generated by Write Leveling for write data'},      
+                  'phy_reg_wrlvl_dqs_ratio':               {'r':( 0, 9),'d':0, 'm':'R','c':'Ratio generated by Write Leveling for write DQS'}}},
     'reg_71':                  {'OFFS': 0x1C4,'RW':'R','COMMENTS':'Training results for data slice 3','FIELDS':{
-                  'phy_reg_status_fifo_we_slave_dll_value':{'r':(20,29),'d':0, 'm':'R','c':'Ratio generated by Read Data Eye training'},      
-                  'phy_reg_rdlvl_fifowein_ratio':          {'r':(10,19),'d':0, 'm':'R','c':'Ratio generated by Write Leveling for write data'},      
-                  'phy_reg_bist_err':                      {'r':( 0, 9),'d':0, 'm':'R','c':'Ratio generated by Write Leveling for write DQS'}}},
+                  'phy_reg_rdlvl_dqs_ratio':               {'r':(20,29),'d':0, 'm':'R','c':'Ratio generated by Read Data Eye training'},      
+                  'phy_reg_wrlvl_dq_ratio':                {'r':(10,19),'d':0, 'm':'R','c':'Ratio generated by Write Leveling for write data'},      
+                  'phy_reg_wrlvl_dqs_ratio':               {'r':( 0, 9),'d':0, 'm':'R','c':'Ratio generated by Write Leveling for write DQS'}}},
 #     u32 reserved9[1];              /* 0x1C8 */
     'phy_dll_sts0':            {'OFFS': 0x1CC,'DFLT':0x00000000,'RW':'R','COMMENTS':'Slave DLL results for data slice 0','FIELDS':{
                   'phy_reg_status_wr_dqs_slave_dll_value':  {'r':(18,26),'d':0, 'm':'R','c':'Delay for write DQS slave DLL'},      
-                  'phy_reg_status_wr_dat a_slave_dll_value':{'r':( 9,17),'d':0, 'm':'R','c':'Delay for write data slave DLL'},      
+                  'phy_reg_status_wr_data_slave_dll_value': {'r':( 9,17),'d':0, 'm':'R','c':'Delay for write data slave DLL'},      
                   'phy_reg_status_rd_dqs_slave_dll_value':  {'r':( 0, 8),'d':0, 'm':'R','c':'Delay for read data slave DLL'}}},
     'phy_dll_sts1':            {'OFFS': 0x1D0,'DFLT':0x00000000,'RW':'R','COMMENTS':'Slave DLL results for data slice 1','FIELDS':{
                   'phy_reg_status_wr_dqs_slave_dll_value':  {'r':(18,26),'d':0, 'm':'R','c':'Delay for write DQS slave DLL'},      
-                  'phy_reg_status_wr_dat a_slave_dll_value':{'r':( 9,17),'d':0, 'm':'R','c':'Delay for write data slave DLL'},      
+                  'phy_reg_status_wr_data_slave_dll_value': {'r':( 9,17),'d':0, 'm':'R','c':'Delay for write data slave DLL'},      
                   'phy_reg_status_rd_dqs_slave_dll_value':  {'r':( 0, 8),'d':0, 'm':'R','c':'Delay for read data slave DLL'}}},
     'phy_dll_sts2':            {'OFFS': 0x1D4,'DFLT':0x00000000,'RW':'R','COMMENTS':'Slave DLL results for data slice 2','FIELDS':{
                   'phy_reg_status_wr_dqs_slave_dll_value':  {'r':(18,26),'d':0, 'm':'R','c':'Delay for write DQS slave DLL'},      
-                  'phy_reg_status_wr_dat a_slave_dll_value':{'r':( 9,17),'d':0, 'm':'R','c':'Delay for write data slave DLL'},      
+                  'phy_reg_status_wr_data_slave_dll_value': {'r':( 9,17),'d':0, 'm':'R','c':'Delay for write data slave DLL'},      
                   'phy_reg_status_rd_dqs_slave_dll_value':  {'r':( 0, 8),'d':0, 'm':'R','c':'Delay for read data slave DLL'}}},
     'phy_dll_sts3':            {'OFFS': 0x1D8,'DFLT':0x00000000,'RW':'R','COMMENTS':'Slave DLL results for data slice 3','FIELDS':{
                   'phy_reg_status_wr_dqs_slave_dll_value':  {'r':(18,26),'d':0, 'm':'R','c':'Delay for write DQS slave DLL'},      
-                  'phy_reg_status_wr_dat a_slave_dll_value':{'r':( 9,17),'d':0, 'm':'R','c':'Delay for write data slave DLL'},      
+                  'phy_reg_status_wr_data_slave_dll_value': {'r':( 9,17),'d':0, 'm':'R','c':'Delay for write data slave DLL'},      
                   'phy_reg_status_rd_dqs_slave_dll_value':  {'r':( 0, 8),'d':0, 'm':'R','c':'Delay for read data slave DLL'}}},
 #     u32 reserved10[1];             /* 0x1DC */
     'dll_lock_sts':            {'OFFS': 0x1E0,'DFLT':0x00000000,'RW':'R','COMMENTS':'DLL lock status','FIELDS':{
@@ -553,6 +562,7 @@ DDRC_DEFS={ #not all fields are defined currently
                   'phy_reg_status_phy_ctrl_dll_lock':        {'r':(19,19),'d':0, 'm':'R','c':'PHY control Master DLL locked'},      
                   'phy_reg_status_of_out_delay_value':       {'r':(10,18),       'm':'R','c':'Master DLL output filter output: 10:11 - fine, 12:18 - coarse'},      
                   'phy_reg_status_of_in_delay_value':        {'r':( 0, 9),       'm':'R','c':'Master DLL output filter input: 10:11 - fine, 12:18 - coarse'}}},
+           
     'phy_ctrl_sts_reg2':       {'OFFS': 0x1E8,'DFLT':0x00000000,'RW':'R','COMMENTS':'PHY control status 2','FIELDS':{
                   'phy_reg_status_phy_ctrl_slave_dll_value':  {'r':(18,26),'d':0, 'm':'R','c':'Read DQS slave DLL input'},      
                   'reserved':                                 {'r':( 9,17),'d':0, 'm':'R','c':'reserved'},      

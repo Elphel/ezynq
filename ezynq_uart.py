@@ -106,7 +106,8 @@ class EzynqUART:
         uart_extra_set=  ezynq_registers.EzynqRegisters(self.UART_DEFS,self.channel,[])
         # wait transmitter FIFO empty (use before proceeding to risky of reboot code )
         uart_extra_set.wait_reg_field_values('channel_sts',  # Channel status
-                                               (('tempty',    1)), True) # Transmitter FIFO empty (continuous)
+                                               (('tempty',    1),
+                                                ('tactive',   0)), True) # Transmitter FIFO empty (continuous)
         uart_extra_set.flush() # to separate codes, not to combine in one write
         # wait transmitter FIFO not full (OK to  put more characters)
         uart_extra_set.wait_reg_field_values('channel_sts',  # Channel status

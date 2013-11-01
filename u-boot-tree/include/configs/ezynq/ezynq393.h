@@ -1,7 +1,7 @@
 /*
  * (C) Copyright 2013 Elphel, Inc.
  *
- * Configuration for Microzed RBL header
+ * Configuration for Elphel393 hardware initialization (pre-U-Boot)
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License as
@@ -17,6 +17,7 @@
 #define __CONFIG_EZYNQ_H
 #define CONFIG_EZYNQ
 
+
 /* Boot image cionfiguration parameters */
 
 #define CONFIG_EZYNQ_BOOT_USERDEF           0x1010000 /*  0x1234567  will be saved in the file header */
@@ -26,15 +27,24 @@
 #define CONFIG_EZYNQ_RESERVED44             0         /*   documented as 0, but actually 1 */
 
 /* Boot debug setup */
-#define CONFIG_EZYNQ_BOOT_DEBUG            /* configure UARTx and send register dumps there.*/
+#define CONFIG_EZYNQ_BOOT_DEBUG        Y    /* configure UARTx and send register dumps there.*/
 #define CONFIG_EZYNQ_LOCK_SLCR         OFF /* Lock SLCR registers when all is done. */
-#define CONFIG_EZYNQ_LED_DEBUG          47 /* toggle LED during boot */
-#define CONFIG_EZYNQ_UART_DEBUG_USE_LED    /* turn on/off LED while waiting for transmit FIFO not full */
 
 #define CONFIG_EZYNQ_DUMP_SLCR_EARLY       /* Dump SLCR registers as soon as UART is initialized (depends on CONFIG_EZYNQ_BOOT_DEBUG) */
 #define CONFIG_EZYNQ_DUMP_DDRC_EARLY       /* Dump DDRC registers as soon as UART is initialized (depends on CONFIG_EZYNQ_BOOT_DEBUG) */
 #define CONFIG_EZYNQ_DUMP_SLCR_LATE        /* Dump SLCR registers after DDR memory is initialized (depends on CONFIG_EZYNQ_BOOT_DEBUG) */
 #define CONFIG_EZYNQ_DUMP_DDRC_LATE        /* Dump DDRC registers after DDR memory is initialized (depends on CONFIG_EZYNQ_BOOT_DEBUG) */
+#define CONFIG_EZYNQ_DUMP_TRAINING_EARLY N  /* Training results registers before DDRC initialization */
+#define CONFIG_EZYNQ_DUMP_TRAINING_LATE  Y  /* Training results registers after DDRC initialization */
+#define CONFIG_EZYNQ_DUMP_OCM              /* Dump (some of) OCM data */
+#define CONFIG_EZYNQ_DUMP_DDR              /* Dump (some of) DDR data */
+#if 0
+#define CONFIG_EZYNQ_DUMP_OCM_LOW        0x0   /* OCM dump start (deafault 0)     */
+#define CONFIG_EZYNQ_DUMP_OCM_HIGH     0x2ff   /* OCM dump end   (deafault 0x2ff, full - 0x2ffff) */
+
+#define CONFIG_EZYNQ_DUMP_DDR_LOW  0x4000000  /* DDR dump start (deafault 0x4000000, start of the OCM copy) */
+#define CONFIG_EZYNQ_DUMP_DDR_HIGH 0x40002ff  /* DDR dump end   (deafault 0x40002ff) */
+#endif
 /* Turning LED on/off at different stages of the boot process. Requires CONFIG_EZYNQ_LED_DEBUG and CONFIG_EZYNQ_BOOT_DEBUG to be set
    If defined, each can be 0,1, ON or OFF */
 #define CONFIG_EZYNQ_LED_CHECKPOINT_1   ON  /* in RBL setup, as soon as MIO is programmed */
@@ -51,24 +61,29 @@
 #define CONFIG_EZYNQ_LED_CHECKPOINT_12  OFF /* Before leaving lowlevel_init() */
 /* MIO configuration */
 #define CONFIG_EZYNQ_OCM                         /* not used */
-#define CONFIG_EZYNQ_MIO_0_VOLT           3.3
+#define CONFIG_EZYNQ_MIO_0_VOLT           1.8
 #define CONFIG_EZYNQ_MIO_1_VOLT           1.8
-#define CONFIG_EZYNQ_QUADSPI_0__SLOW
+
+#define CONFIG_EZYNQ_NAND__SLOW
+
 #define CONFIG_EZYNQ_MIO_ETH_0__SLOW
-#define CONFIG_EZYNQ_MIO_ETH_MDIO__SLOW
+/*#define CONFIG_EZYNQ_MIO_ETH_MDIO__SLOW  */
 #define CONFIG_EZYNQ_MIO_USB_0__SLOW
 #define CONFIG_EZYNQ_MIO_USB_0__PULLUP
+
 #define CONFIG_EZYNQ_MIO_SDIO_0           40  /* 16,28,40 */
 #define CONFIG_EZYNQ_MIO_SDIO_0__SLOW
 #define CONFIG_EZYNQ_MIO_SDIO_0__PULLUP
-#define CONFIG_EZYNQ_MIO_SDCD_0           46  /* any but 7,8  */
+
+#define CONFIG_EZYNQ_MIO_SDCD_0           48  /* any but 7,8  */
 #define CONFIG_EZYNQ_MIO_SDCD_0__PULLUP
-#define CONFIG_EZYNQ_MIO_SDWP_0           50  /* #any but 7,8  */
-#define CONFIG_EZYNQ_MIO_SDWP_0__PULLUP
-#define CONFIG_EZYNQ_MIO_UART_1           48  /* #  8+4*N  */
-/* LED will be OFF */
-#define CONFIG_EZYNQ_MIO_INOUT_47   OUT       /* Make output, do not set data. Will be set after debug will be over */
-#define CONFIG_EZYNQ_MIO_GPIO_OUT_7        1  /* Set selected GPIO output to 0/1 */
+
+#define CONFIG_EZYNQ_MIO_I2C_0            50
+#define CONFIG_EZYNQ_MIO_I2C_0__PULLUP
+
+
+#define CONFIG_EZYNQ_MIO_UART_0           46  /* #  8+4*N  */
+
 
 /*
 Red LED - pullup, input - on,
@@ -193,11 +208,99 @@ output (or undefined) -   off
 #define CONFIG_EZYNQ_DDR_CLOCK_1_LENGTH_MM 0
 #define CONFIG_EZYNQ_DDR_CLOCK_2_LENGTH_MM 0
 #define CONFIG_EZYNQ_DDR_CLOCK_3_LENGTH_MM 0
+
+/* Below will overwrite calculated values (not yet calculated) */
+#if 1 /*testing old version */
+/* LED will be ON */
+  #define CONFIG_EZYNQ_MIO_INOUT_53      OUT     /* Make output, do not set data. Will be set after debug will be over */
+  #define CONFIG_EZYNQ_MIO_GPIO_OUT_53     0     /* Set selected GPIO output to 0/1 */
+  #undef  CONFIG_EZYNQ_DDR_DS_CKE
+  #define CONFIG_EZYNQ_DDR_DS_CKE               4   /* CKE min pulse width (in tCK) */
+
+//  #undef  CONFIG_EZYNQ_DDR_DS_WLMRD
+//  #define CONFIG_EZYNQ_DDR_DS_WLMRD            22   /* Write leveling : time to the first DQS rising edge (cycles). */
+
+
+
+  #define CONFIG_EZYNQ_LED_DEBUG          53     /* toggle LED during boot - temporary, normal use - MDIO_D */
+  #define CONFIG_EZYNQ_UART_DEBUG_USE_LED        /* turn on/off LED while waiting for transmit FIFO not full */
+
+  #define CONFIG_EZYNQ_SILICON               3 /* 3 */        /* Silicon revision */
+  #define CONFIG_EZYNQ_PHY_WRLV_INIT_RATIO_0 0x0 /* Initial ratio for write leveling FSM, slice 0 */
+  #define CONFIG_EZYNQ_PHY_WRLV_INIT_RATIO_1 0x0 /* Initial ratio for write leveling FSM, slice 1 */
+  #define CONFIG_EZYNQ_PHY_WRLV_INIT_RATIO_2 0x0 /* Initial ratio for write leveling FSM, slice 2 */
+  #define CONFIG_EZYNQ_PHY_WRLV_INIT_RATIO_3 0x0 /* Initial ratio for write leveling FSM, slice 3 */
+
+  #define CONFIG_EZYNQ_PHY_GTLV_INIT_RATIO_0 0x0 /* Initial ratio for gate leveling FSM, slice 0 */
+  #define CONFIG_EZYNQ_PHY_GTLV_INIT_RATIO_1 0x0 /* Initial ratio for gate leveling FSM, slice 1 */
+  #define CONFIG_EZYNQ_PHY_GTLV_INIT_RATIO_2 0x0 /* Initial ratio for gate leveling FSM, slice 2 */
+  #define CONFIG_EZYNQ_PHY_GTLV_INIT_RATIO_3 0x0 /* Initial ratio for gate leveling FSM, slice 3 */
+
+  #define CONFIG_EZYNQ_PHY_RD_DQS_SLAVE_RATIO_0 0x35/* Ratio for read DQS slave DLL (256 - clock period), slice 0 */
+  #define CONFIG_EZYNQ_PHY_RD_DQS_SLAVE_RATIO_1 0x35/* Ratio for read DQS slave DLL (256 - clock period), slice 1 */
+  #define CONFIG_EZYNQ_PHY_RD_DQS_SLAVE_RATIO_2 0x35/* Ratio for read DQS slave DLL (256 - clock period), slice 2 */
+  #define CONFIG_EZYNQ_PHY_RD_DQS_SLAVE_RATIO_3 0x35/* Ratio for read DQS slave DLL (256 - clock period), slice 3 */
+
+  #define CONFIG_EZYNQ_PHY_WR_DQS_SLAVE_RATIO_0 0x0 /* Ratio for write DQS slave DLL (256 - clock period), slice 0 */
+  #define CONFIG_EZYNQ_PHY_WR_DQS_SLAVE_RATIO_1 0x0 /* Ratio for write DQS slave DLL (256 - clock period), slice 1 */
+  #define CONFIG_EZYNQ_PHY_WR_DQS_SLAVE_RATIO_2 0x0 /* Ratio for write DQS slave DLL (256 - clock period), slice 2 */
+  #define CONFIG_EZYNQ_PHY_WR_DQS_SLAVE_RATIO_3 0x0 /* Ratio for write DQS slave DLL (256 - clock period), slice 3 */
+
+  #define CONFIG_EZYNQ_PHY_FIFO_WE_SLAVE_RATIO_0 0x35 /*Ratio for FIFO WE slave DLL (256 - clock period), slice 0 */
+  #define CONFIG_EZYNQ_PHY_FIFO_WE_SLAVE_RATIO_1 0x35 /*Ratio for FIFO WE slave DLL (256 - clock period), slice 0 */
+  #define CONFIG_EZYNQ_PHY_FIFO_WE_SLAVE_RATIO_2 0x35 /*Ratio for FIFO WE slave DLL (256 - clock period), slice 0 */
+  #define CONFIG_EZYNQ_PHY_FIFO_WE_SLAVE_RATIO_3 0x35 /*Ratio for FIFO WE slave DLL (256 - clock period), slice 0 */
+
+  #define CONFIG_EZYNQ_PHY_PHY_WR_DATA_SLAVE_RATIO_0 0x40 /* Ratio for write data slave DLL (256 - clock period), slice 0 */
+  #define CONFIG_EZYNQ_PHY_PHY_WR_DATA_SLAVE_RATIO_1 0x40 /* Ratio for write data slave DLL (256 - clock period), slice 1 */
+  #define CONFIG_EZYNQ_PHY_PHY_WR_DATA_SLAVE_RATIO_2 0x40 /* Ratio for write data slave DLL (256 - clock period), slice 2 */
+  #define CONFIG_EZYNQ_PHY_PHY_WR_DATA_SLAVE_RATIO_3 0x40 /* Ratio for write data slave DLL (256 - clock period), slice 3 */
+
+  #define CONFIG_EZYNQ_PHY_PHY_CTRL_SLAVE_RATIO 0x80     /* Ratio for address/command (256 - clock period) */
+  #define CONFIG_EZYNQ_PHY_INVERT_CLK             N     /* RInvert CLK out (if clk can arrive to DRAM chip earlier/at the same time as DQS) */
+
+#else
+  #define CONFIG_EZYNQ_MIO_ETH_MDIO__SLOW 
+
+  #define CONFIG_EZYNQ_SILICON               3 /* 3 */        /* Silicon revision */
+  #define CONFIG_EZYNQ_PHY_WRLV_INIT_RATIO_0 0x4 /* Initial ratio for write leveling FSM, slice 0 */
+  #define CONFIG_EZYNQ_PHY_WRLV_INIT_RATIO_1 0x0 /* Initial ratio for write leveling FSM, slice 1 */
+  #define CONFIG_EZYNQ_PHY_WRLV_INIT_RATIO_2 0x5 /* Initial ratio for write leveling FSM, slice 2 */
+  #define CONFIG_EZYNQ_PHY_WRLV_INIT_RATIO_3 0x7 /* Initial ratio for write leveling FSM, slice 3 */
+
+  #define CONFIG_EZYNQ_PHY_GTLV_INIT_RATIO_0 0x8e /* Initial ratio for gate leveling FSM, slice 0 */
+  #define CONFIG_EZYNQ_PHY_GTLV_INIT_RATIO_1 0x95 /* Initial ratio for gate leveling FSM, slice 1 */
+  #define CONFIG_EZYNQ_PHY_GTLV_INIT_RATIO_2 0x8e /* Initial ratio for gate leveling FSM, slice 2 */
+  #define CONFIG_EZYNQ_PHY_GTLV_INIT_RATIO_3 0x8c /* Initial ratio for gate leveling FSM, slice 3 */
+
+  #define CONFIG_EZYNQ_PHY_WR_DQS_SLAVE_RATIO_0 0x84 /* Ratio for write DQS slave DLL (256 - clock period), slice 0 */
+  #define CONFIG_EZYNQ_PHY_WR_DQS_SLAVE_RATIO_1 0x80 /* Ratio for write DQS slave DLL (256 - clock period), slice 1 */
+  #define CONFIG_EZYNQ_PHY_WR_DQS_SLAVE_RATIO_2 0x85 /* Ratio for write DQS slave DLL (256 - clock period), slice 2 */
+  #define CONFIG_EZYNQ_PHY_WR_DQS_SLAVE_RATIO_3 0x87 /* Ratio for write DQS slave DLL (256 - clock period), slice 3 */
+
+  #define CONFIG_EZYNQ_PHY_FIFO_WE_SLAVE_RATIO_0 0xe3 /*Ratio for FIFO WE slave DLL (256 - clock period), slice 0 */
+  #define CONFIG_EZYNQ_PHY_FIFO_WE_SLAVE_RATIO_1 0xea /*Ratio for FIFO WE slave DLL (256 - clock period), slice 0 */
+  #define CONFIG_EZYNQ_PHY_FIFO_WE_SLAVE_RATIO_2 0xe3 /*Ratio for FIFO WE slave DLL (256 - clock period), slice 0 */
+  #define CONFIG_EZYNQ_PHY_FIFO_WE_SLAVE_RATIO_3 0xe1 /*Ratio for FIFO WE slave DLL (256 - clock period), slice 0 */
+
+  #define CONFIG_EZYNQ_PHY_PHY_WR_DATA_SLAVE_RATIO_0 0xc4 /* Ratio for write data slave DLL (256 - clock period), slice 0 */
+  #define CONFIG_EZYNQ_PHY_PHY_WR_DATA_SLAVE_RATIO_1 0xc0 /* Ratio for write data slave DLL (256 - clock period), slice 1 */
+  #define CONFIG_EZYNQ_PHY_PHY_WR_DATA_SLAVE_RATIO_2 0xc5 /* Ratio for write data slave DLL (256 - clock period), slice 2 */
+  #define CONFIG_EZYNQ_PHY_PHY_WR_DATA_SLAVE_RATIO_3 0xc7 /* Ratio for write data slave DLL (256 - clock period), slice 3 */
+
+  #define CONFIG_EZYNQ_PHY_PHY_CTRL_SLAVE_RATIO 0x100     /* Ratio for address/command (256 - clock period) */
+  #define CONFIG_EZYNQ_PHY_INVERT_CLK                     /* RInvert CLK out (if clk can arrive to DRAM chip earlier/at the same time as DQS) */
+
+#endif
+
+
  /* not yet processed
 #define CONFIG_EZYNQ_DDR_PERIPHERAL_CLKSRC   DDR PLL
 #define CONFIG_EZYNQ_DDR_RAM_BASEADDR   0x00100000
 #define CONFIG_EZYNQ_DDR_RAM_HIGHADDR   0x3FFFFFFF
 */
 
+ 
+ 
 
 #endif /* __CONFIG_EZYNQ_H */

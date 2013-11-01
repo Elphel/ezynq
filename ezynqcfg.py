@@ -576,6 +576,7 @@ if (args.lowlevel):
         u_boot.uart_transmit (reg_sets[segment_dict['UART_XMIT']['FROM']:segment_dict['UART_XMIT']['TO']])
         u_boot.make_ddrc_register_dump()
         u_boot.make_slcr_register_dump()
+        u_boot.make_report_training()
     #if not u_boot.features.get_par_value_or_none('BOOT_DEBUG') is None:
         
     if 'DCI' in segment_dict: 

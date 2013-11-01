@@ -79,7 +79,69 @@ DDR_CFG_DEFS=[
                 'DESCRIPTION':'Drive strength negative for driving DDR DQ/DQS signals'},
     {'NAME':'BIDIR_DRIVE_POS',   'CONF_NAME':'CONFIG_EZYNQ_DDR_BIDIR_DRIVE_POS','TYPE':'I','MANDATORY':True,'DERIVED':False,'DEFAULT':28,
                 'DESCRIPTION':'Slew rate positive for driving DDR DQ/DQS signals'},
-              
+###### Board Dependent (to be calculated) ######
+    {'NAME':'PHY_WRLV_INIT_RATIO_0',              'CONF_NAME':'CONFIG_EZYNQ_PHY_WRLV_INIT_RATIO_0','TYPE':'I','MANDATORY':True,'DERIVED':False,'DEFAULT':0,
+                'DESCRIPTION':'Initial ratio for write leveling FSM, slice 0'},              
+    {'NAME':'PHY_WRLV_INIT_RATIO_1',              'CONF_NAME':'CONFIG_EZYNQ_PHY_WRLV_INIT_RATIO_1','TYPE':'I','MANDATORY':True,'DERIVED':False,'DEFAULT':0,
+                'DESCRIPTION':'Initial ratio for write leveling FSM, slice 1'},              
+    {'NAME':'PHY_WRLV_INIT_RATIO_2',              'CONF_NAME':'CONFIG_EZYNQ_PHY_WRLV_INIT_RATIO_2','TYPE':'I','MANDATORY':True,'DERIVED':False,'DEFAULT':0,
+                'DESCRIPTION':'Initial ratio for write leveling FSM, slice 2'},              
+    {'NAME':'PHY_WRLV_INIT_RATIO_3',              'CONF_NAME':'CONFIG_EZYNQ_PHY_WRLV_INIT_RATIO_3','TYPE':'I','MANDATORY':True,'DERIVED':False,'DEFAULT':0,
+                'DESCRIPTION':'Initial ratio for write leveling FSM, slice 3'},              
+
+    {'NAME':'PHY_GTLV_INIT_RATIO_0',              'CONF_NAME':'CONFIG_EZYNQ_PHY_GTLV_INIT_RATIO_0','TYPE':'I','MANDATORY':True,'DERIVED':False,'DEFAULT':0,
+                'DESCRIPTION':'Initial ratio for gate leveling FSM, slice 0'},              
+    {'NAME':'PHY_GTLV_INIT_RATIO_1',              'CONF_NAME':'CONFIG_EZYNQ_PHY_GTLV_INIT_RATIO_1','TYPE':'I','MANDATORY':True,'DERIVED':False,'DEFAULT':0,
+                'DESCRIPTION':'Initial ratio for gate leveling FSM, slice 1'},              
+    {'NAME':'PHY_GTLV_INIT_RATIO_2',              'CONF_NAME':'CONFIG_EZYNQ_PHY_GTLV_INIT_RATIO_2','TYPE':'I','MANDATORY':True,'DERIVED':False,'DEFAULT':0,
+                'DESCRIPTION':'Initial ratio for gate leveling FSM, slice 2'},              
+    {'NAME':'PHY_GTLV_INIT_RATIO_3',              'CONF_NAME':'CONFIG_EZYNQ_PHY_GTLV_INIT_RATIO_3','TYPE':'I','MANDATORY':True,'DERIVED':False,'DEFAULT':0,
+                'DESCRIPTION':'Initial ratio for gate leveling FSM, slice 3'},              
+
+    {'NAME':'PHY_RD_DQS_SLAVE_RATIO_0',           'CONF_NAME':'CONFIG_EZYNQ_PHY_RD_DQS_SLAVE_RATIO_0','TYPE':'I','MANDATORY':True,'DERIVED':False,'DEFAULT':0x35,
+                'DESCRIPTION':'Ratio for read DQS slave DLL (256 - clock period), slice 0'},              
+    {'NAME':'PHY_RD_DQS_SLAVE_RATIO_1',           'CONF_NAME':'CONFIG_EZYNQ_PHY_RD_DQS_SLAVE_RATIO_1','TYPE':'I','MANDATORY':True,'DERIVED':False,'DEFAULT':0x35,
+                'DESCRIPTION':'Ratio for read DQS slave DLL (256 - clock period), slice 1'},              
+    {'NAME':'PHY_RD_DQS_SLAVE_RATIO_2',           'CONF_NAME':'CONFIG_EZYNQ_PHY_RD_DQS_SLAVE_RATIO_2','TYPE':'I','MANDATORY':True,'DERIVED':False,'DEFAULT':0x35,
+                'DESCRIPTION':'Ratio for read DQS slave DLL (256 - clock period), slice 2'},              
+    {'NAME':'PHY_RD_DQS_SLAVE_RATIO_3',           'CONF_NAME':'CONFIG_EZYNQ_PHY_RD_DQS_SLAVE_RATIO_3','TYPE':'I','MANDATORY':True,'DERIVED':False,'DEFAULT':0x35,
+                'DESCRIPTION':'Ratio for read DQS slave DLL (256 - clock period), slice 3'},              
+
+    {'NAME':'PHY_WR_DQS_SLAVE_RATIO_0',           'CONF_NAME':'CONFIG_EZYNQ_PHY_WR_DQS_SLAVE_RATIO_0','TYPE':'I','MANDATORY':True,'DERIVED':False,'DEFAULT':0,
+                'DESCRIPTION':'Ratio for write DQS slave DLL (256 - clock period), slice 0'},              
+    {'NAME':'PHY_WR_DQS_SLAVE_RATIO_1',           'CONF_NAME':'CONFIG_EZYNQ_PHY_WR_DQS_SLAVE_RATIO_1','TYPE':'I','MANDATORY':True,'DERIVED':False,'DEFAULT':0,
+                'DESCRIPTION':'Ratio for write DQS slave DLL (256 - clock period), slice 1'},              
+    {'NAME':'PHY_WR_DQS_SLAVE_RATIO_2',           'CONF_NAME':'CONFIG_EZYNQ_PHY_WR_DQS_SLAVE_RATIO_2','TYPE':'I','MANDATORY':True,'DERIVED':False,'DEFAULT':0,
+                'DESCRIPTION':'Ratio for write DQS slave DLL (256 - clock period), slice 2'},              
+    {'NAME':'PHY_WR_DQS_SLAVE_RATIO_3',           'CONF_NAME':'CONFIG_EZYNQ_PHY_WR_DQS_SLAVE_RATIO_3','TYPE':'I','MANDATORY':True,'DERIVED':False,'DEFAULT':0,
+                'DESCRIPTION':'Ratio for write DQS slave DLL (256 - clock period), slice 3'},              
+
+    {'NAME':'PHY_FIFO_WE_SLAVE_RATIO_0',           'CONF_NAME':'CONFIG_EZYNQ_PHY_FIFO_WE_SLAVE_RATIO_0','TYPE':'I','MANDATORY':True,'DERIVED':False,'DEFAULT':0x35,
+                'DESCRIPTION':'Ratio for FIFO WE slave DLL (256 - clock period), slice 0'},              
+    {'NAME':'PHY_FIFO_WE_SLAVE_RATIO_1',           'CONF_NAME':'CONFIG_EZYNQ_PHY_FIFO_WE_SLAVE_RATIO_1','TYPE':'I','MANDATORY':True,'DERIVED':False,'DEFAULT':0x35,
+                'DESCRIPTION':'Ratio for FIFO WE slave DLL (256 - clock period), slice 1'},              
+    {'NAME':'PHY_FIFO_WE_SLAVE_RATIO_2',           'CONF_NAME':'CONFIG_EZYNQ_PHY_FIFO_WE_SLAVE_RATIO_2','TYPE':'I','MANDATORY':True,'DERIVED':False,'DEFAULT':0x35,
+                'DESCRIPTION':'Ratio for FIFO WE slave DLL (256 - clock period), slice 2'},              
+    {'NAME':'PHY_FIFO_WE_SLAVE_RATIO_3',           'CONF_NAME':'CONFIG_EZYNQ_PHY_FIFO_WE_SLAVE_RATIO_3','TYPE':'I','MANDATORY':True,'DERIVED':False,'DEFAULT':0x35,
+                'DESCRIPTION':'Ratio for FIFO WE slave DLL (256 - clock period), slice 3'},              
+
+    {'NAME':'PHY_WR_DATA_SLAVE_RATIO_0',           'CONF_NAME':'CONFIG_EZYNQ_PHY_PHY_WR_DATA_SLAVE_RATIO_0','TYPE':'I','MANDATORY':True,'DERIVED':False,'DEFAULT':0x40,
+                'DESCRIPTION':'Ratio for write data slave DLL (256 - clock period), slice 0'},              
+    {'NAME':'PHY_WR_DATA_SLAVE_RATIO_1',           'CONF_NAME':'CONFIG_EZYNQ_PHY_PHY_WR_DATA_SLAVE_RATIO_1','TYPE':'I','MANDATORY':True,'DERIVED':False,'DEFAULT':0x40,
+                'DESCRIPTION':'Ratio for write data slave DLL (256 - clock period), slice 1'},              
+    {'NAME':'PHY_WR_DATA_SLAVE_RATIO_2',           'CONF_NAME':'CONFIG_EZYNQ_PHY_PHY_WR_DATA_SLAVE_RATIO_2','TYPE':'I','MANDATORY':True,'DERIVED':False,'DEFAULT':0x40,
+                'DESCRIPTION':'Ratio for write data slave DLL (256 - clock period), slice 2'},              
+    {'NAME':'PHY_WR_DATA_SLAVE_RATIO_3',           'CONF_NAME':'CONFIG_EZYNQ_PHY_PHY_WR_DATA_SLAVE_RATIO_3','TYPE':'I','MANDATORY':True,'DERIVED':False,'DEFAULT':0x40,
+                'DESCRIPTION':'Ratio for write data slave DLL (256 - clock period), slice 3'},              
+
+    {'NAME':'PHY_CTRL_SLAVE_RATIO',           'CONF_NAME':'CONFIG_EZYNQ_PHY_PHY_CTRL_SLAVE_RATIO','TYPE':'I','MANDATORY':True,'DERIVED':False,'DEFAULT':0x80,
+                'DESCRIPTION':'Ratio for address/command (256 - clock period)'},              
+    {'NAME':'PHY_INVERT_CLK',                 'CONF_NAME':'CONFIG_EZYNQ_PHY_INVERT_CLK','TYPE':'B','MANDATORY':True,'DERIVED':False,'DEFAULT':False,
+                'DESCRIPTION':'Invert CLK out (if clk can arrive to DRAM chip earlier/at the same time as DQS)'},              
+
+    {'NAME':'SILICON',                 'CONF_NAME':'CONFIG_EZYNQ_SILICON','TYPE':'T','MANDATORY':True,'DERIVED':False,'DEFAULT':'3',
+                'DESCRIPTION':'Zynq silicon revision'},              
+
 ###### DDR Datasheet #######
     {'NAME':'PARTNO',          'CONF_NAME':'CONFIG_EZYNQ_DDR_DS_PARTNO','TYPE':'T','MANDATORY':True,'DERIVED':False,'DEFAULT':False,
                 'DESCRIPTION':'Memory part number  (currently not used - derive some parameters later)'},
@@ -137,8 +199,8 @@ DDR_CFG_DEFS=[
                 'DESCRIPTION':'MODE REGISTER SET update delay (in tCK)'},              
     {'NAME':'T_MOD',          'CONF_NAME':'CONFIG_EZYNQ_DDR_DS_T_MOD','TYPE':'F','MANDATORY':False,'DERIVED':False,'DEFAULT':15.0,
                 'DESCRIPTION':'MODE REGISTER SET update delay  (ns).'},   
-    {'NAME':'T_WLMRD',          'CONF_NAME':'CONFIG_EZYNQ_DDR_DS_T_WLMRD','TYPE':'F','MANDATORY':False,'DERIVED':False,'DEFAULT':40.0,
-                'DESCRIPTION':'Write leveling : time to the first DQS rising edge (ns).'},
+    {'NAME':'WLMRD',          'CONF_NAME':'CONFIG_EZYNQ_DDR_DS_WLMRD','TYPE':'I','MANDATORY':False,'DERIVED':False,'DEFAULT':40,
+                'DESCRIPTION':'Write leveling : time to the first DQS rising edge (cycles).'},
     {'NAME':'CKE',             'CONF_NAME':'CONFIG_EZYNQ_DDR_DS_CKE','TYPE':'I','MANDATORY':False,'DERIVED':False,'DEFAULT':3,
                 'DESCRIPTION':'CKE min pulse width (in tCK)'},              
     {'NAME':'T_CKE',          'CONF_NAME':'CONFIG_EZYNQ_DDR_DS_T_CKE','TYPE':'F','MANDATORY':False,'DERIVED':False,'DEFAULT':7.5,
@@ -182,7 +244,7 @@ DDR_CFG_DEFS=[
 # CONFIG_EZYNQ_DDR_DS_RRD = 4
 # CONFIG_EZYNQ_DDR_DS_T_RRD = 10.0
 # CONFIG_EZYNQ_DDR_DS_MRD = 4
-# CONFIG_EZYNQ_DDR_DS_T_WLMRD = 40.0 #
+# CONFIG_EZYNQ_DDR_DS_WLMRD = 40 #
 # CONFIG_EZYNQ_DDR_DS_T_MOD = 15.0
 # CONFIG_EZYNQ_DDR_DS_MOD =   12
 

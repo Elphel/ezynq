@@ -22,6 +22,7 @@ __maintainer__ = "Andrey Filippov"
 __email__ = "andrey@elphel.com"
 __status__ = "Development"
 import os
+import ezynq_ddrc_defs
 #import ezynq_clk
 import ezynq_feature_config
 #Use 'TYPE':'I' for decimal output, 'H' - for hex. On input both are accepted
@@ -38,10 +39,30 @@ UBOOT_CFG_DEFS=[
                 'DESCRIPTION':'Dump SLCR registers as soon as UART is initialized (depends on CONFIG_EZYNQ_BOOT_DEBUG)'},              
     {'NAME':'DUMP_DDRC_EARLY',    'CONF_NAME':'CONFIG_EZYNQ_DUMP_DDRC_EARLY','TYPE':'B','MANDATORY':False,'DERIVED':False,'DEFAULT':False,
                 'DESCRIPTION':'Dump DDRC registers as soon as UART is initialized (depends on CONFIG_EZYNQ_BOOT_DEBUG)'},              
-    {'NAME':'DUMP_SLCR_LATE',    'CONF_NAME':'CONFIG_EZYNQ_DUMP_SLCR_LATE','TYPE':'B','MANDATORY':False,'DERIVED':False,'DEFAULT':False,
+    {'NAME':'DUMP_SLCR_LATE',     'CONF_NAME':'CONFIG_EZYNQ_DUMP_SLCR_LATE','TYPE':'B','MANDATORY':False,'DERIVED':False,'DEFAULT':False,
                 'DESCRIPTION':'Dump SLCR registers after DDR memory is initialized (depends on CONFIG_EZYNQ_BOOT_DEBUG)'},              
-    {'NAME':'DUMP_DDRC_LATE',    'CONF_NAME':'CONFIG_EZYNQ_DUMP_DDRC_LATE','TYPE':'B','MANDATORY':False,'DERIVED':False,'DEFAULT':False,
-                'DESCRIPTION':'Dump DDRC registers after DDR memory is initialized (depends on CONFIG_EZYNQ_BOOT_DEBUG)'},              
+    {'NAME':'DUMP_DDRC_LATE',     'CONF_NAME':'CONFIG_EZYNQ_DUMP_DDRC_LATE','TYPE':'B','MANDATORY':False,'DERIVED':False,'DEFAULT':False,
+                'DESCRIPTION':'Dump DDRC registers after DDR memory is initialized (depends on CONFIG_EZYNQ_BOOT_DEBUG)'},
+
+    {'NAME':'DUMP_TRAINING_EARLY','CONF_NAME':'CONFIG_EZYNQ_DUMP_TRAINING_EARLY','TYPE':'B','MANDATORY':False,'DERIVED':False,'DEFAULT':False,
+                'DESCRIPTION':'Dump Training results before DDRC initialization (depends on CONFIG_EZYNQ_BOOT_DEBUG)'},              
+    {'NAME':'DUMP_TRAINING_LATE', 'CONF_NAME':'CONFIG_EZYNQ_DUMP_TRAINING_LATE','TYPE':'B','MANDATORY':False,'DERIVED':False,'DEFAULT':True,
+                'DESCRIPTION':'Dump Training results after DDRC initialization (depends on CONFIG_EZYNQ_BOOT_DEBUG)'},              
+                              
+    {'NAME':'DUMP_OCM',           'CONF_NAME':'CONFIG_EZYNQ_DUMP_OCM','TYPE':'B','MANDATORY':False,'DERIVED':False,'DEFAULT':False,
+                'DESCRIPTION':'Dump OCM memory range'},              
+    {'NAME':'DUMP_DDR',           'CONF_NAME':'CONFIG_EZYNQ_DUMP_DDR','TYPE':'B','MANDATORY':False,'DERIVED':False,'DEFAULT':False,
+                'DESCRIPTION':'Dump DDER memory range'},              
+
+    {'NAME':'DUMP_OCM_LOW',       'CONF_NAME':'CONFIG_EZYNQ_DUMP_OCM_LOW','TYPE':'H','MANDATORY':False,'DERIVED':False,'DEFAULT':0,
+                'DESCRIPTION':'Dump OCM memory range start address'},              
+    {'NAME':'DUMP_OCM_HIGH',      'CONF_NAME':'CONFIG_EZYNQ_DUMP_OCM_HIGH','TYPE':'H','MANDATORY':False,'DERIVED':False,'DEFAULT':0x2ff,
+                'DESCRIPTION':'Dump OCM memory range end address'},              
+    {'NAME':'DUMP_DDR_LOW',       'CONF_NAME':'CONFIG_EZYNQ_DUMP_DDR_LOW','TYPE':'H','MANDATORY':False,'DERIVED':False,'DEFAULT':0x4000000,
+                'DESCRIPTION':'Dump DDR memory range start address'},              
+    {'NAME':'DUMP_DDR_HIGH',      'CONF_NAME':'CONFIG_EZYNQ_DUMP_DDR_HIGH','TYPE':'H','MANDATORY':False,'DERIVED':False,'DEFAULT':0x40002ff,
+                'DESCRIPTION':'Dump DDR memory range end address'},              
+
 
     {'NAME':'LED_CHECKPOINT_1',    'CONF_NAME':'CONFIG_EZYNQ_LED_CHECKPOINT_1', 'TYPE':'B','MANDATORY':False,'DERIVED':False,'DEFAULT':None,
                 'DESCRIPTION':'LED ON/OFF in RBL (just after MIO is set up)'},              
@@ -403,11 +424,154 @@ inline void ddrc_wait_queue_empty(void)
             if led_cp:
                 self.cfile+='\tdebug_led_on(); /* Turn debug LED ON */\n'
             else:
-                self.cfile+='\tdebug_led_off(); /* Turn debug LED OFF */\n'    
-    
-    def make_arch_cpu_init (self):
+                self.cfile+='\tdebug_led_off(); /* Turn debug LED OFF */\n'
+    def _read_bit_field(self,reg_set,reg_name,field_name,channel=0): #accepts bit field tuple instead of the field name
+        addr=reg_set['BASE_ADDR'][channel]+ reg_set[reg_name]['OFFS']
+        if isinstance(field_name,tuple):
+            bits = field_name
+        else:
+            bits=     reg_set[reg_name]['FIELDS'][field_name]['r']
+#    self._report_bit_field('BIST errors from reg_6c (1 bit per slice)',DDRC_DEFS,'reg_6c','phy_reg_bist_err')
             
+        mask=(1<<(max(bits)-min(bits)))-1
+        return ('(readl(0x%08x) >> %d) & 0x%x'%(addr,min(bits),mask), max(bits)-min(bits))
+    def _report_bit_field(self,name,reg_set,reg_name,field_name,channel=0):
+        self.cfile+='\tuart_puts("'+name+' = 0x");\n'
+        self.cfile+='\tuart_put_hex('+self._read_bit_field(reg_set,reg_name,field_name,channel)[0]+');\n'
+        self.cfile+='\tuart_puts("\\r\\n");\n'
 
+    def _report_multi_bit_fields(self,name,reg_set,fields,channel=0):
+        expr=''
+        shft=0
+        for field in reversed(fields):
+            e,w=self._read_bit_field(reg_set,field[0],field[1],channel)
+            if shft==0:
+                expr+='('+e+')'
+            else:
+                expr+='+(('+e+') << '+str(shft)+')'
+            shft+=w    
+        self.cfile+='\tuart_puts("'+name+' = 0x");\n'
+        self.cfile+='\tuart_put_hex('+expr+');\n'
+        self.cfile+='\tuart_puts("\\r\\n");\n'
+        
+    def make_report_training(self):
+        if not (self.features.get_par_value_or_none('DUMP_TRAINING_EARLY') or self.features.get_par_value_or_none('DUMP_TRAINING_LATE') ):
+            return # do not generate any code
+        DDRC_DEFS=  ezynq_ddrc_defs.DDRC_DEFS
+        self.cfile+='''/* Report DDR training results*/        
+void report_training(void)
+{
+'''
+        
+# The fifo_we_slave ratios for each slice(0 through 3) must be interpreted by software in the following way:
+# Slice 0: fifo_we_ratio_slice_0[10:0] = {Reg_6A[9],Reg_69[18:9]}\
+
+# There is no Reg_B !!!
+# Slice1: fifo_we_ratio_slice_1[10:0] = {Reg_6B[10:9],Reg_6A[18:10]}
+# Slice2: fifo_we_ratio_slice_2[10:0] = {Reg_6C[11:9],Reg_6B[18:11]}
+# Slice3: fifo_we_ratio_slice_3[10:0] = {phy_reg_rdlvl_fifowein_ratio_slice3_msb,Reg_6C[18:12]}
+
+#     'reg_69':                  {'OFFS': 0x1A4,'DFLT':0x000F0000,'RW':'R','COMMENTS':'Training results for data slice 0','FIELDS':{
+#                   'phy_reg_status_fifo_we_slave_dll_value': {'r':(20,28),'d':0,    'm':'R','c':'Delay of FIFO WE slave DLL'},      
+#                   'phy_reg_rdlvl_fifowein_ratio':           {'r':( 9,19),'d':0x780,'m':'R','c':'Ratio by Read Gate training FSM'},      
+#                   'reserved':                               {'r':( 0, 8),'d':0,    'm':'R','c':'reserved'}}},
+#     'reg_6a':                  {'OFFS': 0x1A8,'DFLT':0x000F0000,'RW':'R','COMMENTS':'Training results for data slice 1','FIELDS':{
+#                   'phy_reg_status_fifo_we_slave_dll_value': {'r':(20,28),'d':0,    'm':'R','c':'Delay of FIFO WE slave DLL'},      
+#                   'phy_reg_rdlvl_fifowein_ratio':           {'r':( 9,19),'d':0x780,'m':'R','c':'Ratio by Read Gate training FSM'},      
+#                   'reserved':                               {'r':( 0, 8),'d':0,    'm':'R','c':'reserved'}}},
+# #     u32 reserved8[1];              /* 0x1AC */
+#     'reg_6c':                  {'OFFS': 0x1B0,'DFLT':0x000F0000,'RW':'R','COMMENTS':'Training results for data slice 2','FIELDS':{
+#                   'phy_reg_status_fifo_we_slave_dll_value':{'r':(20,28),'d':0,    'm':'R','c':'Delay of FIFO WE slave DLL'},      
+#                   'phy_reg_rdlvl_fifowein_ratio':          {'r':( 9,19),'d':0x780,'m':'R','c':'Ratio by Read Gate training FSM'},      
+#                   'phy_reg_bist_err':                      {'r':( 0, 8),'d':0,    'm':'R','c':'Mismatch error from BIST checker, 1 bit per data slice'}}},
+#     'reg_6d':                  {'OFFS': 0x1B4,'DFLT':0x000F0000,'RW':'R','COMMENTS':'Training results for data slice 3','FIELDS':{
+#                   'phy_reg_status_fifo_we_slave_dll_value':{'r':(20,28),'d':0,    'm':'R','c':'Delay of FIFO WE slave DLL'},      
+#                   'phy_reg_rdlvl_fifowein_ratio':          {'r':( 9,19),'d':0x780,'m':'R','c':'Ratio by Read Gate training FSM'},      
+#                   'phy_reg_bist_err':                      {'r':( 0, 8),'d':0,    'm':'R','c':'Mismatch error from BIST checker, 1 bit per data slice'}}},
+
+
+        self._report_bit_field('BIST errors from reg_6c (1 bit per slice)',DDRC_DEFS,'reg_6c','phy_reg_bist_err')
+        self._report_bit_field('BIST errors from reg_6d (1 bit per slice)',DDRC_DEFS,'reg_6d','phy_reg_bist_err')
+        self.cfile+='\tuart_puts("\\r\\n");\n'
+        
+        self._report_bit_field('FIFO WE DLL SLICE 0',DDRC_DEFS,'reg_69','phy_reg_status_fifo_we_slave_dll_value')
+        self._report_bit_field('FIFO WE DLL SLICE 1',DDRC_DEFS,'reg_6a','phy_reg_status_fifo_we_slave_dll_value')
+        self._report_bit_field('FIFO WE DLL SLICE 2',DDRC_DEFS,'reg_6c','phy_reg_status_fifo_we_slave_dll_value')
+        self._report_bit_field('FIFO WE DLL SLICE 3',DDRC_DEFS,'reg_6d','phy_reg_status_fifo_we_slave_dll_value')
+        self.cfile+='\tuart_puts("\\r\\n");\n'
+
+#         self._report_bit_field('Ratio from Read Gate Training SLICE 0', DDRC_DEFS,'reg_69','phy_reg_rdlvl_fifowein_ratio')
+#         self._report_bit_field('Ratio from Read Gate Training SLICE 1', DDRC_DEFS,'reg_6a','phy_reg_rdlvl_fifowein_ratio')
+#         self._report_bit_field('Ratio from Read Gate Training SLICE 2', DDRC_DEFS,'reg_6c','phy_reg_rdlvl_fifowein_ratio')
+#         self._report_bit_field('Ratio from Read Gate Training SLICE 3', DDRC_DEFS,'reg_6d','phy_reg_rdlvl_fifowein_ratio')
+#         self.cfile+='\tuart_puts("\\r\\n");\n'
+
+        self._report_multi_bit_fields('FIFO WE ratio SLICE 0',DDRC_DEFS,(('reg_6a',( 9, 9)),('reg_69',( 9,18))))
+        self._report_multi_bit_fields('FIFO WE ratio SLICE 1',DDRC_DEFS,(('reg_6c',( 9,10)),('reg_6a',(10,18))))
+        self._report_multi_bit_fields('FIFO WE ratio SLICE 2',DDRC_DEFS,(('reg_6d',( 9,11)),('reg_6c',(11,18))))
+        self._report_multi_bit_fields('FIFO WE ratio SLICE 3',DDRC_DEFS,
+                                      (('dll_lock_sts','phy_reg_rdlvl_fifowein_ratio_slice3_msb'),
+                                       ('reg_6d',(12,18))))
+        self.cfile+='\tuart_puts("\\r\\n");\n'
+
+        self._report_bit_field('DQS ratio from Read Data Eye Training SLICE 0',DDRC_DEFS,'reg_6e','phy_reg_rdlvl_dqs_ratio')
+        self._report_bit_field('DQS ratio from Read Data Eye Training SLICE 1',DDRC_DEFS,'reg_6f','phy_reg_rdlvl_dqs_ratio')
+        self._report_bit_field('DQS ratio from Read Data Eye Training SLICE 2',DDRC_DEFS,'reg_70','phy_reg_rdlvl_dqs_ratio')
+        self._report_bit_field('DQS ratio from Read Data Eye Training SLICE 3',DDRC_DEFS,'reg_71','phy_reg_rdlvl_dqs_ratio')
+        self.cfile+='\tuart_puts("\\r\\n");\n'
+        
+        self._report_bit_field('DQ write data ratio from Write Leveling Training SLICE 0',DDRC_DEFS,'reg_6e','phy_reg_wrlvl_dq_ratio')
+        self._report_bit_field('DQ write data ratio from Write Leveling Training SLICE 1',DDRC_DEFS,'reg_6f','phy_reg_wrlvl_dq_ratio')
+        self._report_bit_field('DQ write data ratio from Write Leveling Training SLICE 2',DDRC_DEFS,'reg_70','phy_reg_wrlvl_dq_ratio')
+        self._report_bit_field('DQ write data ratio from Write Leveling Training SLICE 3',DDRC_DEFS,'reg_71','phy_reg_wrlvl_dq_ratio')
+        self.cfile+='\tuart_puts("\\r\\n");\n'
+        
+        self._report_bit_field('DQS write ratio from Write Leveling Training SLICE 0',DDRC_DEFS,'reg_6e','phy_reg_wrlvl_dqs_ratio')
+        self._report_bit_field('DQS write ratio from Write Leveling Training SLICE 1',DDRC_DEFS,'reg_6f','phy_reg_wrlvl_dqs_ratio')
+        self._report_bit_field('DQS write ratio from Write Leveling Training SLICE 2',DDRC_DEFS,'reg_70','phy_reg_wrlvl_dqs_ratio')
+        self._report_bit_field('DQS write ratio from Write Leveling Training SLICE 3',DDRC_DEFS,'reg_71','phy_reg_wrlvl_dqs_ratio')
+        self.cfile+='\tuart_puts("\\r\\n");\n'
+        
+        self._report_bit_field('Delay for write DQS slave DLL SLICE 0',DDRC_DEFS,'phy_dll_sts0','phy_reg_status_wr_dqs_slave_dll_value')
+        self._report_bit_field('Delay for write DQS slave DLL SLICE 1',DDRC_DEFS,'phy_dll_sts1','phy_reg_status_wr_dqs_slave_dll_value')
+        self._report_bit_field('Delay for write DQS slave DLL SLICE 2',DDRC_DEFS,'phy_dll_sts2','phy_reg_status_wr_dqs_slave_dll_value')
+        self._report_bit_field('Delay for write DQS slave DLL SLICE 3',DDRC_DEFS,'phy_dll_sts3','phy_reg_status_wr_dqs_slave_dll_value')
+        self.cfile+='\tuart_puts("\\r\\n");\n'
+        
+        self._report_bit_field('Delay for write DQ slave DLL SLICE 0',DDRC_DEFS,'phy_dll_sts0','phy_reg_status_wr_data_slave_dll_value')
+        self._report_bit_field('Delay for write DQ slave DLL SLICE 1',DDRC_DEFS,'phy_dll_sts1','phy_reg_status_wr_data_slave_dll_value')
+        self._report_bit_field('Delay for write DQ slave DLL SLICE 2',DDRC_DEFS,'phy_dll_sts2','phy_reg_status_wr_data_slave_dll_value')
+        self._report_bit_field('Delay for write DQ slave DLL SLICE 3',DDRC_DEFS,'phy_dll_sts3','phy_reg_status_wr_data_slave_dll_value')
+        self.cfile+='\tuart_puts("\\r\\n");\n'
+        
+        self._report_bit_field('Delay for read DQ slave DLL SLICE 0',DDRC_DEFS,'phy_dll_sts0','phy_reg_status_rd_dqs_slave_dll_value')
+        self._report_bit_field('Delay for read DQ slave DLL SLICE 1',DDRC_DEFS,'phy_dll_sts1','phy_reg_status_rd_dqs_slave_dll_value')
+        self._report_bit_field('Delay for read DQ slave DLL SLICE 2',DDRC_DEFS,'phy_dll_sts2','phy_reg_status_rd_dqs_slave_dll_value')
+        self._report_bit_field('Delay for read DQ slave DLL SLICE 3',DDRC_DEFS,'phy_dll_sts3','phy_reg_status_rd_dqs_slave_dll_value')
+        self.cfile+='\tuart_puts("\\r\\n");\n'
+
+
+        self._report_bit_field('Delay all Slave DLLs for Master DLL 1',DDRC_DEFS,'dll_lock_sts','phy_reg_status_dll_slave_value_1')
+        self._report_bit_field('Delay all Slave DLLs for Master DLL 0',DDRC_DEFS,'dll_lock_sts','phy_reg_status_dll_slave_value_0')
+        self._report_bit_field('Master DLL 1 locked',DDRC_DEFS,'dll_lock_sts','phy_reg_status_dll_lock_1')
+        self._report_bit_field('Master DLL 0 locked',DDRC_DEFS,'dll_lock_sts','phy_reg_status_dll_lock_0')
+        self.cfile+='\tuart_puts("\\r\\n");\n'
+
+        self._report_bit_field('Master DLL Output filter locked (+2 - coarse, +1 - fine',DDRC_DEFS,'phy_ctrl_sts','phy_reg_status_phy_ctrl_of_in_lock_state')
+        self._report_bit_field('Values applied to PHY_CTRL Slave DLL',                   DDRC_DEFS,'phy_ctrl_sts','phy_reg_status_phy_ctrl_dll_slave_value')
+        self._report_bit_field('PHY Control Master DLL status (locked)',                 DDRC_DEFS,'phy_ctrl_sts','phy_reg_status_phy_ctrl_dll_lock')
+        self._report_bit_field('Values from Master DLL Output Filter',                   DDRC_DEFS,'phy_ctrl_sts','phy_reg_status_of_out_delay_value')
+        self._report_bit_field('Values applied to Master DLL Output Filter',             DDRC_DEFS,'phy_ctrl_sts','phy_reg_status_of_in_delay_value')
+        self.cfile+='\tuart_puts("\\r\\n");\n'
+
+        self._report_bit_field('Delay values applied to read DQS slave DLL',             DDRC_DEFS,'phy_ctrl_sts_reg2','phy_reg_status_phy_ctrl_slave_dll_value')
+        self._report_bit_field('Values applied to Master DLL Output Filter',             DDRC_DEFS,'phy_ctrl_sts_reg2','phy_reg_status_phy_ctrl_of_in_delay_value')
+        
+        self.cfile+='}\n'
+
+        self.sections.append('ddrc_training')
+    
+    def make_arch_cpu_init(self):
         self.cfile+='''/* Initialize clocks, DDR memory, copy OCM to DDR */        
 int arch_cpu_init(void)
 {
@@ -430,6 +594,13 @@ int arch_cpu_init(void)
         self._cp_led('LED_CHECKPOINT_4') # After PLL bypass is OFF
         if 'uart_init' in self.sections:
             self.cfile+='\tuart_init();         /* Initialize UART for debug information output */\n'
+            self.cfile+='\tuart_puts("devcfg.PS_VERSION=");\n'
+            self.cfile+='\tuart_put_hex(readl(0xf8007080));\n'; #TODO:Compare against specified
+            self.cfile+='\tuart_puts("\\r\\n");\n'
+            self.cfile+='\tuart_puts("slcr.PSS_IDCODE=");\n'
+            self.cfile+='\tuart_put_hex(readl(0xf8000530));\n';
+            self.cfile+='\tuart_puts("\\r\\n");\n'
+            
         self._cp_led('LED_CHECKPOINT_5') # After UART is programmed
         if self.features.get_par_value_or_none('DUMP_SLCR_EARLY'):
             self.cfile+='\tuart_puts("SLCR registers before DCI/DDR initialization\\r\\n");\n'
@@ -437,8 +608,15 @@ int arch_cpu_init(void)
         if self.features.get_par_value_or_none('DUMP_DDRC_EARLY'):
             self.cfile+='\tuart_puts("DDRC registers before DCI/DDR initialization\\r\\n");\n'
             self.cfile+='\tdump_ddrc_regs();    /* Dump all DDRC registers before DCI/DDR initialization */\n'
+            
+        if self.features.get_par_value_or_none('DUMP_TRAINING_EARLY'):
+            self.cfile+='\tuart_puts("Training results registers state before DDRC initialization\\r\\n");\n'
+            self.cfile+='\treport_training();    /* Print training results */\n'
+#         if 'uart_xmit' in self.sections:
+#             self.cfile+='\tuart_wait_tx_fifo_empty();\n'
+    
         self.cfile+='\tdci_calibration();   /* Calibrate DDR DCI impedance and wait for completion */\n'  
-        self._cp_led('LED_CHECKPOINT_6') # After DCI is calibrated
+#        self._cp_led('LED_CHECKPOINT_6') # After DCI is calibrated
         self.cfile+='\tddr_start();         /* Remove soft reset from DDR controller - this will start initialization. Wait for completion */\n'  
         self._cp_led('LED_CHECKPOINT_7') # After DDR is initialized
         if self.features.get_par_value_or_none('DUMP_SLCR_LATE'):
@@ -447,6 +625,9 @@ int arch_cpu_init(void)
         if self.features.get_par_value_or_none('DUMP_DDRC_LATE'):
             self.cfile+='\tuart_puts("DDRC registers after DCI/DDR initialization\\r\\n");\n'
             self.cfile+='\tdump_ddrc_regs();    /* Dump all DDRC registers after DCI/DDR initialization */\n'
+        if self.features.get_par_value_or_none('DUMP_TRAINING_LATE'):
+            self.cfile+='\tuart_puts("Training results registers state after DDRC initialization\\r\\n");\n'
+            self.cfile+='\treport_training();    /* Print training results */\n'
         self.cfile+='''/* Copy 3 pages of OCM from 0x00000.0x2ffff to DDR 0x4000000.0x402ffff*/  
 \tint * s= (int *) 0;
 \tint * d= (int *) 0x4000000;
@@ -455,6 +636,20 @@ int arch_cpu_init(void)
         self.cfile+='\tddrc_wait_queue_empty(); /* Wait no commands are pending in DDRC queue */\n'            
 
         self._cp_led('LED_CHECKPOINT_8') # Before relocation to DDR (to 0x4000000+ )
+        
+        if self.features.get_par_value_or_none('DUMP_OCM'):
+            self.cfile+='\tuart_puts("OCM memory data\\r\\n");\n'
+            self.cfile+='\tuart_dump_regs(0x%08x,0x%08x, 16);\n'%(self.features.get_par_value_or_default('DUMP_OCM_LOW'),self.features.get_par_value_or_default('DUMP_OCM_HIGH'))
+            self.cfile+='\tuart_puts("\\r\\n");\n'
+           
+        if self.features.get_par_value_or_none('DUMP_DDR'):
+            self.cfile+='\tuart_puts("DDR memory data\\r\\n");\n'
+            self.cfile+='\tuart_dump_regs(0x%08x,0x%08x, 16);\n'%(self.features.get_par_value_or_default('DUMP_DDR_LOW'),self.features.get_par_value_or_default('DUMP_DDR_HIGH'))
+            self.cfile+='\tuart_puts("\\r\\n");\n'
+
+#         if 'uart_xmit' in self.sections:
+#             self.cfile+='\tuart_wait_tx_fifo_empty();\n'
+        
         self.cfile+='''/*
    Now jump to the same instruction in the DDR copy of the currently executed code in OCM
    Be careful not to call functions or access data stored in the 3 lower OCM pages.
@@ -505,6 +700,27 @@ int arch_cpu_init(void)
 \twritel(0xC, &slcr_base->ddr_urgent);
 '''
         if 'uart_xmit' in self.sections:
+            self.cfile+='\tuart_put_hex(readl(0xe000002c));\n'
+            self.cfile+='\tuart_putc(0xd);\n'
+            self.cfile+='\tuart_putc(0xa);\n'
+            self.cfile+='\tuart_put_hex(readl(0xe000002c));\n'
+            self.cfile+='\tuart_putc(0xd);\n'
+            self.cfile+='\tuart_putc(0xa);\n'
+#            self.cfile+='\twhile((readl(0xe000002c) & 0x808) != 8); /* uart0.channel_sts  Channel status */\n'
+            self.cfile+='\tuart_put_hex(readl(0xe000002c));\n'
+            self.cfile+='\tuart_putc(0xd);\n'
+            self.cfile+='\tuart_putc(0xa);\n'
+            self.cfile+='\tuart_put_hex(readl(0xe000002c));\n'
+            self.cfile+='\tuart_putc(0xd);\n'
+            self.cfile+='\tuart_putc(0xa);\n'
+            self.cfile+='\tuart_put_hex(0x12345678);\n'
+            self.cfile+='\tuart_putc(0xd);\n'
+            self.cfile+='\tuart_putc(0xa);\n'
+            self.cfile+='\tuart_put_hex(0x12345678);\n'
+            self.cfile+='\tuart_putc(0xd);\n'
+            self.cfile+='\tuart_putc(0xa);\n'
+            self.cfile+='\twhile((readl(0xe000002c) & 0x808) != 8); /* uart0.channel_sts  Channel status */\n'
+     
             self.cfile+='\tuart_wait_tx_fifo_empty(); /* u-boot may re-program UART differently, wait all is sent before getting there */\n'
 #uart_wait_tx_fifo_empty() - add if u-boot debug is on
         self._cp_led('LED_CHECKPOINT_12') # Before leaving lowlevel_init()
@@ -512,6 +728,7 @@ int arch_cpu_init(void)
 #Setup GPIO outputs (after LED debug is over)        
         if 'gpio_out' in self.sections:
             self.cfile+='\tsetup_gpio_outputs(); /* Setup GPIO outputs */\n'
+        
         
 #LOCK_SLCR        
         if self.features.get_par_value_or_none('LOCK_SLCR') is False:
