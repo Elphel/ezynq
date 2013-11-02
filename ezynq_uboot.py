@@ -88,6 +88,8 @@ UBOOT_CFG_DEFS=[
                 'DESCRIPTION':'LED ON/OFF after remapping OCM0-OCM2 high'},              
     {'NAME':'LED_CHECKPOINT_12',   'CONF_NAME':'CONFIG_EZYNQ_LED_CHECKPOINT_12','TYPE':'B','MANDATORY':False,'DERIVED':False,'DEFAULT':None,
                 'DESCRIPTION':'LED ON/OFF before leaving lowlevel_init()'},              
+    {'NAME':'LAST_PRINT_DEBUG',   'CONF_NAME':'CONFIG_EZYNQ_LAST_PRINT_DEBUG','TYPE':'B','MANDATORY':False,'DERIVED':False,'DEFAULT':None,
+                'DESCRIPTION':'Output to UART before exiting arch_cpu_init()'},              
 ]
 # 
 # CONFIG_EZYNQ_BOOT_DEBUG = y # configure UARTx and send register dumps there
@@ -422,9 +424,9 @@ inline void ddrc_wait_queue_empty(void)
 #        print name, led_cp
         if not led_cp is None:
             if led_cp:
-                self.cfile+='\tdebug_led_on(); /* Turn debug LED ON */\n'
+                self.cfile+='\tdebug_led_on(); /* Turn debug LED ON: %s */\n'%name
             else:
-                self.cfile+='\tdebug_led_off(); /* Turn debug LED OFF */\n'
+                self.cfile+='\tdebug_led_off(); /* Turn debug LED OFF: %s*/\n'%name
     def _read_bit_field(self,reg_set,reg_name,field_name,channel=0): #accepts bit field tuple instead of the field name
         addr=reg_set['BASE_ADDR'][channel]+ reg_set[reg_name]['OFFS']
         if isinstance(field_name,tuple):
@@ -494,18 +496,14 @@ void report_training(void)
         self._report_bit_field('BIST errors from reg_6d (1 bit per slice)',DDRC_DEFS,'reg_6d','phy_reg_bist_err')
         self.cfile+='\tuart_puts("\\r\\n");\n'
         
+        self.cfile+='\tuart_puts("Adjusted always:\\r\\n");\n'
         self._report_bit_field('FIFO WE DLL SLICE 0',DDRC_DEFS,'reg_69','phy_reg_status_fifo_we_slave_dll_value')
         self._report_bit_field('FIFO WE DLL SLICE 1',DDRC_DEFS,'reg_6a','phy_reg_status_fifo_we_slave_dll_value')
         self._report_bit_field('FIFO WE DLL SLICE 2',DDRC_DEFS,'reg_6c','phy_reg_status_fifo_we_slave_dll_value')
         self._report_bit_field('FIFO WE DLL SLICE 3',DDRC_DEFS,'reg_6d','phy_reg_status_fifo_we_slave_dll_value')
         self.cfile+='\tuart_puts("\\r\\n");\n'
 
-#         self._report_bit_field('Ratio from Read Gate Training SLICE 0', DDRC_DEFS,'reg_69','phy_reg_rdlvl_fifowein_ratio')
-#         self._report_bit_field('Ratio from Read Gate Training SLICE 1', DDRC_DEFS,'reg_6a','phy_reg_rdlvl_fifowein_ratio')
-#         self._report_bit_field('Ratio from Read Gate Training SLICE 2', DDRC_DEFS,'reg_6c','phy_reg_rdlvl_fifowein_ratio')
-#         self._report_bit_field('Ratio from Read Gate Training SLICE 3', DDRC_DEFS,'reg_6d','phy_reg_rdlvl_fifowein_ratio')
-#         self.cfile+='\tuart_puts("\\r\\n");\n'
-
+        self.cfile+='\tuart_puts("Adjusted when CONFIG_EZYNQ_DDR_TRAIN_READ_GATE is set :\\r\\n");\n'
         self._report_multi_bit_fields('FIFO WE ratio SLICE 0',DDRC_DEFS,(('reg_6a',( 9, 9)),('reg_69',( 9,18))))
         self._report_multi_bit_fields('FIFO WE ratio SLICE 1',DDRC_DEFS,(('reg_6c',( 9,10)),('reg_6a',(10,18))))
         self._report_multi_bit_fields('FIFO WE ratio SLICE 2',DDRC_DEFS,(('reg_6d',( 9,11)),('reg_6c',(11,18))))
@@ -514,36 +512,42 @@ void report_training(void)
                                        ('reg_6d',(12,18))))
         self.cfile+='\tuart_puts("\\r\\n");\n'
 
+        self.cfile+='\tuart_puts("Adjusted when CONFIG_EZYNQ_DDR_TRAIN_DATA_EYE is set :\\r\\n");\n'
         self._report_bit_field('DQS ratio from Read Data Eye Training SLICE 0',DDRC_DEFS,'reg_6e','phy_reg_rdlvl_dqs_ratio')
         self._report_bit_field('DQS ratio from Read Data Eye Training SLICE 1',DDRC_DEFS,'reg_6f','phy_reg_rdlvl_dqs_ratio')
         self._report_bit_field('DQS ratio from Read Data Eye Training SLICE 2',DDRC_DEFS,'reg_70','phy_reg_rdlvl_dqs_ratio')
         self._report_bit_field('DQS ratio from Read Data Eye Training SLICE 3',DDRC_DEFS,'reg_71','phy_reg_rdlvl_dqs_ratio')
         self.cfile+='\tuart_puts("\\r\\n");\n'
         
+        self.cfile+='\tuart_puts("Adjusted when CONFIG_EZYNQ_DDR_TRAIN_WRITE_LEVEL is set :\\r\\n");\n'
         self._report_bit_field('DQ write data ratio from Write Leveling Training SLICE 0',DDRC_DEFS,'reg_6e','phy_reg_wrlvl_dq_ratio')
         self._report_bit_field('DQ write data ratio from Write Leveling Training SLICE 1',DDRC_DEFS,'reg_6f','phy_reg_wrlvl_dq_ratio')
         self._report_bit_field('DQ write data ratio from Write Leveling Training SLICE 2',DDRC_DEFS,'reg_70','phy_reg_wrlvl_dq_ratio')
         self._report_bit_field('DQ write data ratio from Write Leveling Training SLICE 3',DDRC_DEFS,'reg_71','phy_reg_wrlvl_dq_ratio')
         self.cfile+='\tuart_puts("\\r\\n");\n'
         
+        self.cfile+='\tuart_puts("Adjusted when CONFIG_EZYNQ_DDR_TRAIN_WRITE_LEVEL is set :\\r\\n");\n'
         self._report_bit_field('DQS write ratio from Write Leveling Training SLICE 0',DDRC_DEFS,'reg_6e','phy_reg_wrlvl_dqs_ratio')
         self._report_bit_field('DQS write ratio from Write Leveling Training SLICE 1',DDRC_DEFS,'reg_6f','phy_reg_wrlvl_dqs_ratio')
         self._report_bit_field('DQS write ratio from Write Leveling Training SLICE 2',DDRC_DEFS,'reg_70','phy_reg_wrlvl_dqs_ratio')
         self._report_bit_field('DQS write ratio from Write Leveling Training SLICE 3',DDRC_DEFS,'reg_71','phy_reg_wrlvl_dqs_ratio')
         self.cfile+='\tuart_puts("\\r\\n");\n'
         
+        self.cfile+='\tuart_puts("Adjusted when CONFIG_EZYNQ_DDR_TRAIN_WRITE_LEVEL is set :\\r\\n");\n'
         self._report_bit_field('Delay for write DQS slave DLL SLICE 0',DDRC_DEFS,'phy_dll_sts0','phy_reg_status_wr_dqs_slave_dll_value')
         self._report_bit_field('Delay for write DQS slave DLL SLICE 1',DDRC_DEFS,'phy_dll_sts1','phy_reg_status_wr_dqs_slave_dll_value')
         self._report_bit_field('Delay for write DQS slave DLL SLICE 2',DDRC_DEFS,'phy_dll_sts2','phy_reg_status_wr_dqs_slave_dll_value')
         self._report_bit_field('Delay for write DQS slave DLL SLICE 3',DDRC_DEFS,'phy_dll_sts3','phy_reg_status_wr_dqs_slave_dll_value')
         self.cfile+='\tuart_puts("\\r\\n");\n'
         
+        self.cfile+='\tuart_puts("Adjusted when CONFIG_EZYNQ_DDR_TRAIN_WRITE_LEVEL is set :\\r\\n");\n'
         self._report_bit_field('Delay for write DQ slave DLL SLICE 0',DDRC_DEFS,'phy_dll_sts0','phy_reg_status_wr_data_slave_dll_value')
         self._report_bit_field('Delay for write DQ slave DLL SLICE 1',DDRC_DEFS,'phy_dll_sts1','phy_reg_status_wr_data_slave_dll_value')
         self._report_bit_field('Delay for write DQ slave DLL SLICE 2',DDRC_DEFS,'phy_dll_sts2','phy_reg_status_wr_data_slave_dll_value')
         self._report_bit_field('Delay for write DQ slave DLL SLICE 3',DDRC_DEFS,'phy_dll_sts3','phy_reg_status_wr_data_slave_dll_value')
         self.cfile+='\tuart_puts("\\r\\n");\n'
         
+        self.cfile+='\tuart_puts("Adjusted always:\\r\\n");\n'
         self._report_bit_field('Delay for read DQ slave DLL SLICE 0',DDRC_DEFS,'phy_dll_sts0','phy_reg_status_rd_dqs_slave_dll_value')
         self._report_bit_field('Delay for read DQ slave DLL SLICE 1',DDRC_DEFS,'phy_dll_sts1','phy_reg_status_rd_dqs_slave_dll_value')
         self._report_bit_field('Delay for read DQ slave DLL SLICE 2',DDRC_DEFS,'phy_dll_sts2','phy_reg_status_rd_dqs_slave_dll_value')
@@ -579,6 +583,9 @@ int arch_cpu_init(void)
 \tunlock_slcr();
 
 '''
+        #Setup GPIO outputs (To be used by LED)        
+        if 'gpio_out' in self.sections:
+            self.cfile+='\tsetup_gpio_outputs(); /* Setup GPIO outputs */\n'
         self._cp_led('LED_CHECKPOINT_2') # First after getting to user code
         self.cfile+='''/*
    Write PLL and clocks registers as the code is now completely loaded to the OCM and no
@@ -685,6 +692,12 @@ int arch_cpu_init(void)
 
 \tddrc_wait_queue_empty(); /* Wait no commands are pending in DDRC queue */   
 
+\ts= (int *) 0x4000000;
+\td= (int *) 0;
+\twhile (d < ((int *) 0x30000)) *d++=*s++;
+
+\tddrc_wait_queue_empty(); /* Wait no commands are pending in DDRC queue */   
+
 /*
    Continue with the original low-level init, Now we have 2 copies of the code again,
    currently executing somewhere above 0x4000000. But as soon as we will return
@@ -699,7 +712,8 @@ int arch_cpu_init(void)
 \t/* Urgent write, ports S2/S3 */
 \twritel(0xC, &slcr_base->ddr_urgent);
 '''
-        if 'uart_xmit' in self.sections:
+
+        if ('uart_xmit' in self.sections) and self.features.get_par_value_or_none('LAST_PRINT_DEBUG'):
             self.cfile+='\tuart_put_hex(readl(0xe000002c));\n'
             self.cfile+='\tuart_putc(0xd);\n'
             self.cfile+='\tuart_putc(0xa);\n'
@@ -720,15 +734,14 @@ int arch_cpu_init(void)
             self.cfile+='\tuart_putc(0xd);\n'
             self.cfile+='\tuart_putc(0xa);\n'
             self.cfile+='\twhile((readl(0xe000002c) & 0x808) != 8); /* uart0.channel_sts  Channel status */\n'
-     
+        if 'uart_xmit' in self.sections:
             self.cfile+='\tuart_wait_tx_fifo_empty(); /* u-boot may re-program UART differently, wait all is sent before getting there */\n'
 #uart_wait_tx_fifo_empty() - add if u-boot debug is on
         self._cp_led('LED_CHECKPOINT_12') # Before leaving lowlevel_init()
 
-#Setup GPIO outputs (after LED debug is over)        
-        if 'gpio_out' in self.sections:
-            self.cfile+='\tsetup_gpio_outputs(); /* Setup GPIO outputs */\n'
-        
+# #Setup GPIO outputs (after LED debug is over)        
+#         if 'gpio_out' in self.sections:
+#             self.cfile+='\tsetup_gpio_outputs(); /* Setup GPIO outputs */\n'
         
 #LOCK_SLCR        
         if self.features.get_par_value_or_none('LOCK_SLCR') is False:

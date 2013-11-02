@@ -290,8 +290,26 @@ class EzynqMIO:
         self.verbosity=     verbosity
         self.slcr_register_set=  ezynq_registers.EzynqRegisters(self.MIO_PINS_DEFS,0,regs_masked,permit_undefined_bits)
         self.gpio_register_set=  ezynq_registers.EzynqRegisters(self.GPIO_DEFS,0,regs_masked,permit_undefined_bits)
-
     def generate_led_off_on(self, mio_pin):
+        if ('DATA_OUT' in self.mio[mio_pin]) or (('INOUT' in self.mio[mio_pin]) and (self.mio[mio_pin]['INOUT'] == 'OUT')):
+            return self.generate_gpio_led_off_on(mio_pin)
+        else:                                         
+            return self.generate_led_off_on_pullup(mio_pin)
+
+    def generate_gpio_led_off_on(self,mio_pin):
+        mask_data_regs_mio=('mask_data_0_lsw','mask_data_0_msw','mask_data_1_lsw','mask_data_1_msw');
+        led_register_set=  ezynq_registers.EzynqRegisters(self.GPIO_DEFS,0,[])
+        led_register_set.set_bitfields(mask_data_regs_mio[mio_pin/16],
+                                                     (('mask%02i'%mio_pin,0), # enable setting bit
+                                                      ('data%02i'%mio_pin,0))) # data to set
+        led_register_set.flush()
+        led_register_set.set_bitfields(mask_data_regs_mio[mio_pin/16],
+                                                     (('mask%02i'%mio_pin,0), # enable setting bit
+                                                      ('data%02i'%mio_pin,1))) # data to set
+        return led_register_set.get_register_sets(True,True)
+
+
+    def generate_led_off_on_pullup(self, mio_pin):
         # generate code to be included in u-boot for debugging early boot stages
         led_register_set=  ezynq_registers.EzynqRegisters(self.MIO_PINS_DEFS,0,[])
         led_register_set.set_bitfields('mio_pin_%02i'%mio_pin, ( # output 0 - LED off
@@ -301,7 +319,7 @@ class EzynqMIO:
         led_register_set.set_bitfields('mio_pin_%02i'%mio_pin, ( # input+pullup LED on
                                                      ('pullup',          1),
                                                      ('tri_enable',      1))) # ,force,warn)
-        return led_register_set.get_register_sets(sort_addr=True,apply_new=True)
+        return led_register_set.get_register_sets(True,True)
 
     def rbl_led_on_off(self, mio_pin, led_on, reg_sets):
         # generate code to be included in RBL register setup
