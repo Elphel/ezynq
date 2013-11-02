@@ -433,8 +433,8 @@ inline void ddrc_wait_queue_empty(void)
             bits=     reg_set[reg_name]['FIELDS'][field_name]['r']
 #    self._report_bit_field('BIST errors from reg_6c (1 bit per slice)',DDRC_DEFS,'reg_6c','phy_reg_bist_err')
             
-        mask=(1<<(max(bits)-min(bits)))-1
-        return ('(readl(0x%08x) >> %d) & 0x%x'%(addr,min(bits),mask), max(bits)-min(bits))
+        mask=(1<<(max(bits)-min(bits)+1))-1
+        return ('(readl(0x%08x) >> %d) & 0x%x'%(addr,min(bits),mask), max(bits)-min(bits)+1)
     def _report_bit_field(self,name,reg_set,reg_name,field_name,channel=0):
         self.cfile+='\tuart_puts("'+name+' = 0x");\n'
         self.cfile+='\tuart_put_hex('+self._read_bit_field(reg_set,reg_name,field_name,channel)[0]+');\n'
