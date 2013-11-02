@@ -691,7 +691,13 @@ int arch_cpu_init(void)
 \twhile (d < ((int *) 0x30000)) *d++=*s++;
 
 \tddrc_wait_queue_empty(); /* Wait no commands are pending in DDRC queue */   
-
+/*
+ * Below is a hack - copying the same data to low SDRAM again - probably just a delay.
+ * Waiting for ddrc_wait_queue_empty() alone is not sufficient - some of the
+ * generated images work always, some - half times, some - never, dependent on 
+ * seemingly unrelated changes. With this extra delay all seems fine.
+ * Better understanding of the original problem and a fix is needed.
+ */
 \ts= (int *) 0x4000000;
 \td= (int *) 0;
 \twhile (d < ((int *) 0x30000)) *d++=*s++;

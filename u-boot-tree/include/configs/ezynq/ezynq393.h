@@ -69,8 +69,7 @@
 #define CONFIG_EZYNQ_NAND__SLOW
 
 #define CONFIG_EZYNQ_MIO_ETH_0__SLOW
-/* TODO: enable MDIO */
-/*#define CONFIG_EZYNQ_MIO_ETH_MDIO__SLOW  */
+#define CONFIG_EZYNQ_MIO_ETH_MDIO__SLOW
 
 #define CONFIG_EZYNQ_MIO_USB_0__SLOW
 #define CONFIG_EZYNQ_MIO_USB_0__PULLUP
@@ -219,7 +218,7 @@ output (or undefined) -   off
 //  #define CONFIG_EZYNQ_MIO_INOUT_53      OUT     /* Make output, do not set data. Will be set after debug will be over */
 
 
-  #define CONFIG_EZYNQ_MIO_GPIO_OUT_53     0     /* Set selected GPIO output to 0/1 */
+/*  #define CONFIG_EZYNQ_MIO_GPIO_OUT_53     0 */    /* Set selected GPIO output to 0/1 */
   #undef  CONFIG_EZYNQ_DDR_DS_CKE
   #define CONFIG_EZYNQ_DDR_DS_CKE               4   /* CKE min pulse width (in tCK) */
 
@@ -228,7 +227,7 @@ output (or undefined) -   off
 
 
 
-  #define CONFIG_EZYNQ_LED_DEBUG          53     /* toggle LED during boot - temporary, normal use - MDIO_D */
+/*  #define CONFIG_EZYNQ_LED_DEBUG          53 */    /* toggle LED during boot - temporary, normal use - MDIO_D */
   #define CONFIG_EZYNQ_UART_DEBUG_USE_LED    N    /* turn on/off LED while waiting for transmit FIFO not full */
 
   #define CONFIG_EZYNQ_SILICON               3 /* 3 */        /* Silicon revision */
