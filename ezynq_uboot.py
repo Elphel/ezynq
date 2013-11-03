@@ -662,12 +662,14 @@ int arch_cpu_init(void)
    Be careful not to call functions or access data stored in the 3 lower OCM pages.
    writel() is OK as it is just a macro, not a function call 
  */
-\tasm("add pc, pc, #0x4000000" );
-
+\tasm("add pc, pc, #0x4000000\\n\\t"
+"mov r0,r0\\n\\t"
+"mov r0,r0" );
 '''
 # seems some delay is needed before remapping DDR memory
         self.cfile+='\tddrc_wait_queue_empty(); /* seems some delay is needed here before remapping DDR memory */\n'            
         self._cp_led('LED_CHECKPOINT_9') # After relocation to DDR (to 0x4000000+ )
+#        self._cp_led('LED_CHECKPOINT_9') # After relocation to DDR (to 0x4000000+ )
         self.cfile+='\twritel(0, &scu_base->filter_start); /* Remap DDR to zero, FILTERSTART */\n'
         self.cfile+='''/* Device config APB, unlock the PCAP */
 \twritel(0x757BDF0D, &devcfg_base->unlock);
@@ -725,12 +727,9 @@ int arch_cpu_init(void)
             self.cfile+='\tuart_putc(0xa);\n'
         if 'uart_xmit' in self.sections:
             self.cfile+='\tuart_wait_tx_fifo_empty(); /* u-boot may re-program UART differently, wait all is sent before getting there */\n'
-#uart_wait_tx_fifo_empty() - add if u-boot debug is on
         self._cp_led('LED_CHECKPOINT_12') # Before leaving lowlevel_init()
-
-# #Setup GPIO outputs (after LED debug is over)        
-#         if 'gpio_out' in self.sections:
-#             self.cfile+='\tsetup_gpio_outputs(); /* Setup GPIO outputs */\n'
+        if 'uart_xmit' in self.sections:
+            self.cfile+='\tuart_wait_tx_fifo_empty(); /* Second time - for some reason 1 wait sometimes fails after LAST_PRINT_DEBUG */\n'
         
 #LOCK_SLCR        
         if self.features.get_par_value_or_none('LOCK_SLCR') is False:
