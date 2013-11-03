@@ -30,7 +30,7 @@
 #define CONFIG_EZYNQ_BOOT_DEBUG        Y   /* configure UARTx and send register dumps there.*/
 #define CONFIG_EZYNQ_LOCK_SLCR         OFF /* Lock SLCR registers when all is done. */
 #define CONFIG_EZYNQ_LED_DEBUG          47 /* toggle LED during boot */
-#define CONFIG_EZYNQ_UART_DEBUG_USE_LED    /* turn on/off LED while waiting for transmit FIFO not full */
+#define CONFIG_EZYNQ_UART_DEBUG_USE_LED N  /* turn on/off LED while waiting for transmit FIFO not full */
 
 #define CONFIG_EZYNQ_DUMP_SLCR_EARLY     N /* Dump SLCR registers as soon as UART is initialized (depends on CONFIG_EZYNQ_BOOT_DEBUG) */
 #define CONFIG_EZYNQ_DUMP_DDRC_EARLY     N /* Dump DDRC registers as soon as UART is initialized (depends on CONFIG_EZYNQ_BOOT_DEBUG) */
@@ -38,29 +38,29 @@
 #define CONFIG_EZYNQ_DUMP_DDRC_LATE      N  /* Dump DDRC registers after DDR memory is initialized (depends on CONFIG_EZYNQ_BOOT_DEBUG) */
 #define CONFIG_EZYNQ_DUMP_TRAINING_EARLY N /* Training results registers before DDRC initialization */
 #define CONFIG_EZYNQ_DUMP_TRAINING_LATE  Y /* Training results registers after DDRC initialization */
-#define CONFIG_EZYNQ_DUMP_OCM            y /* Dump (some of) OCM data */
-#define CONFIG_EZYNQ_DUMP_DDR            y  /* Dump (some of) DDR data */
+#define CONFIG_EZYNQ_DUMP_OCM            n /* Dump (some of) OCM data */
+#define CONFIG_EZYNQ_DUMP_DDR            n  /* Dump (some of) DDR data */
 #if 1
 #define CONFIG_EZYNQ_DUMP_OCM_LOW        0x0   /* OCM dump start (deafault 0)     */
-#define CONFIG_EZYNQ_DUMP_OCM_HIGH     0x2ff   /* OCM dump end   (deafault 0x2ff, full - 0x2ffff) */
+#define CONFIG_EZYNQ_DUMP_OCM_HIGH   0x2ffff   /* OCM dump end   (deafault 0x2ff, full - 0x2ffff) */
 
 #define CONFIG_EZYNQ_DUMP_DDR_LOW  0x4000000  /* DDR dump start (deafault 0x4000000, start of the OCM copy) */
-#define CONFIG_EZYNQ_DUMP_DDR_HIGH 0x40002ff  /* DDR dump end   (deafault 0x40002ff) */
+#define CONFIG_EZYNQ_DUMP_DDR_HIGH 0x402ffff  /* DDR dump end   (deafault 0x40002ff) */
 #endif
 /* Turning LED on/off at different stages of the boot process. Requires CONFIG_EZYNQ_LED_DEBUG and CONFIG_EZYNQ_BOOT_DEBUG to be set
    If defined, each can be 0,1, ON or OFF */
 #define CONFIG_EZYNQ_LED_CHECKPOINT_1   OFF /* in RBL setup, as soon as MIO is programmed, should be OFF to use GPIO */
 #define CONFIG_EZYNQ_LED_CHECKPOINT_2   OFF /* First after getting to user code */
-#define CONFIG_EZYNQ_LED_CHECKPOINT_3   ON  /* After setting clock registers */
+#define CONFIG_EZYNQ_LED_CHECKPOINT_3   OFF  /* After setting clock registers */
 #define CONFIG_EZYNQ_LED_CHECKPOINT_4   OFF /* After PLL bypass is OFF */
-#define CONFIG_EZYNQ_LED_CHECKPOINT_5   ON  /* After UART is programmed */
+#define CONFIG_EZYNQ_LED_CHECKPOINT_5   OFF  /* After UART is programmed */
 #define CONFIG_EZYNQ_LED_CHECKPOINT_6   OFF /* After DCI is calibrated */
-#define CONFIG_EZYNQ_LED_CHECKPOINT_7   ON  /* After DDR is initialized */
+#define CONFIG_EZYNQ_LED_CHECKPOINT_7   OFF  /* After DDR is initialized */
 #define CONFIG_EZYNQ_LED_CHECKPOINT_8   OFF /* Before relocation to DDR (to 0x4000000+ ) */
 #define CONFIG_EZYNQ_LED_CHECKPOINT_9   ON  /* After  relocation to DDR (to 0x4000000+ ) */
-#define CONFIG_EZYNQ_LED_CHECKPOINT_10  OFF /* Before remapping OCM0-OCM2 high */
+#define CONFIG_EZYNQ_LED_CHECKPOINT_10  ON /* Before remapping OCM0-OCM2 high */
 #define CONFIG_EZYNQ_LED_CHECKPOINT_11  ON  /* After remapping OCM0-OCM2 high */
-#define CONFIG_EZYNQ_LED_CHECKPOINT_12  OFF /* Before leaving lowlevel_init() */
+#define CONFIG_EZYNQ_LED_CHECKPOINT_12  ON /* Before leaving lowlevel_init() */
 #define CONFIG_EZYNQ_LAST_PRINT_DEBUG   y   /* 'Output to UART before exiting arch_cpu_init() */ 
 /* MIO configuration */
 #define CONFIG_EZYNQ_OCM                         /* not used */

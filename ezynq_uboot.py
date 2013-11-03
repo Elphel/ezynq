@@ -720,26 +720,9 @@ int arch_cpu_init(void)
 '''
 
         if ('uart_xmit' in self.sections) and self.features.get_par_value_or_none('LAST_PRINT_DEBUG'):
-            self.cfile+='\tuart_put_hex(readl(0xe000002c));\n'
-            self.cfile+='\tuart_putc(0xd);\n'
-            self.cfile+='\tuart_putc(0xa);\n'
-            self.cfile+='\tuart_put_hex(readl(0xe000002c));\n'
-            self.cfile+='\tuart_putc(0xd);\n'
-            self.cfile+='\tuart_putc(0xa);\n'
-#            self.cfile+='\twhile((readl(0xe000002c) & 0x808) != 8); /* uart0.channel_sts  Channel status */\n'
-            self.cfile+='\tuart_put_hex(readl(0xe000002c));\n'
-            self.cfile+='\tuart_putc(0xd);\n'
-            self.cfile+='\tuart_putc(0xa);\n'
-            self.cfile+='\tuart_put_hex(readl(0xe000002c));\n'
-            self.cfile+='\tuart_putc(0xd);\n'
-            self.cfile+='\tuart_putc(0xa);\n'
             self.cfile+='\tuart_put_hex(0x12345678);\n'
             self.cfile+='\tuart_putc(0xd);\n'
             self.cfile+='\tuart_putc(0xa);\n'
-            self.cfile+='\tuart_put_hex(0x12345678);\n'
-            self.cfile+='\tuart_putc(0xd);\n'
-            self.cfile+='\tuart_putc(0xa);\n'
-            self.cfile+='\twhile((readl(0xe000002c) & 0x808) != 8); /* uart0.channel_sts  Channel status */\n'
         if 'uart_xmit' in self.sections:
             self.cfile+='\tuart_wait_tx_fifo_empty(); /* u-boot may re-program UART differently, wait all is sent before getting there */\n'
 #uart_wait_tx_fifo_empty() - add if u-boot debug is on

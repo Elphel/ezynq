@@ -39,7 +39,7 @@
 #include <configs/ezynq/ezynq_XC7Z010_1CLG400.h>
 #include <configs/ezynq/zed_ezynq.h>
 
-#if 1
+#if 0
   #undef CONFIG_EZYNQ_BOOT_DEBUG        Y    /* configure UARTx and send register dumps there.*/
 #endif
 #define CONFIG_CMD_MEMTEST
