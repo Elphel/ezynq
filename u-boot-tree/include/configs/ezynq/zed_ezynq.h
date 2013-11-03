@@ -38,14 +38,14 @@
 #define CONFIG_EZYNQ_DUMP_DDRC_LATE      N  /* Dump DDRC registers after DDR memory is initialized (depends on CONFIG_EZYNQ_BOOT_DEBUG) */
 #define CONFIG_EZYNQ_DUMP_TRAINING_EARLY N /* Training results registers before DDRC initialization */
 #define CONFIG_EZYNQ_DUMP_TRAINING_LATE  Y /* Training results registers after DDRC initialization */
-#define CONFIG_EZYNQ_DUMP_OCM            n /* Dump (some of) OCM data */
-#define CONFIG_EZYNQ_DUMP_DDR            n  /* Dump (some of) DDR data */
+#define CONFIG_EZYNQ_DUMP_OCM            y /* Dump (some of) OCM data */
+#define CONFIG_EZYNQ_DUMP_DDR            y  /* Dump (some of) DDR data */
 #if 1
 #define CONFIG_EZYNQ_DUMP_OCM_LOW        0x0   /* OCM dump start (deafault 0)     */
-#define CONFIG_EZYNQ_DUMP_OCM_HIGH   0x2ffff   /* OCM dump end   (deafault 0x2ff, full - 0x2ffff) */
+#define CONFIG_EZYNQ_DUMP_OCM_HIGH     0x2ff   /* OCM dump end   (deafault 0x2ff, full - 0x2ffff) */
 
 #define CONFIG_EZYNQ_DUMP_DDR_LOW  0x4000000  /* DDR dump start (deafault 0x4000000, start of the OCM copy) */
-#define CONFIG_EZYNQ_DUMP_DDR_HIGH 0x402ffff  /* DDR dump end   (deafault 0x40002ff) */
+#define CONFIG_EZYNQ_DUMP_DDR_HIGH 0x40002ff  /* DDR dump end   (deafault 0x40002ff) */
 #endif
 /* Turning LED on/off at different stages of the boot process. Requires CONFIG_EZYNQ_LED_DEBUG and CONFIG_EZYNQ_BOOT_DEBUG to be set
    If defined, each can be 0,1, ON or OFF */
@@ -102,9 +102,9 @@ Red LED - pullup, input - on,
 #define CONFIG_EZYNQ_DDR_ARB_PAGE_BANK      N        /*  Enable Arbiter prioritization based on page/bank match */
 #define CONFIG_EZYNQ_DDR_ECC                Disabled /*  Enable ECC for the DDR memory */
 #define CONFIG_EZYNQ_DDR_BUS_WIDTH          32       /*  SoC DDR bus width */
-#define CONFIG_EZYNQ_DDR_TRAIN_WRITE_LEVEL  0        /*  Automatically train write leveling during initialization */
-#define CONFIG_EZYNQ_DDR_TRAIN_READ_GATE    0        /*  Automatically train read gate timing during initialization */
-#define CONFIG_EZYNQ_DDR_TRAIN_DATA_EYE     0        /*  Automatically train data eye during initialization */
+#define CONFIG_EZYNQ_DDR_TRAIN_WRITE_LEVEL  n        /*  Automatically train write leveling during initialization */
+#define CONFIG_EZYNQ_DDR_TRAIN_READ_GATE    n        /*  Automatically train read gate timing during initialization */
+#define CONFIG_EZYNQ_DDR_TRAIN_DATA_EYE     n        /*  Automatically train data eye during initialization */
 #define CONFIG_EZYNQ_DDR_CLOCK_STOP_EN      0        /*  Enable clock stop */
 #define CONFIG_EZYNQ_DDR_USE_INTERNAL_VREF  0        /*  Use internal Vref */
 
