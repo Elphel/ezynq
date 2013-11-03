@@ -70,10 +70,8 @@
 
 #define CONFIG_EZYNQ_MIO_ETH_0__SLOW
 #define CONFIG_EZYNQ_MIO_ETH_MDIO__SLOW
-
 #define CONFIG_EZYNQ_MIO_USB_0__SLOW
 #define CONFIG_EZYNQ_MIO_USB_0__PULLUP
-
 #define CONFIG_EZYNQ_MIO_SDIO_0           40  /* 16,28,40 */
 #define CONFIG_EZYNQ_MIO_SDIO_0__SLOW
 #define CONFIG_EZYNQ_MIO_SDIO_0__PULLUP
@@ -192,8 +190,6 @@ output (or undefined) -   off
 
 #define CONFIG_EZYNQ_CLK_COMPLIANCE_PERCENT    5.0 /*  Allow exceeding maximal limits by this margin (percent */
 
-
-
 /*       Board PCB layout parameters (not yet used)      */
 #define CONFIG_EZYNQ_DDR_BOARD_DELAY0      0.0
 #define CONFIG_EZYNQ_DDR_BOARD_DELAY1      0.0
@@ -214,20 +210,6 @@ output (or undefined) -   off
 
 /* Below will overwrite calculated values (not yet calculated) */
 #if 1 /*testing old version */
-/* LED will be ON */
-//  #define CONFIG_EZYNQ_MIO_INOUT_53      OUT     /* Make output, do not set data. Will be set after debug will be over */
-
-
-/*  #define CONFIG_EZYNQ_MIO_GPIO_OUT_53     0 */    /* Set selected GPIO output to 0/1 */
-  #undef  CONFIG_EZYNQ_DDR_DS_CKE
-  #define CONFIG_EZYNQ_DDR_DS_CKE               4   /* CKE min pulse width (in tCK) */
-
-//  #undef  CONFIG_EZYNQ_DDR_DS_WLMRD
-//  #define CONFIG_EZYNQ_DDR_DS_WLMRD            22   /* Write leveling : time to the first DQS rising edge (cycles). */
-
-
-
-/*  #define CONFIG_EZYNQ_LED_DEBUG          53 */    /* toggle LED during boot - temporary, normal use - MDIO_D */
   #define CONFIG_EZYNQ_UART_DEBUG_USE_LED    N    /* turn on/off LED while waiting for transmit FIFO not full */
 
   #define CONFIG_EZYNQ_SILICON               3 /* 3 */        /* Silicon revision */
@@ -262,7 +244,7 @@ output (or undefined) -   off
   #define CONFIG_EZYNQ_PHY_PHY_WR_DATA_SLAVE_RATIO_3 0x40 /* Ratio for write data slave DLL (256 - clock period), slice 3 */
 
   #define CONFIG_EZYNQ_PHY_PHY_CTRL_SLAVE_RATIO 0x80     /* Ratio for address/command (256 - clock period) */
-  #define CONFIG_EZYNQ_PHY_INVERT_CLK             N     /* RInvert CLK out (if clk can arrive to DRAM chip earlier/at the same time as DQS) */
+  #define CONFIG_EZYNQ_PHY_INVERT_CLK             N     /* Invert CLK out (if clk can arrive to DRAM chip earlier/at the same time as DQS) */
 
 #else
   #define CONFIG_EZYNQ_MIO_ETH_MDIO__SLOW 
@@ -294,7 +276,7 @@ output (or undefined) -   off
   #define CONFIG_EZYNQ_PHY_PHY_WR_DATA_SLAVE_RATIO_3 0xc7 /* Ratio for write data slave DLL (256 - clock period), slice 3 */
 
   #define CONFIG_EZYNQ_PHY_PHY_CTRL_SLAVE_RATIO 0x100     /* Ratio for address/command (256 - clock period) */
-  #define CONFIG_EZYNQ_PHY_INVERT_CLK                     /* RInvert CLK out (if clk can arrive to DRAM chip earlier/at the same time as DQS) */
+  #define CONFIG_EZYNQ_PHY_INVERT_CLK                     /* Invert CLK out (if clk can arrive to DRAM chip earlier/at the same time as DQS) */
 
 #endif
 

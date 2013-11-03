@@ -30,17 +30,19 @@
 #define CONFIG_SYS_NO_FLASH
 
 #define CONFIG_ZYNQ_SDHCI0
-//#define CONFIG_ZYNQ_SPI
+/* #define CONFIG_ZYNQ_SPI */
 
-//#define CONFIG_NAND_ZYNQ
+/* #define CONFIG_NAND_ZYNQ */
 #undef CONFIG_SYS_TEXT_BASE
 #include <configs/zynq_common.h>
 #include <configs/ezynq/ezynq_MT41K256M16RE125.h>  /* should be before zed_ezynq.h as it overwrites DDR3L with DDR3 */
 #include <configs/ezynq/ezynq_XC7Z010_1CLG400.h>
 #include <configs/ezynq/zed_ezynq.h>
 
-//#define CONFIG_CMD_MEMTEST
-#undef CONFIG_EZYNQ_BOOT_DEBUG 
+#if 1
+  #undef CONFIG_EZYNQ_BOOT_DEBUG        Y    /* configure UARTx and send register dumps there.*/
+#endif
+#define CONFIG_CMD_MEMTEST
 
 /* twice slower */
 #undef CONFIG_ZYNQ_SERIAL_CLOCK0
@@ -66,14 +68,14 @@
 #if 0
   #define CONFIG_SYS_TEXT_BASE		0x04000000 /*with 0x04000000 - does not get to the low_Level_init? */
 #else
-  #define CONFIG_SYS_TEXT_BASE		0x00000000 //0x04000000 with 0x04000000 - does not get to the low_Level_init?
+#define CONFIG_SYS_TEXT_BASE		0x00000000
 #endif
 /*
 #define CONFIG_EZYNQ_SKIP_DDR
 */
 #define CONFIG_EZYNQ_SKIP_CLK
 
-//undefs
+/* undefs */
 
 /* undefs */
 /*#undef CONFIG_FS_FAT */
