@@ -65,6 +65,11 @@ the DRAM, not in the OCM. U-boot relocation functionality nicely skips actual re
 the source and destination addresses are the same) and the data memory is initialized when 192K
 OCM limit is not in effect anymore. 
 
+## SUPPORTED BOARDS
+
+* **Avnet MicroZed**
+* **Xilinx ZC706**
+* **Elphel 10393**
 
 ## INSTALLATION (see below for testing without U-boot installation)
 
@@ -118,6 +123,7 @@ New files include:
    suspect a hardware problem.
 3. Bitstream loading is not tested, current code does not enable level shifters - it may be
    more appropriate to do just before loading of the bitstream.
+4. Write level training for DDR memory doesn't work in MicroZed and ZC706
 
 ## Trademark notices
 

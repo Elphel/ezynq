@@ -44,6 +44,8 @@
 
 #define CONFIG_EZYNQ_DUMP_DDR_LOW  0x4000000  /* DDR dump start (deafault 0x4000000, start of the OCM copy) */
 #define CONFIG_EZYNQ_DUMP_DDR_HIGH 0x40002ff  /* DDR dump end   (deafault 0x40002ff) */
+
+#define CONFIG_EZYNQ_OCM_DDR_CHECKSUMS   Y
 #endif
 /* Turning LED on/off at different stages of the boot process. Requires CONFIG_EZYNQ_LED_DEBUG and CONFIG_EZYNQ_BOOT_DEBUG to be set
    If defined, each can be 0,1, ON or OFF */

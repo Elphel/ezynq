@@ -89,7 +89,9 @@ UBOOT_CFG_DEFS=[
     {'NAME':'LED_CHECKPOINT_12',   'CONF_NAME':'CONFIG_EZYNQ_LED_CHECKPOINT_12','TYPE':'B','MANDATORY':False,'DERIVED':False,'DEFAULT':None,
                 'DESCRIPTION':'LED ON/OFF before leaving lowlevel_init()'},              
     {'NAME':'LAST_PRINT_DEBUG',   'CONF_NAME':'CONFIG_EZYNQ_LAST_PRINT_DEBUG','TYPE':'B','MANDATORY':False,'DERIVED':False,'DEFAULT':None,
-                'DESCRIPTION':'Output to UART before exiting arch_cpu_init()'},              
+                'DESCRIPTION':'Output to UART before exiting arch_cpu_init()'},
+    {'NAME':'OCM_DDR_CHECKSUMS',   'CONF_NAME':'CONFIG_EZYNQ_OCM_DDR_CHECKSUMS','TYPE':'B','MANDATORY':False,'DERIVED':False,'DEFAULT':None,
+                'DESCRIPTION':'Print OCM & DDR checksums'},
 ]
 # 
 # CONFIG_EZYNQ_BOOT_DEBUG = y # configure UARTx and send register dumps there
@@ -653,6 +655,31 @@ int arch_cpu_init(void)
             self.cfile+='\tuart_puts("DDR memory data\\r\\n");\n'
             self.cfile+='\tuart_dump_regs(0x%08x,0x%08x, 16);\n'%(self.features.get_par_value_or_default('DUMP_DDR_LOW'),self.features.get_par_value_or_default('DUMP_DDR_HIGH'))
             self.cfile+='\tuart_puts("\\r\\n");\n'
+            
+        if self.features.get_par_value_or_none('OCM_DDR_CHECKSUMS'):
+            self.cfile+='''/*Calculating the sums*/
+\tint i = 0;            
+\tint n = 3;            
+\tint sum;
+\tuart_puts("Memories data checksums:\\r\\n");
+\tfor(i=0;i<n;i++){
+\t\tuart_puts("Read ");
+\t\tuart_put_hex(i+1);
+\t\tuart_puts(": ");
+\t\ts = (int *) 0;
+\t\tsum=0;
+\t\twhile (s< ((int *)0x30000)) sum+=*s++;
+\t\tuart_puts("OCM= 0x");
+\t\tuart_put_hex(sum);
+\t\td = (int *) 0x4000000;
+\t\tsum=0;
+\t\twhile (d< ((int *)0x4030000)) sum+=*d++;
+\t\tuart_puts("  DDR= 0x");
+\t\tuart_put_hex(sum);
+\t\tuart_puts("\\r\\n");
+\t}
+\tuart_puts("\\r\\n");
+'''
 
 #         if 'uart_xmit' in self.sections:
 #             self.cfile+='\tuart_wait_tx_fifo_empty();\n'
@@ -664,12 +691,14 @@ int arch_cpu_init(void)
  */
 \tasm("add pc, pc, #0x4000000\\n\\t"
 "mov r0,r0\\n\\t"
+"mov r0,r0\\n\\t"
 "mov r0,r0" );
 '''
 # seems some delay is needed before remapping DDR memory
 #        self.cfile+='\tddrc_wait_queue_empty(); /* seems some delay is needed here before remapping DDR memory */\n'            
         self._cp_led('LED_CHECKPOINT_9') # After relocation to DDR (to 0x4000000+ )
 #        self._cp_led('LED_CHECKPOINT_9') # After relocation to DDR (to 0x4000000+ )
+            
         self.cfile+='\twritel(0, &scu_base->filter_start); /* Remap DDR to zero, FILTERSTART */\n'
         self.cfile+='''/* Device config APB, unlock the PCAP */
 \twritel(0x757BDF0D, &devcfg_base->unlock);

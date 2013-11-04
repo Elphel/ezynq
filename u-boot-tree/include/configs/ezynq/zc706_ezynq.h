@@ -1,7 +1,7 @@
 /*
  * (C) Copyright 2013 Elphel, Inc.
  *
- * Configuration for Microzed RBL header
+ * Configuration for ZC706 RBL header
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License as
@@ -17,9 +17,7 @@
 #define __CONFIG_EZYNQ_H
 #define CONFIG_EZYNQ
 
-
-/* Boot image cionfiguration parameters */
-
+/* Boot image configuration parameters */
 #define CONFIG_EZYNQ_BOOT_USERDEF           0x1010000 /*  0x1234567  will be saved in the file header */
 #define CONFIG_EZYNQ_BOOT_OCM_OFFSET        0x8c0     /*  0xa40 0x8C0      start of OCM data relative to the flash image start > 0x8C0, 63-bytes aligned */
 #define CONFIG_EZYNQ_BOOT_OCM_IMAGE_LENGTH  0x30000   /* 0x1400c  0x30000   number of bytes to load to the OCM memory, <   0x30000 */
@@ -29,44 +27,31 @@
 /* Boot debug setup */
 #define CONFIG_EZYNQ_BOOT_DEBUG        Y   /* configure UARTx and send register dumps there.*/
 #define CONFIG_EZYNQ_LOCK_SLCR         OFF /* Lock SLCR registers when all is done. */
-#define CONFIG_EZYNQ_LED_DEBUG          47 /* toggle LED during boot */
-#define CONFIG_EZYNQ_UART_DEBUG_USE_LED N  /* turn on/off LED while waiting for transmit FIFO not full */
+#define CONFIG_EZYNQ_UART_DEBUG_USE_LED  N  /* turn on/off LED while waiting for transmit FIFO not full */
 
 #define CONFIG_EZYNQ_DUMP_SLCR_EARLY     N /* Dump SLCR registers as soon as UART is initialized (depends on CONFIG_EZYNQ_BOOT_DEBUG) */
 #define CONFIG_EZYNQ_DUMP_DDRC_EARLY     N /* Dump DDRC registers as soon as UART is initialized (depends on CONFIG_EZYNQ_BOOT_DEBUG) */
 #define CONFIG_EZYNQ_DUMP_SLCR_LATE      N /* Dump SLCR registers after DDR memory is initialized (depends on CONFIG_EZYNQ_BOOT_DEBUG) */
-#define CONFIG_EZYNQ_DUMP_DDRC_LATE      N  /* Dump DDRC registers after DDR memory is initialized (depends on CONFIG_EZYNQ_BOOT_DEBUG) */
+#define CONFIG_EZYNQ_DUMP_DDRC_LATE      Y  /* Dump DDRC registers after DDR memory is initialized (depends on CONFIG_EZYNQ_BOOT_DEBUG) */
 #define CONFIG_EZYNQ_DUMP_TRAINING_EARLY N /* Training results registers before DDRC initialization */
 #define CONFIG_EZYNQ_DUMP_TRAINING_LATE  Y /* Training results registers after DDRC initialization */
 #define CONFIG_EZYNQ_DUMP_OCM            Y /* Dump (some of) OCM data */
-#define CONFIG_EZYNQ_DUMP_DDR            Y  /* Dump (some of) DDR data */
+#define CONFIG_EZYNQ_DUMP_DDR            Y /* Dump (some of) DDR data */
+#define CONFIG_EZYNQ_OCM_DDR_CHECKSUMS   Y /* Print OCM and DDR data checksums (regular sum)*/
+
 #if 1
-#define CONFIG_EZYNQ_DUMP_OCM_LOW        0x0   /* OCM dump start (deafault 0)     */
-#define CONFIG_EZYNQ_DUMP_OCM_HIGH     0x2ff   /* OCM dump end   (deafault 0x2ff, full - 0x2ffff) */
-
-#define CONFIG_EZYNQ_DUMP_DDR_LOW  0x4000000  /* DDR dump start (deafault 0x4000000, start of the OCM copy) */
-#define CONFIG_EZYNQ_DUMP_DDR_HIGH 0x40002ff  /* DDR dump end   (deafault 0x40002ff) */
-
-#define CONFIG_EZYNQ_OCM_DDR_CHECKSUMS   Y
+  #define CONFIG_EZYNQ_DUMP_OCM_LOW        0x0   /* OCM dump start (deafault 0)     */
+  #define CONFIG_EZYNQ_DUMP_OCM_HIGH     0x2ff   /* OCM dump end   (deafault 0x2ff, full - 0x2ffff) */
+  #define CONFIG_EZYNQ_DUMP_DDR_LOW  0x4000000  /* DDR dump start (deafault 0x4000000, start of the OCM copy) */
+  #define CONFIG_EZYNQ_DUMP_DDR_HIGH 0x40002ff  /* DDR dump end   (deafault 0x40002ff) */
 #endif
-/* Turning LED on/off at different stages of the boot process. Requires CONFIG_EZYNQ_LED_DEBUG and CONFIG_EZYNQ_BOOT_DEBUG to be set
-   If defined, each can be 0,1, ON or OFF */
-#define CONFIG_EZYNQ_LED_CHECKPOINT_1   OFF /* in RBL setup, as soon as MIO is programmed, should be OFF to use GPIO */
-#define CONFIG_EZYNQ_LED_CHECKPOINT_2   OFF /* First after getting to user code */
-#define CONFIG_EZYNQ_LED_CHECKPOINT_3   OFF  /* After setting clock registers */
-#define CONFIG_EZYNQ_LED_CHECKPOINT_4   OFF /* After PLL bypass is OFF */
-#define CONFIG_EZYNQ_LED_CHECKPOINT_5   OFF  /* After UART is programmed */
-#define CONFIG_EZYNQ_LED_CHECKPOINT_6   OFF /* After DCI is calibrated */
-#define CONFIG_EZYNQ_LED_CHECKPOINT_7   OFF  /* After DDR is initialized */
-#define CONFIG_EZYNQ_LED_CHECKPOINT_8   OFF /* Before relocation to DDR (to 0x4000000+ ) */
-#define CONFIG_EZYNQ_LED_CHECKPOINT_9   ON  /* After  relocation to DDR (to 0x4000000+ ) */
-#define CONFIG_EZYNQ_LED_CHECKPOINT_10  ON /* Before remapping OCM0-OCM2 high */
-#define CONFIG_EZYNQ_LED_CHECKPOINT_11  ON  /* After remapping OCM0-OCM2 high */
-#define CONFIG_EZYNQ_LED_CHECKPOINT_12  ON /* Before leaving lowlevel_init() */
-#define CONFIG_EZYNQ_LAST_PRINT_DEBUG   y   /* 'Output to UART before exiting arch_cpu_init() */ 
+
+#define CONFIG_EZYNQ_LAST_PRINT_DEBUG   Y   /* 'Output to UART before exiting arch_cpu_init() */ 
+
+
 /* MIO configuration */
 #define CONFIG_EZYNQ_OCM                         /* not used */
-#define CONFIG_EZYNQ_MIO_0_VOLT           3.3
+#define CONFIG_EZYNQ_MIO_0_VOLT           1.8
 #define CONFIG_EZYNQ_MIO_1_VOLT           1.8
 #define CONFIG_EZYNQ_QUADSPI_0__SLOW
 #define CONFIG_EZYNQ_MIO_ETH_0__SLOW
@@ -76,21 +61,17 @@
 #define CONFIG_EZYNQ_MIO_SDIO_0           40  /* 16,28,40 */
 #define CONFIG_EZYNQ_MIO_SDIO_0__SLOW
 #define CONFIG_EZYNQ_MIO_SDIO_0__PULLUP
-#define CONFIG_EZYNQ_MIO_SDCD_0           46  /* any but 7,8  */
+#define CONFIG_EZYNQ_MIO_SDCD_0           14  /* any but 7,8  */
 #define CONFIG_EZYNQ_MIO_SDCD_0__PULLUP
-#define CONFIG_EZYNQ_MIO_SDWP_0           50  /* #any but 7,8  */
+#define CONFIG_EZYNQ_MIO_SDWP_0           15
 #define CONFIG_EZYNQ_MIO_SDWP_0__PULLUP
 #define CONFIG_EZYNQ_MIO_UART_1           48  /* #  8+4*N  */
-/* LED will be OFF */
-#define CONFIG_EZYNQ_MIO_INOUT_47   OUT       /* Make output, do not set data. Will be set after debug will be over */
-#define CONFIG_EZYNQ_MIO_GPIO_OUT_7        1  /* Set selected GPIO output to 0/1 */
+#define CONFIG_EZYNQ_UART1_BAUD_RATE      115200
 
-/*
-Red LED - pullup, input - on,
-#define CONFIG_EZYNQ_MIO_INOUT_47   OUT
-#define CONFIG_EZYNQ_MIO_INOUT_47   IN
-#define CONFIG_EZYNQ_MIO_INOUT_47   BIDIR
-*/
+#define CONFIG_EZYNQ_UART_DEBUG_CHANNEL   0x1
+
+
+
 #define CONFIG_EZYNQ_DDR_ENABLE             Y        /*  Enable DDR memory */
 /* Only specify CONFIG_EZYNQ_DDR_FREQ_MHZ if you want the DDR frequency used for timing calculations is different from actual */
 /* #define CONFIG_EZYNQ_DDR_FREQ_MHZ    533.333333 */ /*  DDR clock frequency in MHz, this value overwrites the one calculated by the PLL/clock setup */
@@ -99,7 +80,7 @@ Red LED - pullup, input - on,
 #define CONFIG_EZYNQ_DDR_ECC                Disabled /*  Enable ECC for the DDR memory */
 #define CONFIG_EZYNQ_DDR_BUS_WIDTH          32       /*  SoC DDR bus width */
 #define CONFIG_EZYNQ_DDR_TRAIN_WRITE_LEVEL  N        /*  [doesn't work yet] Automatically train write leveling during initialization */
-#define CONFIG_EZYNQ_DDR_TRAIN_READ_GATE    N        /*  Automatically train read gate timing during initialization */
+#define CONFIG_EZYNQ_DDR_TRAIN_READ_GATE    Y        /*  Automatically train read gate timing during initialization */
 #define CONFIG_EZYNQ_DDR_TRAIN_DATA_EYE     N        /*  Automatically train data eye during initialization */
 #define CONFIG_EZYNQ_DDR_CLOCK_STOP_EN      0        /*  Enable clock stop */
 #define CONFIG_EZYNQ_DDR_USE_INTERNAL_VREF  0        /*  Use internal Vref */
@@ -165,6 +146,7 @@ Red LED - pullup, input - on,
 #define CONFIG_EZYNQ_CLK_PCAP_SRC         IO /*  PCAP controller clock source (normally IO PLL) */
 #define CONFIG_EZYNQ_CLK_TRACE_SRC        IO /*  Trace Port clock source (normally IO PLL) */
 
+
 /* Even if memory itself is DDR3L (1.35V) it also can support DDR3 mode (1.5V). And unfortunately Zynq has degraded
    specs at 1.35V (only 400MHz maximal clock), so datasheets's 'DDR3L' should be replaced with 'DDR3' and the board
    power supply should be 1.5V - in that case 533MHz clock is possible */
@@ -183,6 +165,8 @@ Red LED - pullup, input - on,
 /* #define CONFIG_EZYNQ_CLK_DDR_2X_MAX_MHZ     408.0 */ /*  Maximal DDR_2X clock frequency (MHz). Overwrites speed grade specific */
 
 #define CONFIG_EZYNQ_CLK_COMPLIANCE_PERCENT    5.0 /*  Allow exceeding maximal limits by this margin (percent */
+
+
 
 /*       Board PCB layout parameters (not yet used)      */
 #define CONFIG_EZYNQ_DDR_BOARD_DELAY0      0.0
@@ -207,7 +191,7 @@ Red LED - pullup, input - on,
 #define CONFIG_EZYNQ_DDR_RAM_HIGHADDR   0x3FFFFFFF
 */
 /* Below will overwrite calculated values (not yet calculated) */
-  #define CONFIG_EZYNQ_SILICON               3 /* 3 */        /* Silicon revision */
+  #define CONFIG_EZYNQ_SILICON               2 /* 3 */        /* Silicon revision */
   #define CONFIG_EZYNQ_PHY_WRLV_INIT_RATIO_0 0x0 /* Initial ratio for write leveling FSM, slice 0 */
   #define CONFIG_EZYNQ_PHY_WRLV_INIT_RATIO_1 0x0 /* Initial ratio for write leveling FSM, slice 1 */
   #define CONFIG_EZYNQ_PHY_WRLV_INIT_RATIO_2 0x0 /* Initial ratio for write leveling FSM, slice 2 */
@@ -240,8 +224,5 @@ Red LED - pullup, input - on,
 
   #define CONFIG_EZYNQ_PHY_PHY_CTRL_SLAVE_RATIO 0x80     /* Ratio for address/command (256 - clock period) */
   #define CONFIG_EZYNQ_PHY_INVERT_CLK             N     /* Invert CLK out (if clk can arrive to DRAM chip earlier/at the same time as DQS) */
-
- 
- 
 
 #endif /* __CONFIG_EZYNQ_H */

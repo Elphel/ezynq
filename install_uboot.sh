@@ -108,4 +108,9 @@ fi
 echo "DONE. 
 FURTHER INSTRUCTIONS (TO GENERATE BOOT.BIN):
   cd u-boot-xlnx
-  ./makeuboot"
+  ./makeuboot <target> 
+
+SUPPORTED TARGETS:
+  ./makeuboot zynq_microzed_config
+  ./makeuboot zynq_zc706_config
+  ./makeuboot elphel393_config "
