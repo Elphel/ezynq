@@ -640,7 +640,7 @@ int arch_cpu_init(void)
 \tint * d= (int *) 0x4000000;
 \twhile (s< ((int *)0x30000)) *d++=*s++;
 '''
-        self.cfile+='\tddrc_wait_queue_empty(); /* Wait no commands are pending in DDRC queue */\n'            
+#        self.cfile+='\tddrc_wait_queue_empty(); /* Wait no commands are pending in DDRC queue */\n'            
 
         self._cp_led('LED_CHECKPOINT_8') # Before relocation to DDR (to 0x4000000+ )
         
@@ -667,7 +667,7 @@ int arch_cpu_init(void)
 "mov r0,r0" );
 '''
 # seems some delay is needed before remapping DDR memory
-        self.cfile+='\tddrc_wait_queue_empty(); /* seems some delay is needed here before remapping DDR memory */\n'            
+#        self.cfile+='\tddrc_wait_queue_empty(); /* seems some delay is needed here before remapping DDR memory */\n'            
         self._cp_led('LED_CHECKPOINT_9') # After relocation to DDR (to 0x4000000+ )
 #        self._cp_led('LED_CHECKPOINT_9') # After relocation to DDR (to 0x4000000+ )
         self.cfile+='\twritel(0, &scu_base->filter_start); /* Remap DDR to zero, FILTERSTART */\n'
@@ -692,7 +692,7 @@ int arch_cpu_init(void)
 \td= (int *) 0;
 \twhile (d < ((int *) 0x30000)) *d++=*s++;
 
-\tddrc_wait_queue_empty(); /* Wait no commands are pending in DDRC queue */   
+/*\tddrc_wait_queue_empty();*/ /* Wait no commands are pending in DDRC queue */   
 /*
  * Below is a hack - copying the same data to low SDRAM again - probably just a delay.
  * Waiting for ddrc_wait_queue_empty() alone is not sufficient - some of the
@@ -700,11 +700,12 @@ int arch_cpu_init(void)
  * seemingly unrelated changes. With this extra delay all seems fine.
  * Better understanding of the original problem and a fix is needed.
  */
+/* 
 \ts= (int *) 0x4000000;
 \td= (int *) 0;
 \twhile (d < ((int *) 0x30000)) *d++=*s++;
-
-\tddrc_wait_queue_empty(); /* Wait no commands are pending in DDRC queue */   
+*/
+/*\tddrc_wait_queue_empty();*/ /* Wait no commands are pending in DDRC queue */   
 
 /*
    Continue with the original low-level init, Now we have 2 copies of the code again,
