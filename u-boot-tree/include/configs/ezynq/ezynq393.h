@@ -27,7 +27,7 @@
 #define CONFIG_EZYNQ_RESERVED44             0         /*   documented as 0, but actually 1 */
 
 /* Boot debug setup */
-#define CONFIG_EZYNQ_BOOT_DEBUG        Y    /* configure UARTx and send register dumps there.*/
+#define CONFIG_EZYNQ_BOOT_DEBUG        Y   /* configure UARTx and send register dumps there.*/
 #define CONFIG_EZYNQ_LOCK_SLCR         OFF /* Lock SLCR registers when all is done. */
 
 #define CONFIG_EZYNQ_DUMP_SLCR_EARLY     N /* Dump SLCR registers as soon as UART is initialized (depends on CONFIG_EZYNQ_BOOT_DEBUG) */
@@ -42,9 +42,8 @@
 #define CONFIG_EZYNQ_DUMP_OCM_LOW        0x0   /* OCM dump start (deafault 0)     */
 #define CONFIG_EZYNQ_DUMP_OCM_HIGH     0x2ff   /* OCM dump end   (deafault 0x2ff, full - 0x2ffff) */
 
-#define CONFIG_EZYNQ_DUMP_DDR_LOW  0x4001014  /* DDR dump start (deafault 0x4000000, start of the OCM copy) */
-//#define CONFIG_EZYNQ_DUMP_DDR_HIGH 0x400152f  /* DDR dump end   (deafault 0x40002ff) */
-#define CONFIG_EZYNQ_DUMP_DDR_HIGH 0x300152f  /* DDR dump end   (deafault 0x40002ff) */
+#define CONFIG_EZYNQ_DUMP_DDR_LOW  0x4000000  /* DDR dump start (deafault 0x4000000, start of the OCM copy) */
+#define CONFIG_EZYNQ_DUMP_DDR_HIGH 0x40002ff  /* DDR dump end   (deafault 0x40002ff) */
 #endif
 /* Turning LED on/off at different stages of the boot process. Requires CONFIG_EZYNQ_LED_DEBUG and CONFIG_EZYNQ_BOOT_DEBUG to be set
    If defined, each can be 0,1, ON or OFF */
@@ -60,7 +59,7 @@
 #define CONFIG_EZYNQ_LED_CHECKPOINT_10  ON  /* Before remapping OCM0-OCM2 high */
 #define CONFIG_EZYNQ_LED_CHECKPOINT_11  ON  /* After remapping OCM0-OCM2 high */
 #define CONFIG_EZYNQ_LED_CHECKPOINT_12  ON  /* Before leaving lowlevel_init() */
-#define CONFIG_EZYNQ_LAST_PRINT_DEBUG   N   /* 'Output to UART before exiting arch_cpu_init() */ 
+#define CONFIG_EZYNQ_LAST_PRINT_DEBUG   Y   /* 'Output to UART before exiting arch_cpu_init() */ 
 /* MIO configuration */
 #define CONFIG_EZYNQ_OCM                         /* not used */
 #define CONFIG_EZYNQ_MIO_0_VOLT           1.8

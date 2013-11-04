@@ -74,12 +74,6 @@
 #define CONFIG_EZYNQ_MIO_SDIO_0           40  /* 16,28,40 */
 #define CONFIG_EZYNQ_MIO_SDIO_0__SLOW
 #define CONFIG_EZYNQ_MIO_SDIO_0__PULLUP
-#define CONFIG_EZYNQ_MIO_SDIO_0           40  /* 16,28,40 */
-#define CONFIG_EZYNQ_MIO_SDIO_0__SLOW
-#define CONFIG_EZYNQ_MIO_SDIO_0__PULLUP
-#define CONFIG_EZYNQ_MIO_SDIO_0           40  /* 16,28,40 */
-#define CONFIG_EZYNQ_MIO_SDIO_0__SLOW
-#define CONFIG_EZYNQ_MIO_SDIO_0__PULLUP
 #define CONFIG_EZYNQ_MIO_SDCD_0           46  /* any but 7,8  */
 #define CONFIG_EZYNQ_MIO_SDCD_0__PULLUP
 #define CONFIG_EZYNQ_MIO_SDWP_0           50  /* #any but 7,8  */
