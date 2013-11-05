@@ -67,6 +67,12 @@ if [ ! -h "$CONFIGS/$EZYNQ" ]; then
 fi
 
 echo "Step 3c: Creating symbolic links for separate files (a suffix is added to the originals)"
+if [ ! -d "board/elphel" ]; then 
+  mkdir "board/elphel"
+fi
+if [ ! -d "board/elphel/elphel393" ]; then 
+  mkdir "board/elphel/elphel393"
+fi
 for SRC in $(find $UBOOT_TREE -type f -not -path "$UBOOT_TREE/$CONFIGS/$EZYNQ/*")
 do
   LINK=$(echo $SRC | sed "s:^$UBOOT_TREE/::")
