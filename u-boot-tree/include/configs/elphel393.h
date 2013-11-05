@@ -42,7 +42,7 @@
 #include <configs/zynq_common.h>
 #include <configs/ezynq/ezynq_MT41K256M16HA107.h>  /* should be before zed_ezynq.h as it overwrites DDR3L with DDR3 */
 #include <configs/ezynq/ezynq_XC7Z030_1FBG484C.h>
-#include <configs/ezynq/ezynq393.h>
+#include <configs/ezynq/ezynq_elphel393.h>
 
 #define CONFIG_CMD_MEMTEST
 

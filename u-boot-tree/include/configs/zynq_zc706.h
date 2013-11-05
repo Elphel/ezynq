@@ -18,7 +18,7 @@
 #ifndef __CONFIG_ZYNQ_ZC706_H
 #define __CONFIG_ZYNQ_ZC706_H
 
-#define PHYS_SDRAM_1_SIZE (512 * 1024 * 1024)
+#define PHYS_SDRAM_1_SIZE (1024 * 1024 * 1024)
 
 #define CONFIG_ZYNQ_SERIAL_UART1
 
@@ -30,7 +30,7 @@
 #include <configs/zynq_common.h>
 #include <configs/ezynq/ezynq_MT41J256M8HX15E.h>  /* should be before zed_ezynq.h as it overwrites DDR3L with DDR3 */
 #include <configs/ezynq/ezynq_XC7Z045_2FFG900C.h>
-#include <configs/ezynq/zc706_ezynq.h>
+#include <configs/ezynq/ezynq_zc706.h>
 
 #define CONFIG_CMD_MEMTEST
 //#undef CONFIG_EZYNQ_BOOT_DEBUG 

@@ -37,7 +37,7 @@
 #include <configs/zynq_common.h>
 #include <configs/ezynq/ezynq_MT41K256M16RE125.h>  /* should be before zed_ezynq.h as it overwrites DDR3L with DDR3 */
 #include <configs/ezynq/ezynq_XC7Z010_1CLG400.h>
-#include <configs/ezynq/zed_ezynq.h>
+#include <configs/ezynq/ezynq_microzed.h>
 
 #if 0
   #undef CONFIG_EZYNQ_BOOT_DEBUG            /* configure UARTx and send register dumps there.*/
