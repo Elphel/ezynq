@@ -113,4 +113,5 @@ FURTHER INSTRUCTIONS (TO GENERATE BOOT.BIN):
 SUPPORTED TARGETS:
   ./makeuboot zynq_microzed_config
   ./makeuboot zynq_zc706_config
-  ./makeuboot elphel393_config "
+  ./makeuboot elphel393_config 
+  ./makeuboot zynq_zed_config "
