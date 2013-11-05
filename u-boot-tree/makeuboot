@@ -7,6 +7,7 @@ if [ ! $1 ]; then
       ./makeuboot zynq_microzed_config
       ./makeuboot zynq_zc706_config
       ./makeuboot elphel393_config
+      ./makeuboot zynq_zed_config
   "
   exit -1
 fi
