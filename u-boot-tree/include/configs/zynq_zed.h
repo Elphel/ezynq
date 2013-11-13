@@ -21,8 +21,8 @@
 #define PHYS_SDRAM_1_SIZE (512 * 1024 * 1024) 
 
 #define CONFIG_ZYNQ_SERIAL_UART1
-#if 0
-#define CONFIG_ZYNQ_GEM0
+#if 1
+//#define CONFIG_ZYNQ_GEM0
 #define CONFIG_ZYNQ_GEM_PHY_ADDR0	0
 #endif
 
@@ -59,7 +59,7 @@
 #undef CONFIG_SYS_TEXT_BASE
 
 #define CONFIG_BOOTDELAY	-1 /* -1 to Disable autoboot */
-#define CONFIG_SYS_PROMPT		"ezynq> "
+#define CONFIG_SYS_PROMPT		"zedboard> "
 
 
 #define CONFIG_SYS_SDRAM_BASE		0x00000000 /* Physical start address of SDRAM. _Must_ be 0 here. */
@@ -122,10 +122,10 @@
 		"fpga load 0 ${loadbit_addr} ${filesize}\0" \
 	"sdboot=echo Copying Linux from SD to RAM... && " \
 		"mmcinfo && " \
-		"fatload mmc 0 0x3000000 ${kernel_image} && " \
-		"fatload mmc 0 0x2A00000 ${devicetree_image} && " \
+		"fatload mmc 0 0x3A00000 ${kernel_image} && " \
+		"fatload mmc 0 0x3400000 ${devicetree_image} && " \
 		"fatload mmc 0 0x2000000 ${ramdisk_image} && " \
-		"bootm 0x3000000 0x2000000 0x2A00000\0" \
+		"bootm 0x3A00000 0x2000000 0x3400000\0" \
 	"nandboot=echo Copying Linux from NAND flash to RAM... && " \
 		"nand read 0x3000000 0x100000 ${kernel_size} && " \
 		"nand read 0x2A00000 0x600000 ${devicetree_size} && " \

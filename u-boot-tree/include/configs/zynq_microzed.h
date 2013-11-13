@@ -22,8 +22,8 @@
 #define PHYS_SDRAM_1_SIZE (1024 * 1024 * 1024)
 
 #define CONFIG_ZYNQ_SERIAL_UART1
-#if 0
-#define CONFIG_ZYNQ_GEM0
+#if 1
+//#define CONFIG_ZYNQ_GEM0
 #define CONFIG_ZYNQ_GEM_PHY_ADDR0	0
 #endif
 
@@ -60,7 +60,7 @@
 #undef CONFIG_SYS_TEXT_BASE
 
 #define CONFIG_BOOTDELAY	-1 /* -1 to Disable autoboot */
-#define CONFIG_SYS_PROMPT		"ezynq> "
+#define CONFIG_SYS_PROMPT		"microzed> "
 
 
 #define CONFIG_SYS_SDRAM_BASE		0x00000000 /* Physical start address of SDRAM. _Must_ be 0 here. */
