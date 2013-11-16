@@ -61,7 +61,7 @@
 #undef CONFIG_ENV_SIZE
 #undef CONFIG_SYS_TEXT_BASE
 
-#define CONFIG_BOOTDELAY	-1 /* -1 to Disable autoboot */
+#define CONFIG_BOOTDELAY	1 /* -1 to Disable autoboot */
 #define CONFIG_SYS_PROMPT		"elphel393> "
 
 
