@@ -115,10 +115,10 @@
 		"fpga load 0 ${loadbit_addr} ${filesize}\0" \
 	"sdboot=echo Copying Linux from SD to RAM... && " \
 		"mmcinfo && " \
-		"fatload mmc 0 0x3A00000 ${kernel_image} && " \
-		"fatload mmc 0 0x3400000 ${devicetree_image} && " \
+		"fatload mmc 0 0x3F00000 ${kernel_image} && " \
+		"fatload mmc 0 0x3E00000 ${devicetree_image} && " \
 		"fatload mmc 0 0x2000000 ${ramdisk_image} && " \
-		"bootm 0x3A00000 0x2000000 0x3400000\0" \
+		"bootm 0x3F00000 0x2000000 0x3E00000\0" \
 	"nandboot=echo Copying Linux from NAND flash to RAM... && " \
 		"nand read 0x3000000 0x100000 ${kernel_size} && " \
 		"nand read 0x2A00000 0x600000 ${devicetree_size} && " \

@@ -85,6 +85,8 @@
 //#define CONFIG_EZYNQ_MIO_INOUT_47   OUT       /* Make output, do not set data. Will be set after debug will be over */
 //#define CONFIG_EZYNQ_MIO_GPIO_OUT_7        1  /* Set selected GPIO output to 0/1 */
 
+#define CONFIG_EZYNQ_UART_DEBUG_CHANNEL   0x1
+
 /*
 Red LED - pullup, input - on,
 #define CONFIG_EZYNQ_MIO_INOUT_47   OUT
