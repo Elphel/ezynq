@@ -40,6 +40,10 @@
 
 #undef CONFIG_SYS_TEXT_BASE
 #include <configs/zynq_common.h>
+
+#undef CONFIG_IPADDR
+#undef CONFIG_SERVERIP
+
 #include <configs/ezynq/ezynq_MT41K256M16HA107.h>  /* should be before zed_ezynq.h as it overwrites DDR3L with DDR3 */
 #include <configs/ezynq/ezynq_XC7Z030_1FBG484C.h>
 #include <configs/ezynq/ezynq_elphel393.h>
@@ -62,7 +66,7 @@
 #undef CONFIG_SYS_TEXT_BASE
 
 #define CONFIG_BOOTDELAY	1 /* -1 to Disable autoboot */
-#define CONFIG_SYS_PROMPT		"elphel393> "
+#define CONFIG_SYS_PROMPT		"elphel393-u-boot> "
 
 
 #define CONFIG_SYS_SDRAM_BASE		0x00000000 /* Physical start address of SDRAM. _Must_ be 0 here. */
@@ -115,7 +119,7 @@
 	"devicetree_size=0x20000\0"	\
 	"ramdisk_size=0x5E0000\0"	\
 	"fdt_high=0x20000000\0"	\
-	"initrd_high=0x20000000\0"	\
+	"initrd_high=0xFFFFFFFF\0"	\
 	"mmc_loadbit_fat=echo Loading bitstream from SD/MMC/eMMC to RAM.. && " \
 		"mmcinfo && " \
 		"fatload mmc 0 ${loadbit_addr} ${bitstream_image} && " \

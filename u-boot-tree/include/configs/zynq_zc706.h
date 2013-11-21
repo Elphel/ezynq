@@ -28,6 +28,10 @@
 
 #undef CONFIG_SYS_TEXT_BASE
 #include <configs/zynq_common.h>
+
+#undef CONFIG_IPADDR
+#undef CONFIG_SERVERIP
+
 #include <configs/ezynq/ezynq_MT41J256M8HX15E.h>  /* should be before zed_ezynq.h as it overwrites DDR3L with DDR3 */
 #include <configs/ezynq/ezynq_XC7Z045_2FFG900C.h>
 #include <configs/ezynq/ezynq_zc706.h>

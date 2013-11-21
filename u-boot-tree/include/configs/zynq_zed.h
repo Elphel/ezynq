@@ -34,6 +34,10 @@
 /* #define CONFIG_NAND_ZYNQ */
 #undef CONFIG_SYS_TEXT_BASE
 #include <configs/zynq_common.h>
+
+#undef CONFIG_IPADDR
+#undef CONFIG_SERVERIP
+
 #include <configs/ezynq/ezynq_MT41J128M16HA15E.h>  /* should be before zed_ezynq.h as it overwrites DDR3L with DDR3 */
 #include <configs/ezynq/ezynq_XC7Z020_1CLG484.h>
 #include <configs/ezynq/ezynq_zed.h>
@@ -115,7 +119,7 @@
 	"devicetree_size=0x20000\0"	\
 	"ramdisk_size=0x5E0000\0"	\
 	"fdt_high=0x20000000\0"	\
-	"initrd_high=0x20000000\0"	\
+	"initrd_high=0xFFFFFFFF\0"	\
 	"mmc_loadbit_fat=echo Loading bitstream from SD/MMC/eMMC to RAM.. && " \
 		"mmcinfo && " \
 		"fatload mmc 0 ${loadbit_addr} ${bitstream_image} && " \
