@@ -119,7 +119,7 @@
 	"devicetree_size=0x20000\0"	\
 	"ramdisk_size=0x5E0000\0"	\
 	"fdt_high=0x20000000\0"	\
-	"initrd_high=0xFFFFFFFF\0"	\
+	"initrd_high=0x20000000\0"	\
 	"mmc_loadbit_fat=echo Loading bitstream from SD/MMC/eMMC to RAM.. && " \
 		"mmcinfo && " \
 		"fatload mmc 0 ${loadbit_addr} ${bitstream_image} && " \
