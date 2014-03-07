@@ -52,7 +52,7 @@ fi
 
 echo "Step 2: Checking out u-boot version with the hash 'bbd91fc9ae290c31dc52fd8322f43f67ddd39247'"
 cd "$REPO_DIR_NAME"
-git checkout bbd91fc9ae290c31dc52fd8322f43f67ddd39247
+git checkout 54fee227ef141214141a226efd17ae0516deaf32
 
 echo "Step 3: Merging ezynq with u-boot"
 

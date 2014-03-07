@@ -133,6 +133,7 @@ class EzynqUBoot:
 #include <asm/io.h>
 #include <asm/arch/sys_proto.h>
 #include <asm/arch/hardware.h>
+#include <asm/arch/clk.h>
 
 """
     
@@ -760,7 +761,11 @@ int arch_cpu_init(void)
         self._cp_led('LED_CHECKPOINT_12') # Before leaving lowlevel_init()
         if 'uart_xmit' in self.sections:
             self.cfile+='\tuart_wait_tx_fifo_empty(); /* Second time - for some reason 1 wait sometimes fails after LAST_PRINT_DEBUG */\n'
-        
+             
+        self.cfile+='''/* set up the CPU clk clock frequency in the global data struct */
+	zynq_clk_early_init();
+'''
+             
 #LOCK_SLCR        
         if self.features.get_par_value_or_none('LOCK_SLCR') is False:
             self.cfile+='/* Leaving SLCR registers UNLOCKED according to setting of %s */\n'%self.features.get_par_confname('LOCK_SLCR')
