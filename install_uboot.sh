@@ -41,7 +41,8 @@ SUFFIX=".orig"
 INITENV="initenv"
 OVERWRITE_INITENV=1
 CROSS_COMPILE="arm-poky-linux-gnueabi-"
-COMPILE_PATH="/opt/poky/1.4.2/sysroots/x86_64-pokysdk-linux/usr/bin/armv7a-vfp-neon-poky-linux-gnueabi"
+#COMPILE_PATH="/opt/poky/1.4.2/sysroots/x86_64-pokysdk-linux/usr/bin/armv7a-vfp-neon-poky-linux-gnueabi"
+COMPILE_PATH="/opt/poky/1.5.1/sysroots/x86_64-pokysdk-linux/usr/bin/arm-poky-linux-gnueabi"
 
 echo "Step 1: Cloning Xilinx's u-boot repository (master-next branch)"
 if [ ! -d "$REPO_DIR_NAME/.git" ]; then
@@ -50,9 +51,10 @@ else
   echo "  Already there"
 fi
 
-echo "Step 2: Checking out u-boot version with the hash 'bbd91fc9ae290c31dc52fd8322f43f67ddd39247'"
+echo "Step 2: Checking out u-boot version with the certain hash"
 cd "$REPO_DIR_NAME"
-git checkout 54fee227ef141214141a226efd17ae0516deaf32
+#git checkout 54fee227ef141214141a226efd17ae0516deaf32
+git checkout 2a0536fa48db1fc5332e3cd33b846d0da0c8bc1e
 
 echo "Step 3: Merging ezynq with u-boot"
 
