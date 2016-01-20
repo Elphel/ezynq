@@ -4,11 +4,12 @@
  * SPDX-License-Identifier:	GPL-2.0+
  */
 #include <common.h>
+#include <debug_uart.h>
 #include <spl.h>
 
 #include <asm/io.h>
+#include <asm/spl.h>
 #include <asm/arch/hardware.h>
-#include <asm/arch/spl.h>
 #include <asm/arch/sys_proto.h>
 
 #ifndef CONFIG_EZYNQ
@@ -23,27 +24,29 @@ DECLARE_GLOBAL_DATA_PTR;
 void board_init_f(ulong dummy)
 {
 	/* Clear the BSS. */
-	memset(__bss_start, 0, __bss_end - __bss_start);
+	//memset(__bss_start, 0, __bss_end - __bss_start);
 
 	/* Set global data pointer. */
-	gd = &gdata;
+	//gd = &gdata;
 
 #ifndef CONFIG_EZYNQ
 	ps7_init();
 #endif
-	preloader_console_init();
 	arch_cpu_init();
-	
-#ifdef CONFIG_EZYNQ
-	puts("Copying ps7_init.c/h from hw project is NOT REQUIRED\n");
+        
+#ifdef CONFIG_EZYNQ  
+	puts("NOT REQUIRED: Copying ps7_init.c/h from hw project\n");
 #endif
-	board_init_r(NULL, 0);
+// 	board_init_r(NULL, 0);
 }
 
+#ifdef CONFIG_SPL_BOARD_INIT
 void spl_board_init(void)
 {
+        preloader_console_init();
 	board_init();
 }
+#endif
 
 u32 spl_boot_device(void)
 {
@@ -82,7 +85,7 @@ u32 spl_boot_device(void)
 #ifdef CONFIG_SPL_MMC_SUPPORT
 u32 spl_boot_mode(void)
 {
-	return MMCSD_MODE_FAT;
+	return MMCSD_MODE_FS;
 }
 #endif
 

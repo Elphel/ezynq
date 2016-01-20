@@ -15,12 +15,13 @@ obj-y	+= slcr.o
 
 #use CONFIG_EZYNQ for the first (spl) u-boot pass or the only one (if spl building disabled)
 ifeq ($(CONFIG_SPL),)
-obj-$(CONFIG_EZYNQ)	+= ezynq.o
+	obj-$(CONFIG_EZYNQ)	+= ezynq.o
 endif
 ifneq ($(CONFIG_SPL_BUILD),)
-obj-$(CONFIG_EZYNQ)	+= ezynq.o
+	obj-$(CONFIG_EZYNQ)	+= ezynq.o
 endif
 
 obj-y	+= clk.o
 obj-y	+= lowlevel_init.o
+AFLAGS_lowlevel_init.o := -mfpu=neon
 obj-$(CONFIG_SPL_BUILD)	+= spl.o

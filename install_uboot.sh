@@ -33,8 +33,8 @@ SCRIPTPATH=$(dirname "$SCRIPT")
 UBOOT_TREE="$SCRIPTPATH/u-boot-tree"
 CONFIGS="include/configs"
 EZYNQ="ezynq"
-REPO_DIR_NAME="u-boot-xlnx"
-PATCH_NAME="u-boot-xlnx.patch"
+REPO_DIR_NAME="u-boot"
+PATCH_NAME="u-boot.patch"
 
 SUFFIX=".orig"
 
@@ -44,9 +44,9 @@ CROSS_COMPILE="arm-poky-linux-gnueabi-"
 #COMPILE_PATH="/opt/poky/1.4.2/sysroots/x86_64-pokysdk-linux/usr/bin/armv7a-vfp-neon-poky-linux-gnueabi"
 COMPILE_PATH="/opt/poky/1.5.1/sysroots/x86_64-pokysdk-linux/usr/bin/arm-poky-linux-gnueabi"
 
-echo "Step 1: Cloning Xilinx's u-boot repository (master-next branch)"
+echo "Step 1: Cloning u-boot repository (master branch)"
 if [ ! -d "$REPO_DIR_NAME/.git" ]; then
-  git clone -b master-next https://github.com/Xilinx/u-boot-xlnx.git "$REPO_DIR_NAME"
+  git clone -b master git://git.denx.de/u-boot.git "$REPO_DIR_NAME"
 else
   echo "  Already there"
 fi
@@ -54,7 +54,8 @@ fi
 echo "Step 2: Checking out u-boot version with the certain hash"
 cd "$REPO_DIR_NAME"
 #git checkout 54fee227ef141214141a226efd17ae0516deaf32
-git checkout 2a0536fa48db1fc5332e3cd33b846d0da0c8bc1e
+#git checkout 2a0536fa48db1fc5332e3cd33b846d0da0c8bc1e
+git checkout fa85e826c16b9ce1ad302a57e9c4b24db0d8b930
 
 echo "Step 3: Merging ezynq with u-boot"
 
@@ -115,7 +116,7 @@ fi
 
 echo "DONE. 
 FURTHER INSTRUCTIONS (TO GENERATE BOOT.BIN):
-  cd u-boot-xlnx
+  cd u-boot
   ./makeuboot <target> 
 
 SUPPORTED TARGETS:
