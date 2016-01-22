@@ -1,18 +1,18 @@
 /*
- * Xilinx MicroZED board DTS
+ * Xilinx ZC706 board DTS
  *
- * Copyright (C) 2013 Xilinx, Inc.
+ *  Copyright (C) 2011 - 2015 Xilinx
+ *  Copyright (C) 2012 National Instruments Corp.
  *
- * SPDX-License-Identifier:	GPL-2.0+
- * 
+ * SPDX-License-Identifier:     GPL-2.0+
  * Modified: Oleg Dzhimiev <oleg@elphel.com>, Elphel Inc., 2016
  */
 /dts-v1/;
 #include "zynq-7000.dtsi"
 
 / {
-	model = "Zynq MicroZED Board";
-	compatible = "xlnx,zynq-microzed", "xlnx,zynq-7000";
+        model = "Zynq ZC706 Development Board";
+        compatible = "xlnx,zynq-zc706", "xlnx,zynq-7000";
 
 	aliases {
 		serial0 = &uart1;

@@ -1,5 +1,5 @@
 /*
- * Xilinx MicroZED board DTS
+ * Xilinx ZED board DTS
  *
  * Copyright (C) 2013 Xilinx, Inc.
  *
@@ -11,8 +11,8 @@
 #include "zynq-7000.dtsi"
 
 / {
-	model = "Zynq MicroZED Board";
-	compatible = "xlnx,zynq-microzed", "xlnx,zynq-7000";
+	model = "Zynq Zed Development Board";
+	compatible = "xlnx,zynq-zed", "xlnx,zynq-7000";
 
 	aliases {
 		serial0 = &uart1;
