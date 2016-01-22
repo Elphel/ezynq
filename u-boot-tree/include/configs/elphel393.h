@@ -28,7 +28,7 @@
 #define CONFIG_SYS_NO_FLASH
 
 #define CONFIG_ZYNQ_SDHCI0
-#define CONFIG_DEFAULT_DEVICE_TREE	zynq-elphel393
+/*#define CONFIG_DEFAULT_DEVICE_TREE	elphel393*/
 
 #include <configs/zynq-common.h>
 #undef CONFIG_SYS_PROMPT
