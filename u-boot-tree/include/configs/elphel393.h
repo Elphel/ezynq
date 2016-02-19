@@ -34,6 +34,8 @@
 #undef CONFIG_SYS_PROMPT
 #undef CONFIG_BOOTDELAY
 #undef CONFIG_EXTRA_ENV_SETTINGS
+/*skip u-boot falcon mode*/
+#undef CONFIG_SPL_OS_BOOT
 
 #include <configs/ezynq/ezynq_MT41K256M16HA107.h>  /* should be before zed_ezynq.h as it overwrites DDR3L with DDR3 */
 #include <configs/ezynq/ezynq_XC7Z030_1FBG484C.h>
