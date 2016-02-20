@@ -16,7 +16,7 @@
 #define CONFIG_ZYNQ_GEM0
 #define CONFIG_ZYNQ_GEM_PHY_ADDR0	0
 
-#define CONFIG_SYS_NO_FLASH
+/*#define CONFIG_SYS_NO_FLASH*/
 
 #define CONFIG_ZYNQ_SDHCI0
 
@@ -34,6 +34,8 @@
 #include <configs/ezynq/ezynq_microzed.h>
 
 #define CONFIG_CMD_NAND
+#define CONFIG_SYS_MAX_NAND_DEVICE	1
+#define CONFIG_SYS_NAND_BASE		0xE1000000
 
 #define CONFIG_BOOTDELAY	1 /* -1 to Disable autoboot */
 #define CONFIG_SYS_PROMPT		"microzed-u-boot> "
