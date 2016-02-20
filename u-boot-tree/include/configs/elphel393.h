@@ -27,7 +27,7 @@
 
 #define CONFIG_SYS_NO_FLASH
 
-#define CONFIG_ZYNQ_SDHCI0
+#define CONFIG_ZYNQ_SDHCI0z
 /*#define CONFIG_DEFAULT_DEVICE_TREE	elphel393*/
 
 #include <configs/zynq-common.h>
@@ -41,6 +41,7 @@
 #include <configs/ezynq/ezynq_XC7Z030_1FBG484C.h>
 #include <configs/ezynq/ezynq_elphel393.h>
 
+#define CONFIG_CMD_NAND
 #define CONFIG_CMD_MEMTEST
 
 #define CONFIG_BOOTDELAY	1 /* -1 to Disable autoboot */
