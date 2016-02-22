@@ -43,10 +43,11 @@
 
 #define CONFIG_SPL_NAND_SUPPORT
 
+/*
 #define CONFIG_CMD_NAND
 #define CONFIG_SYS_MAX_NAND_DEVICE	1
 #define CONFIG_SYS_NAND_BASE		0xE1000000
-
+*/
 #define CONFIG_CMD_MEMTEST
 
 #define CONFIG_BOOTDELAY	1 /* -1 to Disable autoboot */
