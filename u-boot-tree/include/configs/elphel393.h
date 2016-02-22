@@ -25,9 +25,11 @@
 #define CONFIG_ZYNQ_GEM0
 #define CONFIG_ZYNQ_GEM_PHY_ADDR0	0
 
-/*#define CONFIG_SYS_NO_FLASH*/
+#define CONFIG_ZYNQ_SDHCI0
 
-#define CONFIG_ZYNQ_SDHCI0z
+#define CONFIG_SYS_NO_FLASH
+#define CONFIG_SPL_NAND_SUPPORT
+
 /*#define CONFIG_DEFAULT_DEVICE_TREE	elphel393*/
 
 #include <configs/zynq-common.h>
@@ -40,8 +42,6 @@
 #include <configs/ezynq/ezynq_MT41K256M16HA107.h>  /* should be before zed_ezynq.h as it overwrites DDR3L with DDR3 */
 #include <configs/ezynq/ezynq_XC7Z030_1FBG484C.h>
 #include <configs/ezynq/ezynq_elphel393.h>
-
-#define CONFIG_SPL_NAND_SUPPORT
 
 /*
 #define CONFIG_CMD_NAND
