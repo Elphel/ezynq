@@ -33,10 +33,6 @@
 #include <configs/ezynq/ezynq_XC7Z010_1CLG400.h>
 #include <configs/ezynq/ezynq_microzed.h>
 
-#define CONFIG_CMD_NAND
-#define CONFIG_SYS_MAX_NAND_DEVICE	1
-#define CONFIG_SYS_NAND_BASE		0xE1000000
-
 #define CONFIG_BOOTDELAY	1 /* -1 to Disable autoboot */
 #define CONFIG_SYS_PROMPT		"microzed-u-boot> "
 

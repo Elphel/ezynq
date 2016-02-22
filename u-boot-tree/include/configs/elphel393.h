@@ -41,6 +41,8 @@
 #include <configs/ezynq/ezynq_XC7Z030_1FBG484C.h>
 #include <configs/ezynq/ezynq_elphel393.h>
 
+#define CONFIG_SPL_NAND_SUPPORT
+
 #define CONFIG_CMD_NAND
 #define CONFIG_SYS_MAX_NAND_DEVICE	1
 #define CONFIG_SYS_NAND_BASE		0xE1000000
