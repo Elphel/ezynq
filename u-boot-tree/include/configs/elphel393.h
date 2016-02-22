@@ -28,10 +28,18 @@
 #define CONFIG_ZYNQ_SDHCI0
 
 #define CONFIG_SYS_NO_FLASH
-#define CONFIG_SPL_NAND_SUPPORT
+
 #define CONFIG_NAND_ZYNQ
 
+/*
+#define CONFIG_SPL_NAND_SUPPORT
+#define CONFIG_SPL_NAND_DRIVERS
+*/
+
 /*#define CONFIG_DEFAULT_DEVICE_TREE	elphel393*/
+
+/*redefined in zynq-common.h*/
+#undef CONFIG_CMD_NAND
 
 #include <configs/zynq-common.h>
 #undef CONFIG_SYS_PROMPT
@@ -44,10 +52,16 @@
 #include <configs/ezynq/ezynq_XC7Z030_1FBG484C.h>
 #include <configs/ezynq/ezynq_elphel393.h>
 
+/*#define CONFIG_SYS_MAX_NAND_DEVICE	1*/
+/*#define CONFIG_SYS_NAND_BASE		0xE1000000*/
+/*
+#define CONFIG_SPL_NAND_DENALI
+#define CONFIG_SYS_NAND_DATA_BASE	0xE1000000
+#define CONFIG_SYS_NAND_REGS_BASE	0xE1000000
+#define CONFIG_SYS_NAND_BAD_BLOCK_POS	0
+*/
 
-#define CONFIG_CMD_NAND
-#define CONFIG_SYS_MAX_NAND_DEVICE	1
-#define CONFIG_SYS_NAND_BASE		0xE1000000
+#define CONFIG_SYS_NAND_U_BOOT_OFFS	0xE1000000
 
 #define CONFIG_CMD_MEMTEST
 
