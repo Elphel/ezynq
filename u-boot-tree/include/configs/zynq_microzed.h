@@ -16,11 +16,16 @@
 #define CONFIG_ZYNQ_GEM0
 #define CONFIG_ZYNQ_GEM_PHY_ADDR0	0
 
-/*#define CONFIG_SYS_NO_FLASH*/
+#define CONFIG_SYS_NO_FLASH
 
 #define CONFIG_ZYNQ_SDHCI0
 
+#define CONFIG_NAND_ZYNQ
+
 /*#define CONFIG_DEFAULT_DEVICE_TREE	zynq-microzed*/
+
+/*redefined in zynq-common.h*/
+#undef CONFIG_CMD_NAND
 
 #include <configs/zynq-common.h>
 #undef CONFIG_SYS_PROMPT
