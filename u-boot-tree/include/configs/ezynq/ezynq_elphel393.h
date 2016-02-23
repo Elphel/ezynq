@@ -244,8 +244,11 @@ output (or undefined) -   off
   #define CONFIG_EZYNQ_PHY_PHY_WR_DATA_SLAVE_RATIO_2 0x40 /* Ratio for write data slave DLL (256 - clock period), slice 2 */
   #define CONFIG_EZYNQ_PHY_PHY_WR_DATA_SLAVE_RATIO_3 0x40 /* Ratio for write data slave DLL (256 - clock period), slice 3 */
 
-  #define CONFIG_EZYNQ_PHY_PHY_CTRL_SLAVE_RATIO 0x80     /* Ratio for address/command (256 - clock period) */
-  #define CONFIG_EZYNQ_PHY_INVERT_CLK             N     /* Invert CLK out (if clk can arrive to DRAM chip earlier/at the same time as DQS) */
+  /*#define CONFIG_EZYNQ_PHY_PHY_CTRL_SLAVE_RATIO 0x80*/     /* Ratio for address/command (256 - clock period) */
+  /*#define CONFIG_EZYNQ_PHY_INVERT_CLK             N*/     /* Invert CLK out (if clk can arrive to DRAM chip earlier/at the same time as DQS) */
+  #define CONFIG_EZYNQ_PHY_PHY_CTRL_SLAVE_RATIO 0xb0      /*0x90  0x70 0x80 Ratio for address/command (256 - clock period) */
+  #define CONFIG_EZYNQ_PHY_INVERT_CLK             Y /*N*/     /* Invert CLK out (if clk can arrive to DRAM chip earlier/at the same time as DQS) */
+  
 
 #else
   #define CONFIG_EZYNQ_MIO_ETH_MDIO__SLOW 
