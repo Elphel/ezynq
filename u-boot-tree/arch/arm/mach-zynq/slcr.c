@@ -257,8 +257,6 @@ void zynq_slcr_devcfg_enable(void)
 u32 zynq_slcr_get_boot_mode(void)
 {
 	/* Get the bootmode register value */
-	printf("\nBOOTMODE CODE is %d\n",(u32)readl(&slcr_base->boot_mode));
-	udelay(5000);
 	return readl(&slcr_base->boot_mode);
 }
 

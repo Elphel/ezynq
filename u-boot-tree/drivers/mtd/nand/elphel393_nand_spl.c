@@ -1,8 +1,7 @@
 /*
- * Xilinx Zynq NAND Flash Controller Driver
- * This driver is based on plat_nand.c and mxc_nand.c drivers
+ * Elphel393 NAND driver for SPL, not based on denali_spl.c
  *
- * Copyright (C) 2009 - 2013 Xilinx, Inc.
+ * Copyright (C) 2016 Elphel, Inc.
  *
  * SPDX-License-Identifier:	GPL-2.0+
  */
@@ -19,82 +18,118 @@
 #include <asm/arch/hardware.h>
 #include <asm/arch/sys_proto.h>
 
-/* The NAND flash driver defines */
-#define ZYNQ_NAND_CMD_PHASE	1	/* End command valid in command phase */
-#define ZYNQ_NAND_DATA_PHASE	2	/* End command valid in data phase */
-#define ZYNQ_NAND_ECC_SIZE	512	/* Size of data for ECC operation */
+extern nand_info_t nand_info[CONFIG_SYS_MAX_NAND_DEVICE];
 
-/* Flash memory controller operating parameters */
-#define ZYNQ_NAND_CLR_CONFIG	((0x1 << 1)  |	/* Disable interrupt */ \
-				(0x1 << 4)   |	/* Clear interrupt */ \
-				(0x1 << 6))	/* Disable ECC interrupt */
-
-/* Assuming 50MHz clock (20ns cycle time) and 3V operation */
-#define ZYNQ_NAND_SET_CYCLES	((0x2 << 20) |	/* t_rr from nand_cycles */ \
-				(0x2 << 17)  |	/* t_ar from nand_cycles */ \
-				(0x1 << 14)  |	/* t_clr from nand_cycles */ \
-				(0x3 << 11)  |	/* t_wp from nand_cycles */ \
-				(0x2 << 8)   |	/* t_rea from nand_cycles */ \
-				(0x5 << 4)   |	/* t_wc from nand_cycles */ \
-				(0x5 << 0))	/* t_rc from nand_cycles */
-
-#define ZYNQ_NAND_SET_OPMODE	0x0
-
-#define ZYNQ_NAND_DIRECT_CMD	((0x4 << 23) |	/* Chip 0 from interface 1 */ \
-				(0x2 << 21))	/* UpdateRegs operation */
-
-#define ZYNQ_NAND_ECC_CONFIG	((0x1 << 2)  |	/* ECC available on APB */ \
-				(0x1 << 4)   |	/* ECC read at end of page */ \
-				(0x0 << 5))	/* No Jumping */
-
-#define ZYNQ_NAND_ECC_CMD1	((0x80)      |	/* Write command */ \
-				(0x00 << 8)  |	/* Read command */ \
-				(0x30 << 16) |	/* Read End command */ \
-				(0x1 << 24))	/* Read End command calid */
-
-#define ZYNQ_NAND_ECC_CMD2	((0x85)      |	/* Write col change cmd */ \
-				(0x05 << 8)  |	/* Read col change cmd */ \
-				(0xE0 << 16) |	/* Read col change end cmd */ \
-				(0x1 << 24))	/* Read col change
-							end cmd valid */
-/* AXI Address definitions */
-#define START_CMD_SHIFT		3
-#define END_CMD_SHIFT		11
-#define END_CMD_VALID_SHIFT	20
-#define ADDR_CYCLES_SHIFT	21
-#define CLEAR_CS_SHIFT		21
-#define ECC_LAST_SHIFT		10
-#define COMMAND_PHASE		(0 << 19)
-#define DATA_PHASE		(1 << 19)
-
-#define ZYNQ_NAND_ECC_LAST	(1 << ECC_LAST_SHIFT)	/* Set ECC_Last */
-#define ZYNQ_NAND_CLEAR_CS	(1 << CLEAR_CS_SHIFT)	/* Clear chip select */
-
-/* ECC block registers bit position and bit mask */
-#define ZYNQ_NAND_ECC_BUSY	(1 << 6)	/* ECC block is busy */
-#define ZYNQ_NAND_ECC_MASK	0x00FFFFFF	/* ECC value mask */
-
-#define ZYNQ_NAND_ROW_ADDR_CYCL_MASK	0x0F
-#define ZYNQ_NAND_COL_ADDR_CYCL_MASK	0xF0
-
-/* NAND MIO buswidth count*/
-#define ZYNQ_NAND_MIO_NUM_NAND_8BIT	13
-#define ZYNQ_NAND_MIO_NUM_NAND_16BIT	8
-
-/* Based on Fabian Gottlieb von Bellingshausen's work in Antarctica */
-int nand_spl_load_image(uint32_t offs, unsigned int size, void *dst)
+static int is_badblock(struct mtd_info *mtd, loff_t offs, int allowbbt)
 {
+	register struct nand_chip *chip = mtd->priv;
+	unsigned int block = offs >> chip->phys_erase_shift;
+	unsigned int page = offs >> chip->page_shift;
+
+	printf("    is_badblock(): offs=0x%08x block=%d page=%d\n",(int)offs, block,
+	      page);
+	//chip->cmdfunc(mtd, NAND_CMD_READ0, mtd->writesize, page);
+	//memset(chip->oob_poi, 0, mtd->oobsize);
+	//chip->read_buf(mtd, chip->oob_poi, mtd->oobsize);
+
+	//return chip->oob_poi[0] != 0xff;
 	return 0;
 }
 
-/* nand_init() - initialize data to make nand usable by SPL */
+//dst or buf - destination in RAM
+//offs - u-boot-dtb.img offset in NAND
+//size - size of u-boot-dtb.img
+int nand_spl_load_image(uint32_t offs, unsigned int size, void *buf)
+{
+	struct nand_chip *chip;
+	struct mtd_info *mtd;
+	unsigned int page;
+	unsigned int nand_page_per_block;
+	unsigned int sz = 0;
+
+	printf("\nnand_spl_load_image(): offs=0x%08x size=%d (0x%08x) buf_addr=0x%08x\n",offs,size,size,buf);
+	udelay(10000);
+
+	//if (mxs_nand_init()) return -ENODEV;
+	mtd = &nand_info[0];
+	//mtd.priv = &nand_chip;
+	chip = mtd->priv;
+	page = offs >> chip->page_shift;
+	nand_page_per_block = mtd->erasesize / mtd->writesize;
+
+	debug("%s offset:0x%08x len:%d page:%d\n", __func__, offs, size, page);
+
+	printf("  nand_page_per_block= %d\n",nand_page_per_block);
+	printf("  mtd->writesize= %d\n",mtd->writesize);
+	printf("  u-boot-dtb.img size is: %d (0x%08x)\n",size,size);
+	
+	size = roundup(size, mtd->writesize);
+
+	printf("  u-boot-dtb.img size after roundup is:%d\n",size);
+	
+	//u32 testbuf[16];
+
+	while (sz < size) {
+		//if (mxs_read_page_ecc(&mtd, buf, page) < 0)
+		//	return -1;
+		//printf("  Reading from NAND, offset:0x%08x page_index:%d to MEM address:0x%08x\n",offs, page, buf);
+
+		chip->cmdfunc(mtd, NAND_CMD_READ0, 0, page);
+		udelay(500);
+		//read min
+		chip->read_buf(mtd,buf,min(size-sz, mtd->writesize));
+
+		//chip->ecc.read_page(mtd, chip, buf, 0, page);
+		sz += mtd->writesize;
+		offs += mtd->writesize;
+		page++;
+		buf += mtd->writesize;
+
+		/*
+		 * Check if we have crossed a block boundary, and if so
+		 * check for bad block.
+		 */
+		//if (!(page % nand_page_per_block)) {
+		//	/*
+		//	 * Yes, new block. See if this block is good. If not,
+		//	 * loop until we find a good block.
+		//	 */
+		//	while (is_badblock(&mtd, offs, 1)) {
+		//		page = page + nand_page_per_block;
+		//		/* Check we've reached the end of flash. */
+		//		if (page >= mtd->size >> chip->page_shift)
+		//			return -ENOMEM;
+		//	}
+		//}
+	}
+	return 0;
+}
+
+/* already defined in nand.c
+// nand_init() - initialize data to make nand usable by SPL
 void nand_init(void)
 {
-	
+	puts("nand_init()\n");
+	udelay(5000);
+	board_nand_init();
+}
+*/
+
+void nand_init_custom(void)
+{
+	puts("nand_init_custom()\n");
+	udelay(5000);
+	//board_nand_init();
 }
 
 /* secret */
 void nand_deselect(void) {
-	
+	puts("nand_deselect(): empty function\n");
+	udelay(10000);
 }
 
+void nand_deselect2(void) {
+	printf("nand_deselect2(): &nand_info[0]=0x%08x\n",(u32)&nand_info[0]);
+	puts("nand_deselect2(): empty function\n");
+	udelay(10000);
+}

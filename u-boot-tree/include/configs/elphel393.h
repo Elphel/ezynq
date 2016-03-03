@@ -32,7 +32,7 @@
 #define CONFIG_NAND_ZYNQ
 
 #ifdef CONFIG_NAND_ZYNQ
-    #define CONFIG_CMD_NAND
+    /*#define CONFIG_CMD_NAND*/
     #define CONFIG_CMD_NAND_LOCK_UNLOCK
     #define CONFIG_SYS_MAX_NAND_DEVICE 1
     #define CONFIG_SYS_NAND_SELF_INIT
@@ -40,15 +40,35 @@
     #define CONFIG_MTD_DEVICE
 #endif
 
+#define CONFIG_SPL_NAND_ELPHEL393
+
+#define CONFIG_SYS_NAND_U_BOOT_OFFS	0x40000
+
 /*
-#define CONFIG_SPL_NAND_SUPPORT
-#define CONFIG_SPL_NAND_DRIVERS
+#define CONFIG_SPL_NAND_LOAD
+#define CONFIG_SYS_NAND_U_BOOT_SIZE	0x100000
+#define CONFIG_SYS_NAND_U_BOOT_DST	0x0
+#define CONFIG_SYS_NAND_U_BOOT_START	0x0
 */
 
+#define CONFIG_SPL_NAND_SUPPORT
+#define CONFIG_SPL_NAND_DRIVERS
+
+#define CONFIG_SPL_NAND_INIT
+#define CONFIG_SPL_NAND_BASE
+#define CONFIG_SPL_NAND_ECC
+#define CONFIG_SPL_NAND_BBT
+#define CONFIG_SPL_NAND_IDS
+
+/* Load U-Boot to this address */
+#define CONFIG_SYS_NAND_U_BOOT_DST	CONFIG_SYS_TEXT_BASE
+#define CONFIG_SYS_NAND_U_BOOT_START	CONFIG_SYS_NAND_U_BOOT_DST
+
+#define CONFIG_MTD
 /*#define CONFIG_DEFAULT_DEVICE_TREE	elphel393*/
 
 /*redefined in zynq-common.h*/
-#undef CONFIG_CMD_NAND
+/*#undef CONFIG_CMD_NAND*/
 
 #include <configs/zynq-common.h>
 #undef CONFIG_SYS_PROMPT
@@ -57,21 +77,11 @@
 /*skip u-boot falcon mode*/
 #undef CONFIG_SPL_OS_BOOT
 
+#undef CONFIG_DISPLAY_BOARDINFO
+
 #include <configs/ezynq/ezynq_MT41K256M16HA107.h>  /* should be before zed_ezynq.h as it overwrites DDR3L with DDR3 */
 #include <configs/ezynq/ezynq_XC7Z030_1FBG484C.h>
 #include <configs/ezynq/ezynq_elphel393.h>
-
-/*#define CONFIG_SYS_MAX_NAND_DEVICE	1*/
-/*#define CONFIG_SYS_NAND_BASE		0xE1000000*/
-/*
-#define CONFIG_SPL_NAND_DENALI
-#define CONFIG_SYS_NAND_DATA_BASE	0xE1000000
-#define CONFIG_SYS_NAND_REGS_BASE	0xE1000000
-#define CONFIG_SYS_NAND_BAD_BLOCK_POS	0
-*/
-/*
-#define CONFIG_SYS_NAND_U_BOOT_OFFS	0xE1000000
-*/
 
 #define CONFIG_CMD_MEMTEST
 
@@ -92,8 +102,8 @@
 	"loadbit_addr=0x100000\0"	\
 	"loadbootenv_addr=0x2000000\0" \
 	"kernel_size=0x500000\0"	\
-	"devicetree_size=0x20000\0"	\
-	"ramdisk_size=0x5E0000\0"	\
+	"devicetree_size=0x100000\0"	\
+	"ramdisk_size=0x1E00000\0"	\
 	"boot_size=0xF00000\0"	\
 	"fdt_high=0x20000000\0"	\
 	"initrd_high=0x20000000\0"	\
@@ -144,11 +154,11 @@
 			"bootm 0x3000000 0x2000000 0x2A00000; " \
 		"fi\0" \
 	"nandboot=echo Copying Linux from NAND flash to RAM... && " \
-		"nand read 0x3000000 0x100000 ${kernel_size} && " \
-		"nand read 0x2A00000 0x600000 ${devicetree_size} && " \
+		"nand read 0x3F00000 0x240000 ${kernel_size} && " \
+		"nand read 0x3E00000 0x140000 ${devicetree_size} && " \
 		"echo Copying ramdisk... && " \
-		"nand read 0x2000000 0x620000 ${ramdisk_size} && " \
-		"bootm 0x3000000 0x2000000 0x2A00000\0" \
+		"nand read 0x2000000 0x1240000 ${ramdisk_size} && " \
+		"bootm 0x3F00000 0x2000000 0x3E00000\0" \
 	"jtagboot=echo TFTPing Linux to RAM... && " \
 		"tftpboot 0x3000000 ${kernel_image} && " \
 		"tftpboot 0x2A00000 ${devicetree_image} && " \

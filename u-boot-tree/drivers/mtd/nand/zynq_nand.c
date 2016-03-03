@@ -55,8 +55,8 @@
 #define ZYNQ_NAND_ECC_CMD2	((0x85)      |	/* Write col change cmd */ \
 				(0x05 << 8)  |	/* Read col change cmd */ \
 				(0xE0 << 16) |	/* Read col change end cmd */ \
-				(0x1 << 24))	/* Read col change
-							end cmd valid */
+				(0x1 << 24))	/* Read col change end cmd valid */
+
 /* AXI Address definitions */
 #define START_CMD_SHIFT		3
 #define END_CMD_SHIFT		11
@@ -773,6 +773,8 @@ static void zynq_nand_cmd_function(struct mtd_info *mtd, unsigned int command,
 	unsigned long end_cmd_valid = 0;
 	unsigned long i;
 
+	//printf(" zynq_nand(): Command=0x%02x Column=0x%02x PageAddr=0x%08x\n",command,column,page_addr);
+
 	xnand = (struct zynq_nand_info *)chip->priv;
 	if (xnand->end_cmd_pending) {
 		/* Check for end command if this command request is same as the
@@ -905,6 +907,9 @@ static void zynq_nand_cmd_function(struct mtd_info *mtd, unsigned int command,
  */
 static void zynq_nand_read_buf(struct mtd_info *mtd, u8 *buf, int len)
 {
+
+	//printf("zynq_nand_read_buf():start len=0x%08x buf=0x%08x\n",len,buf);
+
 	struct nand_chip *chip = mtd->priv;
 	const u32 *nand = chip->IO_ADDR_R;
 
@@ -955,6 +960,9 @@ static void zynq_nand_read_buf(struct mtd_info *mtd, u8 *buf, int len)
  */
 static void zynq_nand_write_buf(struct mtd_info *mtd, const u8 *buf, int len)
 {
+
+	printf("zynq_nand_write_buf(): len=%d buf=%d\n",len,buf);
+
 	struct nand_chip *chip = mtd->priv;
 	const u32 *nand = chip->IO_ADDR_W;
 
@@ -1040,7 +1048,9 @@ static int zynq_nand_check_is_16bit_bw_flash(void)
 	    (mio_num_16bit == ZYNQ_NAND_MIO_NUM_NAND_16BIT))
 		is_16bit_bw = NAND_BW_16BIT;
 
-	return is_16bit_bw;
+	//return is_16bit_bw;
+	//elphel force 8 bits width
+	return NAND_BW_8BIT;
 }
 
 static int zynq_nand_init(struct nand_chip *nand_chip, int devnum)
@@ -1056,7 +1066,12 @@ static int zynq_nand_init(struct nand_chip *nand_chip, int devnum)
 	int ondie_ecc_enabled = 0;
 	int is_16bit_bw;
 
+	//printf("\n  zynq_nand_init():start\n");
+
 	xnand = calloc(1, sizeof(struct zynq_nand_info));
+
+	//printf("ZYNQ_NAND_INIT: CALLOC @0x%08x size=%d\n",(u32)&xnand,sizeof(xnand));
+
 	if (!xnand) {
 		printf("%s: failed to allocate\n", __func__);
 		goto free;
@@ -1071,6 +1086,11 @@ static int zynq_nand_init(struct nand_chip *nand_chip, int devnum)
 	/* Set address of NAND IO lines */
 	nand_chip->IO_ADDR_R = xnand->nand_base;
 	nand_chip->IO_ADDR_W = xnand->nand_base;
+
+	//printf("    ZYNQ_NAND_BASEADDR:0x%08x\n",(unsigned int)ZYNQ_NAND_BASEADDR);
+	//printf("    xnand->nand_base:0x%08x\n",(unsigned int)xnand->nand_base);
+	//printf("    nand_chip->IO_ADDR_R:0x%08x\n",(unsigned int)nand_chip->IO_ADDR_R);
+	//printf("    nand_chip->IO_ADDR_W:0x%08x\n",(unsigned int)nand_chip->IO_ADDR_W);
 
 	/* Set the driver entry points for MTD */
 	nand_chip->cmdfunc = zynq_nand_cmd_function;
@@ -1087,6 +1107,9 @@ static int zynq_nand_init(struct nand_chip *nand_chip, int devnum)
 	/* Check the NAND buswidth */
 	/* FIXME this will be changed by using NAND_BUSWIDTH_AUTO */
 	is_16bit_bw = zynq_nand_check_is_16bit_bw_flash();
+
+	//printf("    is_16bit_bw: %d\n",is_16bit_bw);
+
 	if (is_16bit_bw == NAND_BW_UNKNOWN) {
 		printf("%s: Unable detect NAND based on MIO settings\n",
 		       __func__);
@@ -1115,6 +1138,10 @@ static int zynq_nand_init(struct nand_chip *nand_chip, int devnum)
 	/* Read manufacturer and device IDs */
 	maf_id = nand_chip->read_byte(mtd);
 	dev_id = nand_chip->read_byte(mtd);
+
+	//printf("    maf_id=0x%02x dev_id=0x%02x\n",maf_id,dev_id);
+	//printf("    nand_chip->IO_ADDR_R:0x%08x\n",(unsigned int)nand_chip->IO_ADDR_R);
+	//printf("    nand_chip->IO_ADDR_W:0x%08x\n",(unsigned int)nand_chip->IO_ADDR_W);
 
 	if ((maf_id == 0x2c) && ((dev_id == 0xf1) ||
 				 (dev_id == 0xa1) || (dev_id == 0xb1) ||
@@ -1146,6 +1173,13 @@ static int zynq_nand_init(struct nand_chip *nand_chip, int devnum)
 	}
 
 	if (ondie_ecc_enabled) {
+		//puts("  Welcome to OnDie ECC flash\n");
+		
+		//printf("    ZYNQ_NAND_BASEADDR:0x%08x\n",(unsigned int)ZYNQ_NAND_BASEADDR);
+		//printf("    xnand->nand_base:0x%08x\n",(unsigned int)xnand->nand_base);
+		//printf("    nand_chip->IO_ADDR_R:0x%08x\n",(unsigned int)nand_chip->IO_ADDR_R);
+		//printf("    nand_chip->IO_ADDR_W:0x%08x\n",(unsigned int)nand_chip->IO_ADDR_W);
+		
 		/* bypass the controller ECC block */
 		ecc_cfg = readl(&zynq_nand_smc_base->emcr);
 		ecc_cfg &= ~0xc;
@@ -1206,6 +1240,7 @@ static int zynq_nand_init(struct nand_chip *nand_chip, int devnum)
 			       &zynq_nand_smc_base->emcr);
 			break;
 		case 2048:
+			printf("    necc_page_size = 0x3\n");
 			ecc_page_size = 0x3;
 			/* Set the ECC memory config register */
 			writel((ZYNQ_NAND_ECC_CONFIG | ecc_page_size),
@@ -1248,6 +1283,7 @@ static int zynq_nand_init(struct nand_chip *nand_chip, int devnum)
 	if (nand_register(devnum))
 		goto fail;
 
+	//printf("  zynq_nand_init(): end\n");
 	return 0;
 fail:
 free:
@@ -1261,6 +1297,9 @@ void board_nand_init(void)
 {
 	struct nand_chip *nand = &nand_chip[0];
 
+	printf("board_nand_init(): &nand_chip[0]=0x%08x\n",(u32)&nand_chip[0]);
+
 	if (zynq_nand_init(nand, 0))
 		puts("ZYNQ NAND init failed\n");
+
 }
