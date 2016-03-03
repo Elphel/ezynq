@@ -40,9 +40,11 @@ config TARGET_ELPHEL393
 endchoice
 
 config SYS_BOARD
+	default "elphel393" if TARGET_ELPHEL393
 	default "zynq"
 
 config SYS_VENDOR
+	default "elphel" if TARGET_ELPHEL393
 	default "xilinx"
 
 config SYS_SOC
