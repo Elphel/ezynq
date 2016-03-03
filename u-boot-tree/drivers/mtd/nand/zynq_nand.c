@@ -16,6 +16,7 @@
 #include <linux/mtd/nand.h>
 #include <linux/mtd/partitions.h>
 #include <linux/mtd/nand_ecc.h>
+#include <linux/mtd/nand_bch.h>
 #include <asm/arch/hardware.h>
 #include <asm/arch/sys_proto.h>
 
