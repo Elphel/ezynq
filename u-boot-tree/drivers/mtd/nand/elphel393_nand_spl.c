@@ -25,12 +25,14 @@ static int is_badblock(struct mtd_info *mtd, loff_t offs, int allowbbt)
 	register struct nand_chip *chip = mtd->priv;
 	unsigned int block = offs >> chip->phys_erase_shift;
 	unsigned int page = offs >> chip->page_shift;
-
+	unsigned long data_width = 4;
+	u8 *p;
+	
 	printf("    is_badblock(): offs=0x%08x block=%d page=%d\n",(int)offs,block,page);
 	chip->cmdfunc(mtd, NAND_CMD_READOOB, 0, page);
-	memset(chip->oob_poi, 0, mtd->oobsize);
-	chip->read_buf(mtd, chip->oob_poi, mtd->oobsize);
-
+	p = chip->oob_poi;
+	chip->read_buf(mtd, p, (mtd->oobsize - data_width));
+	
 	return chip->oob_poi[0] != 0xff;
 }
 
