@@ -28,10 +28,12 @@ static int is_badblock(struct mtd_info *mtd, loff_t offs, int allowbbt)
 	unsigned long data_width = 4;
 	u8 *p;
 	
-	printf("    is_badblock(): offs=0x%08x block=%d page=%d\n",(int)offs,block,page);
+	debug("    is_badblock(): offs=0x%08x block=%d page=%d\n",(int)offs,block,page);
 	chip->cmdfunc(mtd, NAND_CMD_READOOB, 0, page);
 	p = chip->oob_poi;
 	chip->read_buf(mtd, p, (mtd->oobsize - data_width));
+	
+	printf("    is_badblock(): offs=0x%08x block=0x%08x page=0x%08x chip->oob_poi[0]=0x%08x\n",(u32)offs,(u32)block,(u32)page,(u32)chip->oob_poi[0]);
 	
 	return chip->oob_poi[0] != 0xff;
 }
