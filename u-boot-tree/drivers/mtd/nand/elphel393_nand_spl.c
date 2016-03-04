@@ -27,12 +27,11 @@ static int is_badblock(struct mtd_info *mtd, loff_t offs, int allowbbt)
 	unsigned int page = offs >> chip->page_shift;
 
 	debug("    is_badblock(): offs=0x%08x block=%d page=%d\n",(int)offs,block,page);
-	//chip->cmdfunc(mtd, NAND_CMD_READ0, mtd->writesize, page);
-	//memset(chip->oob_poi, 0, mtd->oobsize);
-	//chip->read_buf(mtd, chip->oob_poi, mtd->oobsize);
+	chip->cmdfunc(mtd, NAND_CMD_READ0, mtd->writesize, page);
+	memset(chip->oob_poi, 0, mtd->oobsize);
+	chip->read_buf(mtd, chip->oob_poi, mtd->oobsize);
 
-	//return chip->oob_poi[0] != 0xff;
-	return 0;
+	return chip->oob_poi[0] != 0xff;
 }
 
 //dst or buf - destination in RAM
@@ -86,18 +85,18 @@ int nand_spl_load_image(uint32_t offs, unsigned int size, void *buf)
 		 * Check if we have crossed a block boundary, and if so
 		 * check for bad block.
 		 */
-		//if (!(page % nand_page_per_block)) {
-		//	/*
-		//	 * Yes, new block. See if this block is good. If not,
-		//	 * loop until we find a good block.
-		//	 */
-		//	while (is_badblock(&mtd, offs, 1)) {
-		//		page = page + nand_page_per_block;
-		//		/* Check we've reached the end of flash. */
-		//		if (page >= mtd->size >> chip->page_shift)
-		//			return -ENOMEM;
-		//	}
-		//}
+		if (!(page % nand_page_per_block)) {
+			/*
+			 * Yes, new block. See if this block is good. If not,
+			 * loop until we find a good block.
+			 */
+			while (is_badblock(&mtd, offs, 1)) {
+				page = page + nand_page_per_block;
+				/* Check we've reached the end of flash. */
+				if (page >= mtd->size >> chip->page_shift)
+					return -ENOMEM;
+			}
+		}
 	}
 	return 0;
 }

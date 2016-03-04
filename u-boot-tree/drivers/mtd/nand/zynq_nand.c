@@ -961,7 +961,7 @@ static void zynq_nand_read_buf(struct mtd_info *mtd, u8 *buf, int len)
 static void zynq_nand_write_buf(struct mtd_info *mtd, const u8 *buf, int len)
 {
 
-	printf("zynq_nand_write_buf(): len=%d buf=%d\n",(u32)len,(u32)buf);
+	debug("zynq_nand_write_buf(): len=%d buf=%d\n",(u32)len,(u32)buf);
 
 	struct nand_chip *chip = mtd->priv;
 	const u32 *nand = chip->IO_ADDR_W;
@@ -1297,7 +1297,7 @@ void board_nand_init(void)
 {
 	struct nand_chip *nand = &nand_chip[0];
 
-	printf("board_nand_init(): &nand_chip[0]=0x%08x\n",(u32)&nand_chip[0]);
+	debug("board_nand_init(): &nand_chip[0]=0x%08x\n",(u32)&nand_chip[0]);
 
 	if (zynq_nand_init(nand, 0))
 		puts("ZYNQ NAND init failed\n");

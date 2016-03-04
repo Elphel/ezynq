@@ -2839,7 +2839,7 @@ static u16 onfi_crc16(u16 crc, u8 const *p, size_t len)
 static int nand_flash_detect_ext_param_page(struct mtd_info *mtd,
 		struct nand_chip *chip, struct nand_onfi_params *p)
 {
-	printf("nand_flash_detect_ext_param_page\n");
+	pr_debug("nand_flash_detect_ext_param_page\n");
 
 	struct onfi_ext_param_page *ep;
 	struct onfi_ext_section *s;
