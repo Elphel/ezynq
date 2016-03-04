@@ -26,8 +26,7 @@ static int is_badblock(struct mtd_info *mtd, loff_t offs, int allowbbt)
 	unsigned int block = offs >> chip->phys_erase_shift;
 	unsigned int page = offs >> chip->page_shift;
 
-	printf("    is_badblock(): offs=0x%08x block=%d page=%d\n",(int)offs, block,
-	      page);
+	debug("    is_badblock(): offs=0x%08x block=%d page=%d\n",(int)offs,block,page);
 	//chip->cmdfunc(mtd, NAND_CMD_READ0, mtd->writesize, page);
 	//memset(chip->oob_poi, 0, mtd->oobsize);
 	//chip->read_buf(mtd, chip->oob_poi, mtd->oobsize);
@@ -47,7 +46,7 @@ int nand_spl_load_image(uint32_t offs, unsigned int size, void *buf)
 	unsigned int nand_page_per_block;
 	unsigned int sz = 0;
 
-	printf("\nnand_spl_load_image(): offs=0x%08x size=%d (0x%08x) buf_addr=0x%08x\n",offs,size,size,buf);
+	debug("\nnand_spl_load_image(): offs=0x%08x size=%d (0x%08x) buf_addr=0x%08x\n",offs,size,size,buf);
 	udelay(10000);
 
 	//if (mxs_nand_init()) return -ENODEV;
@@ -59,15 +58,13 @@ int nand_spl_load_image(uint32_t offs, unsigned int size, void *buf)
 
 	debug("%s offset:0x%08x len:%d page:%d\n", __func__, offs, size, page);
 
-	printf("  nand_page_per_block= %d\n",nand_page_per_block);
-	printf("  mtd->writesize= %d\n",mtd->writesize);
-	printf("  u-boot-dtb.img size is: %d (0x%08x)\n",size,size);
+	debug("  nand_page_per_block= %d\n",nand_page_per_block);
+	debug("  mtd->writesize= %d\n",mtd->writesize);
+	debug("  u-boot-dtb.img size is: %d (0x%08x)\n",size,size);
 	
 	size = roundup(size, mtd->writesize);
 
-	printf("  u-boot-dtb.img size after roundup is:%d\n",size);
-	
-	//u32 testbuf[16];
+	debug("  u-boot-dtb.img size after roundup is:%d\n",size);
 
 	while (sz < size) {
 		//if (mxs_read_page_ecc(&mtd, buf, page) < 0)
@@ -115,21 +112,7 @@ void nand_init(void)
 }
 */
 
-void nand_init_custom(void)
-{
-	puts("nand_init_custom()\n");
-	udelay(5000);
-	//board_nand_init();
-}
-
-/* secret */
 void nand_deselect(void) {
-	puts("nand_deselect(): empty function\n");
-	udelay(10000);
-}
-
-void nand_deselect2(void) {
-	printf("nand_deselect2(): &nand_info[0]=0x%08x\n",(u32)&nand_info[0]);
-	puts("nand_deselect2(): empty function\n");
+	debug("nand_deselect()\n");
 	udelay(10000);
 }

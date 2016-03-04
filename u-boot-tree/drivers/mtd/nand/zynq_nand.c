@@ -16,7 +16,6 @@
 #include <linux/mtd/nand.h>
 #include <linux/mtd/partitions.h>
 #include <linux/mtd/nand_ecc.h>
-#include <linux/mtd/nand_bch.h>
 #include <asm/arch/hardware.h>
 #include <asm/arch/sys_proto.h>
 
@@ -962,7 +961,7 @@ static void zynq_nand_read_buf(struct mtd_info *mtd, u8 *buf, int len)
 static void zynq_nand_write_buf(struct mtd_info *mtd, const u8 *buf, int len)
 {
 
-	printf("zynq_nand_write_buf(): len=%d buf=%d\n",len,buf);
+	printf("zynq_nand_write_buf(): len=%d buf=%d\n",(u32)len,(u32)buf);
 
 	struct nand_chip *chip = mtd->priv;
 	const u32 *nand = chip->IO_ADDR_W;
@@ -1049,9 +1048,9 @@ static int zynq_nand_check_is_16bit_bw_flash(void)
 	    (mio_num_16bit == ZYNQ_NAND_MIO_NUM_NAND_16BIT))
 		is_16bit_bw = NAND_BW_16BIT;
 
-	//return is_16bit_bw;
+	return is_16bit_bw;
 	//elphel force 8 bits width
-	return NAND_BW_8BIT;
+	//return NAND_BW_8BIT;
 }
 
 static int zynq_nand_init(struct nand_chip *nand_chip, int devnum)
@@ -1276,11 +1275,7 @@ static int zynq_nand_init(struct nand_chip *nand_chip, int devnum)
 	}
 
 	/* second phase scan */
-#ifndef CONFIG_SPL_BUILD
 	if (nand_scan_tail(mtd)) {
-#else
-	if (nand_scan_tail_spl(mtd)) {
-#endif
 		printf("%s: nand_scan_tailfailed\n", __func__);
 		goto fail;
 	}
@@ -1308,302 +1303,3 @@ void board_nand_init(void)
 		puts("ZYNQ NAND init failed\n");
 
 }
-
-/**
- * nand_scan_tail_spl - [NAND Interface] Scan for the NAND device
- * @mtd: MTD device structure
- *
- * This is the second phase of the normal nand_scan() function. It fills out
- * all the uninitialized function pointers with the defaults and scans for a
- * bad block table if appropriate.
- */
-
-//elphel
-struct nand_buffers nbuf_data;
-
-int nand_scan_tail_spl(struct mtd_info *mtd)
-{
-	int i;
-	struct nand_chip *chip = mtd->priv;
-	struct nand_ecc_ctrl *ecc = &chip->ecc;
-	struct nand_buffers *nbuf;
-
-	/* New bad blocks should be marked in OOB, flash-based BBT, or both */
-	BUG_ON((chip->bbt_options & NAND_BBT_NO_OOB_BBM) &&
-			!(chip->bbt_options & NAND_BBT_USE_FLASH));
-
-	if (!(chip->options & NAND_OWN_BUFFERS)) {
-		//elphel
-		//nbuf = kzalloc(sizeof(struct nand_buffers), GFP_KERNEL);
-		nbuf = &nbuf_data;
-		chip->buffers = nbuf;
-	} else {
-		if (!chip->buffers)
-			return -ENOMEM;
-	}
-
-	/* Set the internal oob buffer location, just after the page data */
-	chip->oob_poi = chip->buffers->databuf + mtd->writesize;
-
-	/*
-	 * If no default placement scheme is given, select an appropriate one.
-	 */
-	if (!ecc->layout && (ecc->mode != NAND_ECC_SOFT_BCH)) {
-		switch (mtd->oobsize) {
-		case 8:
-			ecc->layout = &nand_oob_8;
-			break;
-		case 16:
-			ecc->layout = &nand_oob_16;
-			break;
-		case 64:
-			ecc->layout = &nand_oob_64;
-			break;
-		case 128:
-			ecc->layout = &nand_oob_128;
-			break;
-		default:
-			pr_warn("No oob scheme defined for oobsize %d\n",
-				   mtd->oobsize);
-			BUG();
-		}
-	}
-
-	if (!chip->write_page)
-		chip->write_page = nand_write_page;
-
-	/*
-	 * Check ECC mode, default to software if 3byte/512byte hardware ECC is
-	 * selected and we have 256 byte pagesize fallback to software ECC
-	 */
-
-	switch (ecc->mode) {
-	case NAND_ECC_HW_OOB_FIRST:
-		/* Similar to NAND_ECC_HW, but a separate read_page handle */
-		if (!ecc->calculate || !ecc->correct || !ecc->hwctl) {
-			pr_warn("No ECC functions supplied; hardware ECC not possible\n");
-			BUG();
-		}
-		if (!ecc->read_page)
-			ecc->read_page = nand_read_page_hwecc_oob_first;
-
-	case NAND_ECC_HW:
-		/* Use standard hwecc read page function? */
-		if (!ecc->read_page)
-			ecc->read_page = nand_read_page_hwecc;
-		if (!ecc->write_page)
-			ecc->write_page = nand_write_page_hwecc;
-		if (!ecc->read_page_raw)
-			ecc->read_page_raw = nand_read_page_raw;
-		if (!ecc->write_page_raw)
-			ecc->write_page_raw = nand_write_page_raw;
-		if (!ecc->read_oob)
-			ecc->read_oob = nand_read_oob_std;
-		if (!ecc->write_oob)
-			ecc->write_oob = nand_write_oob_std;
-		if (!ecc->read_subpage)
-			ecc->read_subpage = nand_read_subpage;
-		if (!ecc->write_subpage)
-			ecc->write_subpage = nand_write_subpage_hwecc;
-
-	case NAND_ECC_HW_SYNDROME:
-		if ((!ecc->calculate || !ecc->correct || !ecc->hwctl) &&
-		    (!ecc->read_page ||
-		     ecc->read_page == nand_read_page_hwecc ||
-		     !ecc->write_page ||
-		     ecc->write_page == nand_write_page_hwecc)) {
-			pr_warn("No ECC functions supplied; hardware ECC not possible\n");
-			BUG();
-		}
-		/* Use standard syndrome read/write page function? */
-		if (!ecc->read_page)
-			ecc->read_page = nand_read_page_syndrome;
-		if (!ecc->write_page)
-			ecc->write_page = nand_write_page_syndrome;
-		if (!ecc->read_page_raw)
-			ecc->read_page_raw = nand_read_page_raw_syndrome;
-		if (!ecc->write_page_raw)
-			ecc->write_page_raw = nand_write_page_raw_syndrome;
-		if (!ecc->read_oob)
-			ecc->read_oob = nand_read_oob_syndrome;
-		if (!ecc->write_oob)
-			ecc->write_oob = nand_write_oob_syndrome;
-
-		if (mtd->writesize >= ecc->size) {
-			if (!ecc->strength) {
-				pr_warn("Driver must set ecc.strength when using hardware ECC\n");
-				BUG();
-			}
-			break;
-		}
-		pr_warn("%d byte HW ECC not possible on %d byte page size, fallback to SW ECC\n",
-			ecc->size, mtd->writesize);
-		ecc->mode = NAND_ECC_SOFT;
-
-	case NAND_ECC_SOFT:
-		ecc->calculate = nand_calculate_ecc;
-		ecc->correct = nand_correct_data;
-		ecc->read_page = nand_read_page_swecc;
-		ecc->read_subpage = nand_read_subpage;
-		ecc->write_page = nand_write_page_swecc;
-		ecc->read_page_raw = nand_read_page_raw;
-		ecc->write_page_raw = nand_write_page_raw;
-		ecc->read_oob = nand_read_oob_std;
-		ecc->write_oob = nand_write_oob_std;
-		if (!ecc->size)
-			ecc->size = 256;
-		ecc->bytes = 3;
-		ecc->strength = 1;
-		break;
-
-	case NAND_ECC_SOFT_BCH:
-		if (!mtd_nand_has_bch()) {
-			pr_warn("CONFIG_MTD_NAND_ECC_BCH not enabled\n");
-			BUG();
-		}
-		ecc->calculate = nand_bch_calculate_ecc;
-		ecc->correct = nand_bch_correct_data;
-		ecc->read_page = nand_read_page_swecc;
-		ecc->read_subpage = nand_read_subpage;
-		ecc->write_page = nand_write_page_swecc;
-		ecc->read_page_raw = nand_read_page_raw;
-		ecc->write_page_raw = nand_write_page_raw;
-		ecc->read_oob = nand_read_oob_std;
-		ecc->write_oob = nand_write_oob_std;
-		/*
-		 * Board driver should supply ecc.size and ecc.strength values
-		 * to select how many bits are correctable. Otherwise, default
-		 * to 4 bits for large page devices.
-		 */
-		if (!ecc->size && (mtd->oobsize >= 64)) {
-			ecc->size = 512;
-			ecc->strength = 4;
-		}
-
-		/* See nand_bch_init() for details. */
-		ecc->bytes = DIV_ROUND_UP(
-				ecc->strength * fls(8 * ecc->size), 8);
-		ecc->priv = nand_bch_init(mtd, ecc->size, ecc->bytes,
-					       &ecc->layout);
-		if (!ecc->priv) {
-			pr_warn("BCH ECC initialization failed!\n");
-			BUG();
-		}
-		break;
-
-	case NAND_ECC_NONE:
-		pr_warn("NAND_ECC_NONE selected by board driver. This is not recommended!\n");
-		ecc->read_page = nand_read_page_raw;
-		ecc->write_page = nand_write_page_raw;
-		ecc->read_oob = nand_read_oob_std;
-		ecc->read_page_raw = nand_read_page_raw;
-		ecc->write_page_raw = nand_write_page_raw;
-		ecc->write_oob = nand_write_oob_std;
-		ecc->size = mtd->writesize;
-		ecc->bytes = 0;
-		ecc->strength = 0;
-		break;
-
-	default:
-		pr_warn("Invalid NAND_ECC_MODE %d\n", ecc->mode);
-		BUG();
-	}
-
-	/* For many systems, the standard OOB write also works for raw */
-	if (!ecc->read_oob_raw)
-		ecc->read_oob_raw = ecc->read_oob;
-	if (!ecc->write_oob_raw)
-		ecc->write_oob_raw = ecc->write_oob;
-
-	/*
-	 * The number of bytes available for a client to place data into
-	 * the out of band area.
-	 */
-	ecc->layout->oobavail = 0;
-	for (i = 0; ecc->layout->oobfree[i].length
-			&& i < ARRAY_SIZE(ecc->layout->oobfree); i++)
-		ecc->layout->oobavail += ecc->layout->oobfree[i].length;
-	mtd->oobavail = ecc->layout->oobavail;
-
-	/* ECC sanity check: warn if it's too weak */
-	if (!nand_ecc_strength_good(mtd))
-		pr_warn("WARNING: %s: the ECC used on your system is too weak compared to the one required by the NAND chip\n",
-			mtd->name);
-
-	/*
-	 * Set the number of read / write steps for one page depending on ECC
-	 * mode.
-	 */
-	ecc->steps = mtd->writesize / ecc->size;
-	if (ecc->steps * ecc->size != mtd->writesize) {
-		pr_warn("Invalid ECC parameters\n");
-		BUG();
-	}
-	ecc->total = ecc->steps * ecc->bytes;
-
-	/* Allow subpage writes up to ecc.steps. Not possible for MLC flash */
-	if (!(chip->options & NAND_NO_SUBPAGE_WRITE) && nand_is_slc(chip)) {
-		switch (ecc->steps) {
-		case 2:
-			mtd->subpage_sft = 1;
-			break;
-		case 4:
-		case 8:
-		case 16:
-			mtd->subpage_sft = 2;
-			break;
-		}
-	}
-	chip->subpagesize = mtd->writesize >> mtd->subpage_sft;
-
-	/* Initialize state */
-	chip->state = FL_READY;
-
-	/* Invalidate the pagebuffer reference */
-	chip->pagebuf = -1;
-
-	/* Large page NAND with SOFT_ECC should support subpage reads */
-	switch (ecc->mode) {
-	case NAND_ECC_SOFT:
-	case NAND_ECC_SOFT_BCH:
-		if (chip->page_shift > 9)
-			chip->options |= NAND_SUBPAGE_READ;
-		break;
-
-	default:
-		break;
-	}
-
-	/* Fill in remaining MTD driver data */
-	mtd->type = nand_is_slc(chip) ? MTD_NANDFLASH : MTD_MLCNANDFLASH;
-	mtd->flags = (chip->options & NAND_ROM) ? MTD_CAP_ROM :
-						MTD_CAP_NANDFLASH;
-	mtd->_erase = nand_erase;
-	mtd->_read = nand_read;
-	mtd->_write = nand_write;
-	mtd->_panic_write = panic_nand_write;
-	mtd->_read_oob = nand_read_oob;
-	mtd->_write_oob = nand_write_oob;
-	mtd->_sync = nand_sync;
-	mtd->_lock = NULL;
-	mtd->_unlock = NULL;
-	mtd->_block_isreserved = nand_block_isreserved;
-	mtd->_block_isbad = nand_block_isbad;
-	mtd->_block_markbad = nand_block_markbad;
-	mtd->writebufsize = mtd->writesize;
-
-	/* propagate ecc info to mtd_info */
-	mtd->ecclayout = ecc->layout;
-	mtd->ecc_strength = ecc->strength;
-	mtd->ecc_step_size = ecc->size;
-	/*
-	 * Initialize bitflip_threshold to its default prior scan_bbt() call.
-	 * scan_bbt() might invoke mtd_read(), thus bitflip_threshold must be
-	 * properly set.
-	 */
-	if (!mtd->bitflip_threshold)
-		mtd->bitflip_threshold = DIV_ROUND_UP(mtd->ecc_strength * 3, 4);
-
-	return 0;
-}
-EXPORT_SYMBOL(nand_scan_tail_spl);
