@@ -26,8 +26,8 @@ static int is_badblock(struct mtd_info *mtd, loff_t offs, int allowbbt)
 	unsigned int block = offs >> chip->phys_erase_shift;
 	unsigned int page = offs >> chip->page_shift;
 
-	debug("    is_badblock(): offs=0x%08x block=%d page=%d\n",(int)offs,block,page);
-	chip->cmdfunc(mtd, NAND_CMD_READ0, mtd->writesize, page);
+	printf("    is_badblock(): offs=0x%08x block=%d page=%d\n",(int)offs,block,page);
+	chip->cmdfunc(mtd, NAND_CMD_READOOB, 0, page);
 	memset(chip->oob_poi, 0, mtd->oobsize);
 	chip->read_buf(mtd, chip->oob_poi, mtd->oobsize);
 
