@@ -29,7 +29,7 @@ static int is_badblock(struct mtd_info *mtd, loff_t offs, int allowbbt)
 	
 	debug("    is_badblock(): offs=0x%08x block=%d page=%d\n",(int)offs,block,page);
 	chip->cmdfunc(mtd, NAND_CMD_READOOB, 0, page);
-	chip->read_buf(mtd, &chip->oob_poi, (mtd->oobsize - data_width));
+	chip->read_buf(mtd, chip->oob_poi, (mtd->oobsize - data_width));
 	
 	printf("    is_badblock(): offs=0x%08x block=0x%08x page=0x%08x chip->oob_poi[0]=0x%08x\n",(u32)offs,(u32)block,(u32)page,(u32)chip->oob_poi[0]);
 	
