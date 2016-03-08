@@ -93,10 +93,10 @@
 	"sdboot=if mmcinfo; then " \
 			"run uenvboot; " \
 			"echo Copying Linux from SD to RAM... && " \
-			"fatload mmc 0 0x3F00000 ${kernel_image} && " \
-			"fatload mmc 0 0x3E00000 ${devicetree_image} && " \
+			"fatload mmc 0 0x4F00000 ${kernel_image} && " \
+			"fatload mmc 0 0x4E00000 ${devicetree_image} && " \
 			"fatload mmc 0 0x2000000 ${ramdisk_image} && " \
-			"bootm 0x3F00000 0x2000000 0x3E00000; " \
+			"bootm 0x4F00000 0x2000000 0x4E00000; " \
 		"fi\0" \
 	"usbboot=if usb start; then " \
 			"run uenvboot; " \

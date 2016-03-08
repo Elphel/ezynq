@@ -140,10 +140,10 @@
 	"sdboot=if mmcinfo; then " \
 			"run uenvboot; " \
 			"echo Copying Linux from SD to RAM... && " \
-			"fatload mmc 0 0x3F00000 ${kernel_image} && " \
-			"fatload mmc 0 0x3E00000 ${devicetree_image} && " \
+			"fatload mmc 0 0x4F00000 ${kernel_image} && " \
+			"fatload mmc 0 0x4E00000 ${devicetree_image} && " \
 			"fatload mmc 0 0x2000000 ${ramdisk_image} && " \
-			"bootm 0x3F00000 0x2000000 0x3E00000; " \
+			"bootm 0x4F00000 0x2000000 0x4E00000; " \
 		"fi\0" \
 	"usbboot=if usb start; then " \
 			"run uenvboot; " \
@@ -154,11 +154,11 @@
 			"bootm 0x3000000 0x2000000 0x2A00000; " \
 		"fi\0" \
 	"nandboot=echo Copying Linux from NAND flash to RAM... && " \
-		"nand read 0x3F00000 0x600000 ${kernel_size} && " \
-		"nand read 0x3E00000 0x500000 ${devicetree_size} && " \
+		"nand read 0x4F00000 0x600000 ${kernel_size} && " \
+		"nand read 0x4E00000 0x500000 ${devicetree_size} && " \
 		"echo Copying ramdisk... && " \
 		"nand read 0x2000000 0x1600000 ${ramdisk_size} && " \
-		"bootm 0x3F00000 0x2000000 0x3E00000\0" \
+		"bootm 0x4F00000 0x2000000 0x4E00000\0" \
 	"jtagboot=echo TFTPing Linux to RAM... && " \
 		"tftpboot 0x3000000 ${kernel_image} && " \
 		"tftpboot 0x2A00000 ${devicetree_image} && " \
