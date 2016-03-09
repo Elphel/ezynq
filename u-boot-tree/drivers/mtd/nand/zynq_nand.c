@@ -152,6 +152,9 @@ static const struct zynq_nand_command_format zynq_nand_commands[] = {
 	{NAND_CMD_PARAM, NAND_CMD_NONE, 1, NAND_CMD_NONE},
 	{NAND_CMD_GET_FEATURES, NAND_CMD_NONE, 1, NAND_CMD_NONE},
 	{NAND_CMD_SET_FEATURES, NAND_CMD_NONE, 1, NAND_CMD_NONE},
+	{NAND_CMD_UNLOCK1, NAND_CMD_NONE, 3, NAND_CMD_NONE},
+	{NAND_CMD_UNLOCK2, NAND_CMD_NONE, 3, NAND_CMD_NONE},
+	{NAND_CMD_LOCK, NAND_CMD_NONE, 0, NAND_CMD_NONE},
 	{NAND_CMD_NONE, NAND_CMD_NONE, 0, 0},
 	/* Add all the flash commands supported by the flash device and Linux
 	 * The cache program command is not supported by driver because driver
