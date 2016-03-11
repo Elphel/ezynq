@@ -155,7 +155,11 @@
 	"nandboot=echo Copying Linux from NAND flash to RAM... && " \
 		"nand read 0x4F00000 0x600000 ${kernel_size} && " \
 		"nand read 0x4E00000 0x500000 ${devicetree_size} && " \
-		"nand unlock 0x1600000 0x10000000 && "\
+		"bootm 0x4F00000 - 0x4E00000\0" \
+	"devboot= echo Copying Linux from SD to RAM... && " \
+		"fatload mmc 0 0x4F00000 ${kernel_image} && " \
+		" echo Copying Device Tree from NAND flash to RAM && " \
+		"nand read 0x4E00000 0x500000 ${devicetree_size} && " \
 		"bootm 0x4F00000 - 0x4E00000\0" \
 	"jtagboot=echo TFTPing Linux to RAM... && " \
 		"tftpboot 0x3000000 ${kernel_image} && " \
