@@ -93,7 +93,7 @@
 
 /* Default environment */
 #define CONFIG_EXTRA_ENV_SETTINGS	\
-	"ethaddr=00:0a:35:00:01:22\0"	\
+	"ethaddr=00:0e:64:10:00:00\0"	\
 	"kernel_image=uImage\0"	\
 	"ramdisk_image=uramdisk.image.gz\0"	\
 	"devicetree_image=devicetree.dtb\0"	\
