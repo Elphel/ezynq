@@ -279,6 +279,7 @@ static int zynq_nand_init_nand_flash(int option)
 	status = zynq_nand_waitfor_ecc_completion();
 	if (status < 0) {
 		printf("%s: Timeout\n", __func__);
+		udelay(100);
 		return status;
 	}
 
@@ -775,6 +776,9 @@ static void zynq_nand_cmd_function(struct mtd_info *mtd, unsigned int command,
 	unsigned long end_cmd = 0;
 	unsigned long end_cmd_valid = 0;
 	unsigned long i;
+	
+	/* Wait max 10 time units */
+	int timeout = 10;
 
 	//printf(" zynq_nand(): Command=0x%02x Column=0x%02x PageAddr=0x%08x\n",command,column,page_addr);
 
@@ -896,8 +900,14 @@ static void zynq_nand_cmd_function(struct mtd_info *mtd, unsigned int command,
 	    (command == NAND_CMD_RESET) ||
 	    (command == NAND_CMD_PARAM) ||
 	    (command == NAND_CMD_GET_FEATURES)) {
-		while (!chip->dev_ready(mtd))
-				;
+		while (!chip->dev_ready(mtd)){
+			if (timeout==0) {
+				printf("ERROR: nand flash command timeout\n");
+				break;
+			}
+			timeout--;
+			udelay(10);
+		}
 		return;
 	}
 }
@@ -1127,13 +1137,13 @@ static int zynq_nand_init(struct nand_chip *nand_chip, int devnum)
 		printf("%s: nand flash init failed\n", __func__);
 		goto free;
 	}
-
+	
 	/* first scan to find the device and get the page size */
 	if (nand_scan_ident(mtd, 1, NULL)) {
 		printf("%s: nand_scan_ident failed\n", __func__);
 		goto fail;
 	}
-
+	
 	/* Send the command for reading device ID */
 	nand_chip->cmdfunc(mtd, NAND_CMD_RESET, -1, -1);
 	nand_chip->cmdfunc(mtd, NAND_CMD_READID, 0x00, -1);
