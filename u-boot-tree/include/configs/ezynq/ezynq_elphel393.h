@@ -83,6 +83,7 @@
 #define CONFIG_EZYNQ_MIO_I2C_0            50
 #define CONFIG_EZYNQ_MIO_I2C_0__PULLUP
 
+#define CONFIG_EZYNQ_MIO_SDWP_0           63
 
 #define CONFIG_EZYNQ_MIO_UART_0           46  /* #  8+4*N  */
 
