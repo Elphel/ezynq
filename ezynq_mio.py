@@ -521,6 +521,10 @@ class EzynqMIO:
             for signal in iface:
                 pin=iface[signal]
                 #see if the same pin was already used in one or several interfaces
+                
+                if pin['PIN']==63: 
+                    continue
+                
                 if mio[pin['PIN']]['USED_IN'] : #need to add len() >0?
                     for used_in in mio[pin['PIN']]['USED_IN']:
                         print ('MIO pin '+str(pin['PIN'])+" is previously used by interface "+used_in['NAME']+
