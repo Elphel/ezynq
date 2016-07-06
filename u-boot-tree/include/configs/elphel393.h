@@ -101,7 +101,7 @@
 	"boot_image=BOOT.bin\0"	\
 	"loadbit_addr=0x100000\0"	\
 	"loadbootenv_addr=0x2000000\0" \
-	"kernel_size=0x500000\0"	\
+	"kernel_size=0x800000\0"	\
 	"devicetree_size=0x100000\0"	\
 	"ramdisk_size=0x1E00000\0"	\
 	"boot_size=0xF00000\0"	\
