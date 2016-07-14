@@ -70,7 +70,10 @@
 /*redefined in zynq-common.h*/
 /*#undef CONFIG_CMD_NAND*/
 
+#define CONFIG_ZYNQ_I2C0
+
 #include <configs/zynq-common.h>
+
 #undef CONFIG_SYS_PROMPT
 #undef CONFIG_BOOTDELAY
 #undef CONFIG_EXTRA_ENV_SETTINGS

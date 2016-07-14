@@ -15,6 +15,7 @@
 	aliases {
 		serial0 = &uart0;
                 mmc0 = &sdhci0;
+                i2c0 = &i2c0;
 	};
 
         chosen {
@@ -35,4 +36,9 @@
 &sdhci0 {
         u-boot,dm-pre-reloc;
         status = "okay";
+};
+
+&i2c0 {
+        status = "okay";
+        clock-frequency = <400000>;
 };
