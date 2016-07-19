@@ -94,6 +94,23 @@
 /*#define CONFIG_EZYNQ_SKIP_DDR*/
 #define CONFIG_EZYNQ_SKIP_CLK
 
+#define CONFIG_MTD_DEVICE
+
+/* UBI support in full U-Boot */
+#define CONFIG_MTD_PARTITIONS
+#define CONFIG_CMD_MTDPARTS
+#define CONFIG_CMD_UBI
+#define CONFIG_CMD_UBIFS
+#define CONFIG_RBTREE
+#define CONFIG_LZO
+#define MTDIDS_DEFAULT  "nand0=nand"
+#define MTDPARTS_DEFAULT "mtdparts=nand:1m(u-boot-spl),"   \
+                         "4m(u-boot)," \
+                         "1m(device-tree)," \
+                         "16m(kernel)," \
+                         "256m(rootfs)," \
+                         "256m(rootfs)"
+
 /* Default environment */
 #define CONFIG_EXTRA_ENV_SETTINGS	\
 	"ethaddr=00:0e:64:10:00:00\0"	\
