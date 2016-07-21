@@ -181,6 +181,29 @@
 		" echo Copying Device Tree from NAND flash to RAM && " \
 		"nand read 0x4E00000 0x500000 ${devicetree_size} && " \
 		"bootm 0x4F00000 - 0x4E00000\0" \
+        "nandboot2=echo NAND boot 2... ; " \
+                "mtd default; " \
+                "mtd4=0; " \
+                "ubi part nand0,4; " \
+                "if ubi check elphel393-rootfs; then " \
+                    "mtd4=1; " \
+                "fi; " \
+                "mtd5=0; " \
+                "ubi part nand0,5; " \
+                "if ubi check elphel393-rootfs; then " \
+                    "mtd5=1; " \
+                "fi; " \
+                "i2c read 68 4 1 ${loadbootenv_addr}; " \
+                "setexpr.b bootsrc *${loadbootenv_addr} \\\\& 0x80; " \
+                "setexpr bootsrc ${bootsrc} / 0x80; " \
+                "setexpr bootsrc ${bootsrc} \\\\& ${mtd4}; " \
+                "setexpr bootsrc ${bootsrc} \\\\& ${mtd5}; " \
+                "setexpr bootsrc ${bootsrc} \\\\^ ${mtd5}; " \
+                "if test ${bootsrc} -eq 1; then " \
+                    "echo Booting from mtd4!; " \
+                "else " \
+                    "echo Booting from mtd5!; " \
+                "fi\0" \
 	"jtagboot=echo TFTPing Linux to RAM... && " \
 		"tftpboot 0x3000000 ${kernel_image} && " \
 		"tftpboot 0x2A00000 ${devicetree_image} && " \
