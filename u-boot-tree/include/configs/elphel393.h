@@ -25,6 +25,7 @@
 #define CONFIG_ZYNQ_GEM0
 #define CONFIG_ZYNQ_GEM_PHY_ADDR0	0
 
+#define CONFIG_ZYNQ_SDHCI
 #define CONFIG_ZYNQ_SDHCI0
 
 #define CONFIG_SYS_NO_FLASH
@@ -73,6 +74,9 @@
 #define CONFIG_ZYNQ_I2C0
 
 #include <configs/zynq-common.h>
+
+/* Need to define it - otherwise error "FDT creation failed!"*/
+#define CONFIG_SYS_SDRAM_BASE       0
 
 #undef CONFIG_SYS_PROMPT
 #undef CONFIG_BOOTDELAY
