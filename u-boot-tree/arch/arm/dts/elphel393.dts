@@ -1,0 +1,44 @@
+/*
+ * Elphel 10393 board DTS
+ *
+ * Copyright (C) 2016 Elphel, Inc.
+ *
+ * SPDX-License-Identifier:	GPL-3.0+
+ */
+/dts-v1/;
+#include "zynq-7000.dtsi"
+
+/ {
+	model = "Elphel 10393 Board";
+	compatible = "xlnx,zynq-7000";
+
+	aliases {
+		serial0 = &uart0;
+                mmc0 = &sdhci0;
+                i2c0 = &i2c0;
+	};
+
+        chosen {
+                stdout-path = "serial0:115200n8";
+        };
+        
+	memory {
+		device_type = "memory";
+		reg = <0 0x40000000>;
+	};
+};
+
+&uart0 {
+	u-boot,dm-pre-reloc;
+	status = "okay";
+};
+
+&sdhci0 {
+        u-boot,dm-pre-reloc;
+        status = "okay";
+};
+
+&i2c0 {
+        status = "okay";
+        clock-frequency = <400000>;
+};
