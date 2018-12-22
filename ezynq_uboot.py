@@ -763,7 +763,7 @@ int arch_cpu_init(void)
             self.cfile+='\tuart_wait_tx_fifo_empty(); /* Second time - for some reason 1 wait sometimes fails after LAST_PRINT_DEBUG */\n'
              
         self.cfile+='''/* set up the CPU clk clock frequency in the global data struct */
-	zynq_clk_early_init();
+	//zynq_clk_early_init();
 '''
              
 #LOCK_SLCR        
