@@ -18,7 +18,7 @@
 #include <asm/arch/hardware.h>
 #include <asm/arch/sys_proto.h>
 
-extern nand_info_t nand_info[CONFIG_SYS_MAX_NAND_DEVICE];
+extern mtd_info nand_info[CONFIG_SYS_MAX_NAND_DEVICE];
 
 static int is_badblock(struct mtd_info *mtd, loff_t offs, int allowbbt)
 {
