@@ -100,7 +100,7 @@
 
 #define CONFIG_MTD_DEVICE
 
-#define CONFIG_SPL_STACK_R_ADDR=0x200000
+#define CONFIG_SPL_STACK_R_ADDR 0x200000
 
 /* UBI support in full U-Boot */
 //#define CONFIG_MTD_PARTITIONS
