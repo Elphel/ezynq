@@ -19,10 +19,11 @@
 #include <asm/arch/sys_proto.h>
 
 //extern nand_info_t nand_info[CONFIG_SYS_MAX_NAND_DEVICE];
+static struct mtd_info *mtd;
 
 static int is_badblock(struct mtd_info *mtd, loff_t offs, int allowbbt)
 {
-	register struct nand_chip *chip = mtd->priv;
+	register struct nand_chip *chip = mtd_to_nand(mtd);
 	unsigned int block = offs >> chip->phys_erase_shift;
 	unsigned int page = offs >> chip->page_shift;
 	unsigned long data_width = 4;
@@ -51,9 +52,11 @@ int nand_spl_load_image(uint32_t offs, unsigned int size, void *buf)
 	udelay(10000);
 
 	//if (mxs_nand_init()) return -ENODEV;
-	mtd = &nand_info[0];
+	//mtd = &nand_info[0];
 	//mtd.priv = &nand_chip;
-	chip = mtd->priv;
+	//chip = mtd->priv;
+	chip = mtd_to_nand(mtd);
+
 	page = offs >> chip->page_shift;
 	nand_page_per_block = mtd->erasesize / mtd->writesize;
 
