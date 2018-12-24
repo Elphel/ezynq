@@ -42,6 +42,7 @@
 #endif
 
 #define CONFIG_SPL_NAND_ELPHEL393
+#define CONFIG_SPL_NAND_IDENT
 
 #define CONFIG_SYS_NAND_U_BOOT_OFFS	0x100000 /*look-up in dts!*/
 
