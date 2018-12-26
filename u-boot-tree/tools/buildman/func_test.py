@@ -1,5 +1,7 @@
-# SPDX-License-Identifier: GPL-2.0+
+#
 # Copyright (c) 2014 Google, Inc
+#
+# SPDX-License-Identifier:      GPL-2.0+
 #
 
 import os
@@ -27,7 +29,7 @@ settings_data = '''
 [make-flags]
 src=/home/sjg/c/src
 chroot=/home/sjg/c/chroot
-vboot=VBOOT_DEBUG=1 MAKEFLAGS_VBOOT=DEBUG=1 CFLAGS_EXTRA_VBOOT=-DUNROLL_LOOPS VBOOT_SOURCE=${src}/platform/vboot_reference
+vboot=USE_STDINT=1 VBOOT_DEBUG=1 MAKEFLAGS_VBOOT=DEBUG=1 CFLAGS_EXTRA_VBOOT=-DUNROLL_LOOPS VBOOT_SOURCE=${src}/platform/vboot_reference
 chromeos_coreboot=VBOOT=${chroot}/build/link/usr ${vboot}
 chromeos_daisy=VBOOT=${chroot}/build/daisy/usr ${vboot}
 chromeos_peach=VBOOT=${chroot}/build/peach_pit/usr ${vboot}
@@ -327,9 +329,6 @@ class TestFunctional(unittest.TestCase):
     def _HandleCommandObjdump(self, args):
         return command.CommandResult(return_code=0)
 
-    def _HandleCommandObjcopy(self, args):
-        return command.CommandResult(return_code=0)
-
     def _HandleCommandSize(self, args):
         return command.CommandResult(return_code=0)
 
@@ -362,8 +361,6 @@ class TestFunctional(unittest.TestCase):
             return self._HandleCommandNm(args)
         elif cmd.endswith('objdump'):
             return self._HandleCommandObjdump(args)
-        elif cmd.endswith('objcopy'):
-            return self._HandleCommandObjcopy(args)
         elif cmd.endswith( 'size'):
             return self._HandleCommandSize(args)
 
@@ -524,12 +521,3 @@ class TestFunctional(unittest.TestCase):
         self._RunControl('-b', self._test_branch, clean_dir=False)
         self.assertEqual(self._builder.count, self._total_builds)
         self.assertEqual(self._builder.fail, 0)
-
-    def testBadOutputDir(self):
-        """Test building with an output dir the same as out current dir"""
-        self._test_branch = '/__dev/__testbranch'
-        with self.assertRaises(SystemExit):
-            self._RunControl('-b', self._test_branch, '-o', os.getcwd())
-        with self.assertRaises(SystemExit):
-            self._RunControl('-b', self._test_branch, '-o',
-                             os.path.join(os.getcwd(), 'test'))

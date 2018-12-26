@@ -1,5 +1,7 @@
-# SPDX-License-Identifier: GPL-2.0+
+#
 # Copyright (c) 2014 Google, Inc
+#
+# SPDX-License-Identifier:      GPL-2.0+
 #
 
 from optparse import OptionParser
@@ -18,8 +20,6 @@ def ParseArgs():
     parser.add_option('-B', '--bloat', dest='show_bloat',
           action='store_true', default=False,
           help='Show changes in function code size for each board')
-    parser.add_option('--boards', type='string', action='append',
-          help='List of board names to build separated by comma')
     parser.add_option('-c', '--count', dest='count', type='int',
           default=-1, help='Run build on the top n commits')
     parser.add_option('-C', '--force-reconfig', dest='force_reconfig',
@@ -66,7 +66,7 @@ def ParseArgs():
     parser.add_option('-l', '--list-error-boards', action='store_true',
           default=False, help='Show a list of boards next to each error/warning')
     parser.add_option('--list-tool-chains', action='store_true', default=False,
-          help='List available tool chains (use -v to see probing detail)')
+          help='List available tool chains')
     parser.add_option('-n', '--dry-run', action='store_true', dest='dry_run',
           default=False, help="Do a dry run (describe actions, but do nothing)")
     parser.add_option('-N', '--no-subdirs', action='store_true', dest='no_subdirs',
@@ -94,8 +94,6 @@ def ParseArgs():
           default=None, help='Number of builder threads to use')
     parser.add_option('-u', '--show_unknown', action='store_true',
           default=False, help='Show boards with unknown build result')
-    parser.add_option('-U', '--show-environment', action='store_true',
-          default=False, help='Show environment changes in summary')
     parser.add_option('-v', '--verbose', action='store_true',
           default=False, help='Show build results while the build progresses')
     parser.add_option('-V', '--verbose-build', action='store_true',
@@ -104,7 +102,7 @@ def ParseArgs():
           type='string', action='append',
           help='Specify a list of boards to exclude, separated by comma')
 
-    parser.usage += """ [list of target/arch/cpu/board/vendor/soc to build]
+    parser.usage += """
 
     Build U-Boot for all commits in a branch. Use -n to do a dry run"""
 

@@ -1,4 +1,3 @@
-# SPDX-License-Identifier: GPL-2.0+
 #
 # (C) Copyright 2000-2011
 # Wolfgang Denk, DENX Software Engineering, wd@denx.de.
@@ -9,6 +8,9 @@
 # (C) Copyright 2011
 # Texas Instruments Incorporated - http://www.ti.com/
 # Aneesh V <aneesh@ti.com>
+#
+# SPDX-License-Identifier:	GPL-2.0+
+#
 # Based on top-level Makefile.
 #
 
@@ -45,13 +47,6 @@ SPL_ :=
 SPL_TPL_ :=
 endif
 
-ifeq ($(obj)$(CONFIG_SUPPORT_SPL),spl)
-$(error You cannot build SPL without enabling CONFIG_SUPPORT_SPL)
-endif
-ifeq ($(obj)$(CONFIG_SUPPORT_TPL),tpl)
-$(error You cannot build TPL without enabling CONFIG_SUPPORT_TPL)
-endif
-
 include $(srctree)/config.mk
 include $(srctree)/arch/$(ARCH)/Makefile
 
@@ -81,11 +76,9 @@ libs-$(CONFIG_TPL_LIBGENERIC_SUPPORT) += lib/
 else
 libs-$(CONFIG_SPL_LIBCOMMON_SUPPORT) += common/ cmd/ env/
 libs-$(CONFIG_SPL_LIBGENERIC_SUPPORT) += lib/
-ifdef CONFIG_SPL_FRAMEWORK
-libs-$(CONFIG_PARTITIONS) += disk/
-endif
 endif
 
+libs-$(CONFIG_SPL_LIBDISK_SUPPORT) += disk/
 libs-y += drivers/
 libs-$(CONFIG_SPL_USB_GADGET_SUPPORT) += drivers/usb/dwc3/
 libs-y += dts/
@@ -151,11 +144,7 @@ MKIMAGEOUTPUT ?= /dev/null
 
 quiet_cmd_mkimage = MKIMAGE $@
 cmd_mkimage = $(objtree)/tools/mkimage $(MKIMAGEFLAGS_$(@F)) -d $< $@ \
-	>$(MKIMAGEOUTPUT) $(if $(KBUILD_VERBOSE:0=), && cat $(MKIMAGEOUTPUT))
-
-quiet_cmd_mkfitimage = MKIMAGE $@
-cmd_mkfitimage = $(objtree)/tools/mkimage $(MKIMAGEFLAGS_$(@F)) -f $(SPL_ITS) -E $@ \
-	$(if $(KBUILD_VERBOSE:1=), MKIMAGEOUTPUT)
+	$(if $(KBUILD_VERBOSE:1=), >$(MKIMAGEOUTPUT))
 
 MKIMAGEFLAGS_MLO = -T omapimage -a $(CONFIG_SPL_TEXT_BASE)
 
@@ -180,14 +169,8 @@ ifdef CONFIG_ARCH_ZYNQ
 MKIMAGEFLAGS_boot.bin = -T zynqimage -R $(srctree)/$(CONFIG_BOOT_INIT_FILE)
 endif
 ifdef CONFIG_ARCH_ZYNQMP
-ifneq ($(CONFIG_PMUFW_INIT_FILE),"")
-spl/boot.bin: zynqmp-check-pmufw
-zynqmp-check-pmufw: FORCE
-	( cd $(srctree) && test -r $(CONFIG_PMUFW_INIT_FILE) ) \
-		|| ( echo "Cannot read $(CONFIG_PMUFW_INIT_FILE)" && false )
-endif
 MKIMAGEFLAGS_boot.bin = -T zynqmpimage -R $(srctree)/$(CONFIG_BOOT_INIT_FILE) \
-	-n "$(shell cd $(srctree); readlink -f $(CONFIG_PMUFW_INIT_FILE))"
+	-n $(srctree)/$(CONFIG_PMUFW_INIT_FILE)
 endif
 
 spl/boot.bin: $(obj)/u-boot-spl.bin FORCE
@@ -220,8 +203,6 @@ ALL-$(CONFIG_SPL_X86_16BIT_INIT) += $(obj)/u-boot-x86-16bit-spl.bin
 
 ALL-$(CONFIG_ARCH_ZYNQ)		+= $(obj)/boot.bin
 ALL-$(CONFIG_ARCH_ZYNQMP)	+= $(obj)/boot.bin
-
-ALL-$(CONFIG_ARCH_MEDIATEK)	+= $(obj)/u-boot-spl-mtk.bin
 
 all:	$(ALL-y)
 
@@ -328,11 +309,7 @@ LDFLAGS_$(SPL_BIN) += -Ttext $(CONFIG_SPL_TEXT_BASE)
 endif
 endif
 
-ifdef CONFIG_TARGET_SOCFPGA_ARRIA10
-MKIMAGEFLAGS_$(SPL_BIN).sfp = -T socfpgaimage_v1
-else
 MKIMAGEFLAGS_$(SPL_BIN).sfp = -T socfpgaimage
-endif
 $(obj)/$(SPL_BIN).sfp: $(obj)/$(SPL_BIN).bin FORCE
 	$(call if_changed,mkimage)
 
@@ -352,15 +329,6 @@ cmd_sunxi_spl_image_builder = $(objtree)/tools/sunxi-spl-image-builder \
 				-s -b $< $@
 $(obj)/sunxi-spl-with-ecc.bin: $(obj)/sunxi-spl.bin
 	$(call if_changed,sunxi_spl_image_builder)
-
-
-# MediaTek's specific SPL build
-MKIMAGEFLAGS_u-boot-spl-mtk.bin = -T mtk_image \
-	-a $(CONFIG_SPL_TEXT_BASE) -e $(CONFIG_SPL_TEXT_BASE) \
-	-n "$(patsubst "%",%,$(CONFIG_MTK_BROM_HEADER_INFO))"
-
-$(obj)/u-boot-spl-mtk.bin: $(obj)/u-boot-spl.bin FORCE
-	$(call if_changed,mkimage)
 
 # Rule to link u-boot-spl
 # May be overridden by arch/$(ARCH)/config.mk
@@ -384,7 +352,7 @@ $(u-boot-spl-dirs): $(u-boot-spl-platdata)
 
 quiet_cmd_cpp_lds = LDS     $@
 cmd_cpp_lds = $(CPP) -Wp,-MD,$(depfile) $(cpp_flags) $(LDPPFLAGS) -ansi \
-		-D__ASSEMBLY__ -x assembler-with-cpp -std=c99 -P -o $@ $<
+		-D__ASSEMBLY__ -x assembler-with-cpp -P -o $@ $<
 
 $(obj)/u-boot-spl.lds: $(LDSCRIPT) FORCE
 	$(call if_changed_dep,cpp_lds)
@@ -421,18 +389,9 @@ MKIMAGEFLAGS_$(SPL_BIN).multidtb.fit = -f auto -A $(ARCH) -T firmware -C none -O
 
 $(obj)/$(SPL_BIN).multidtb.fit: /dev/null $(SHRUNK_ARCH_DTB) FORCE
 	$(call if_changed,mkimage)
-ifneq ($(SOURCE_DATE_EPOCH),)
-	touch -d @$(SOURCE_DATE_EPOCH) $(obj)/$(SPL_BIN).multidtb.fit
-	chmod 0600 $(obj)/$(SPL_BIN).multidtb.fit
-endif
 
 $(obj)/$(SPL_BIN).multidtb.fit.gz: $(obj)/$(SPL_BIN).multidtb.fit
 	@gzip -kf9 $< > $@
 
 $(obj)/$(SPL_BIN).multidtb.fit.lzo: $(obj)/$(SPL_BIN).multidtb.fit
 	@lzop -f9 $< > $@
-
-ifdef CONFIG_ARCH_K3
-tispl.bin: $(obj)/u-boot-spl-nodtb.bin $(SHRUNK_ARCH_DTB) $(SPL_ITS) FORCE
-	$(call if_changed,mkfitimage)
-endif

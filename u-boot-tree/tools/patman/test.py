@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
-# SPDX-License-Identifier: GPL-2.0+
 #
 # Copyright (c) 2011 The Chromium OS Authors.
+#
+# SPDX-License-Identifier:	GPL-2.0+
 #
 
 import os
@@ -148,10 +149,10 @@ index 0000000..2234c87
 --- /dev/null
 +++ b/common/bootstage.c
 @@ -0,0 +1,37 @@
-+%s
 +/*
 + * Copyright (c) 2011, Google Inc. All rights reserved.
 + *
++ * SPDX-License-Identifier:	GPL-2.0+
 + */
 +
 +/*
@@ -189,22 +190,19 @@ index 0000000..2234c87
 1.7.3.1
 '''
         signoff = 'Signed-off-by: Simon Glass <sjg@chromium.org>\n'
-        license = '// SPDX-License-Identifier: GPL-2.0+'
         tab = '	'
         indent = '    '
         if data_type == 'good':
             pass
         elif data_type == 'no-signoff':
             signoff = ''
-        elif data_type == 'no-license':
-            license = ''
         elif data_type == 'spaces':
             tab = '   '
         elif data_type == 'indent':
             indent = tab
         else:
             print('not implemented')
-        return data % (signoff, license, tab, indent, tab)
+        return data % (signoff, tab, indent, tab)
 
     def SetupData(self, data_type):
         inhandle, inname = tempfile.mkstemp()
@@ -233,17 +231,6 @@ index 0000000..2234c87
         self.assertEqual(len(result.problems), 1)
         self.assertEqual(result.errors, 1)
         self.assertEqual(result.warnings, 0)
-        self.assertEqual(result.checks, 0)
-        self.assertEqual(result.lines, 62)
-        os.remove(inf)
-
-    def testNoLicense(self):
-        inf = self.SetupData('no-license')
-        result = checkpatch.CheckPatch(inf)
-        self.assertEqual(result.ok, False)
-        self.assertEqual(len(result.problems), 1)
-        self.assertEqual(result.errors, 0)
-        self.assertEqual(result.warnings, 1)
         self.assertEqual(result.checks, 0)
         self.assertEqual(result.lines, 62)
         os.remove(inf)

@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: GPL-2.0+
 /*
  * (C) Copyright 2008 Semihalf
  *
@@ -11,6 +10,8 @@
  *		some functions added to address abstraction
  *
  * All rights reserved.
+ *
+ * SPDX-License-Identifier:	GPL-2.0+
  */
 
 #include "imagetool.h"
@@ -51,8 +52,7 @@ static int fit_add_file_data(struct image_tool_params *params, size_t size_inc,
 
 	/* for first image creation, add a timestamp at offset 0 i.e., root  */
 	if (params->datafile) {
-		time_t time = imagetool_get_source_date(params->cmdname,
-							sbuf.st_mtime);
+		time_t time = imagetool_get_source_date(params, sbuf.st_mtime);
 		ret = fit_set_timestamp(ptr, 0, time);
 	}
 
@@ -60,8 +60,7 @@ static int fit_add_file_data(struct image_tool_params *params, size_t size_inc,
 		ret = fit_add_verification_data(params->keydir, dest_blob, ptr,
 						params->comment,
 						params->require_keys,
-						params->engine_id,
-						params->cmdname);
+						params->engine_id);
 	}
 
 	if (dest_blob) {
@@ -202,22 +201,21 @@ static int fit_write_images(struct image_tool_params *params, char *fdt)
 	typename = genimg_get_type_short_name(params->fit_image_type);
 	snprintf(str, sizeof(str), "%s-1", typename);
 	fdt_begin_node(fdt, str);
-	fdt_property_string(fdt, FIT_DESC_PROP, params->imagename);
-	fdt_property_string(fdt, FIT_TYPE_PROP, typename);
-	fdt_property_string(fdt, FIT_ARCH_PROP,
+	fdt_property_string(fdt, "description", params->imagename);
+	fdt_property_string(fdt, "type", typename);
+	fdt_property_string(fdt, "arch",
 			    genimg_get_arch_short_name(params->arch));
-	fdt_property_string(fdt, FIT_OS_PROP,
-			    genimg_get_os_short_name(params->os));
-	fdt_property_string(fdt, FIT_COMP_PROP,
+	fdt_property_string(fdt, "os", genimg_get_os_short_name(params->os));
+	fdt_property_string(fdt, "compression",
 			    genimg_get_comp_short_name(params->comp));
-	fdt_property_u32(fdt, FIT_LOAD_PROP, params->addr);
-	fdt_property_u32(fdt, FIT_ENTRY_PROP, params->ep);
+	fdt_property_u32(fdt, "load", params->addr);
+	fdt_property_u32(fdt, "entry", params->ep);
 
 	/*
 	 * Put data last since it is large. SPL may only load the first part
 	 * of the DT, so this way it can access all the above fields.
 	 */
-	ret = fdt_property_file(params, fdt, FIT_DATA_PROP, params->datafile);
+	ret = fdt_property_file(params, fdt, "data", params->datafile);
 	if (ret)
 		return ret;
 	fdt_end_node(fdt);
@@ -231,15 +229,14 @@ static int fit_write_images(struct image_tool_params *params, char *fdt)
 		fdt_begin_node(fdt, str);
 
 		get_basename(str, sizeof(str), cont->fname);
-		fdt_property_string(fdt, FIT_DESC_PROP, str);
-		ret = fdt_property_file(params, fdt, FIT_DATA_PROP,
-					cont->fname);
+		fdt_property_string(fdt, "description", str);
+		ret = fdt_property_file(params, fdt, "data", cont->fname);
 		if (ret)
 			return ret;
-		fdt_property_string(fdt, FIT_TYPE_PROP, typename);
-		fdt_property_string(fdt, FIT_ARCH_PROP,
+		fdt_property_string(fdt, "type", typename);
+		fdt_property_string(fdt, "arch",
 				    genimg_get_arch_short_name(params->arch));
-		fdt_property_string(fdt, FIT_COMP_PROP,
+		fdt_property_string(fdt, "compression",
 				    genimg_get_comp_short_name(IH_COMP_NONE));
 		fdt_end_node(fdt);
 	}
@@ -248,12 +245,10 @@ static int fit_write_images(struct image_tool_params *params, char *fdt)
 	if (params->fit_ramdisk) {
 		fdt_begin_node(fdt, FIT_RAMDISK_PROP "-1");
 
-		fdt_property_string(fdt, FIT_TYPE_PROP, FIT_RAMDISK_PROP);
-		fdt_property_string(fdt, FIT_OS_PROP,
-				    genimg_get_os_short_name(params->os));
+		fdt_property_string(fdt, "type", FIT_RAMDISK_PROP);
+		fdt_property_string(fdt, "os", genimg_get_os_short_name(params->os));
 
-		ret = fdt_property_file(params, fdt, FIT_DATA_PROP,
-					params->fit_ramdisk);
+		ret = fdt_property_file(params, fdt, "data", params->fit_ramdisk);
 		if (ret)
 			return ret;
 
@@ -282,7 +277,7 @@ static void fit_write_configs(struct image_tool_params *params, char *fdt)
 	int upto;
 
 	fdt_begin_node(fdt, "configurations");
-	fdt_property_string(fdt, FIT_DEFAULT_PROP, "conf-1");
+	fdt_property_string(fdt, "default", "conf-1");
 
 	upto = 0;
 	for (cont = params->content_head; cont; cont = cont->next) {
@@ -293,7 +288,7 @@ static void fit_write_configs(struct image_tool_params *params, char *fdt)
 		fdt_begin_node(fdt, str);
 
 		get_basename(str, sizeof(str), cont->fname);
-		fdt_property_string(fdt, FIT_DESC_PROP, str);
+		fdt_property_string(fdt, "description", str);
 
 		typename = genimg_get_type_short_name(params->fit_image_type);
 		snprintf(str, sizeof(str), "%s-1", typename);
@@ -333,7 +328,7 @@ static int fit_build_fdt(struct image_tool_params *params, char *fdt, int size)
 		return ret;
 	fdt_finish_reservemap(fdt);
 	fdt_begin_node(fdt, "");
-	fdt_property_strf(fdt, FIT_DESC_PROP,
+	fdt_property_strf(fdt, "description",
 			  "%s image with one or more FDT blobs",
 			  genimg_get_type_name(params->fit_image_type));
 	fdt_property_strf(fdt, "creator", "U-Boot mkimage %s", PLAIN_VERSION);
@@ -445,26 +440,25 @@ static int fit_extract_data(struct image_tool_params *params, const char *fname)
 		const char *data;
 		int len;
 
-		data = fdt_getprop(fdt, node, FIT_DATA_PROP, &len);
+		data = fdt_getprop(fdt, node, "data", &len);
 		if (!data)
 			continue;
 		memcpy(buf + buf_ptr, data, len);
 		debug("Extracting data size %x\n", len);
 
-		ret = fdt_delprop(fdt, node, FIT_DATA_PROP);
+		ret = fdt_delprop(fdt, node, "data");
 		if (ret) {
 			ret = -EPERM;
 			goto err_munmap;
 		}
 		if (params->external_offset > 0) {
 			/* An external offset positions the data absolutely. */
-			fdt_setprop_u32(fdt, node, FIT_DATA_POSITION_PROP,
+			fdt_setprop_u32(fdt, node, "data-position",
 					params->external_offset + buf_ptr);
 		} else {
-			fdt_setprop_u32(fdt, node, FIT_DATA_OFFSET_PROP,
-					buf_ptr);
+			fdt_setprop_u32(fdt, node, "data-offset", buf_ptr);
 		}
-		fdt_setprop_u32(fdt, node, FIT_DATA_SIZE_PROP, len);
+		fdt_setprop_u32(fdt, node, "data-size", len);
 
 		buf_ptr += (len + 3) & ~3;
 	}
@@ -656,9 +650,9 @@ static int fit_handle_file(struct image_tool_params *params)
 		}
 		*cmd = '\0';
 	} else if (params->datafile) {
-		/* dtc -I dts -O dtb -p 500 -o tmpfile datafile */
-		snprintf(cmd, sizeof(cmd), "%s %s -o \"%s\" \"%s\"",
-			 MKIMAGE_DTC, params->dtc, tmpfile, params->datafile);
+		/* dtc -I dts -O dtb -p 500 datafile > tmpfile */
+		snprintf(cmd, sizeof(cmd), "%s %s \"%s\" > \"%s\"",
+			 MKIMAGE_DTC, params->dtc, params->datafile, tmpfile);
 		debug("Trying to execute \"%s\"\n", cmd);
 	} else {
 		snprintf(cmd, sizeof(cmd), "cp \"%s\" \"%s\"",

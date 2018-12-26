@@ -1,4 +1,4 @@
-#!/usr/bin/env perl
+#!/usr/bin/perl -w
 #
 # Copyright 2005-2009 - Steven Rostedt
 # Licensed under the terms of the GNU GPL License version 2
@@ -42,7 +42,6 @@
 #    mv config_strip .config
 #    make oldconfig
 #
-use warnings;
 use strict;
 use Getopt::Long;
 

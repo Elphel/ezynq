@@ -14,8 +14,7 @@ PYLIBFDT_srcs = $(addprefix $(LIBFDT_srcdir)/,$(LIBFDT_SRCS)) \
 		$(obj)/libfdt.i
 
 quiet_cmd_pymod = PYMOD   $@
-      cmd_pymod = unset CROSS_COMPILE; unset CFLAGS; \
-		CC="$(HOSTCC)" LDSHARED="$(HOSTCC) -shared " \
+      cmd_pymod = unset CC; unset CROSS_COMPILE; unset CFLAGS;\
 		LDFLAGS="$(HOSTLDFLAGS)" \
 		VERSION="u-boot-$(UBOOTVERSION)" \
 		CPPFLAGS="$(HOSTCFLAGS) -I$(LIBFDT_srcdir)" OBJDIR=$(obj) \

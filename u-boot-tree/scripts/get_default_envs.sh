@@ -1,7 +1,8 @@
 #! /bin/bash
-# SPDX-License-Identifier: GPL-2.0+
 #
 # Copyright (C) 2016, Lukasz Majewski <l.majewski@majess.pl>
+#
+# SPDX-License-Identifier:      GPL-2.0+
 #
 
 # This file extracts default envs from built u-boot
@@ -23,7 +24,7 @@ else
 fi
 
 env_obj_file_path=$(find ${path} -path "*/env/*" -not -path "*/spl/*" \
-			 -not -path "*/tools/*" -name "${ENV_OBJ_FILE}")
+			 -name "${ENV_OBJ_FILE}")
 [ -z "${env_obj_file_path}" ] && \
     { echoerr "File '${ENV_OBJ_FILE}' not found!"; exit 1; }
 

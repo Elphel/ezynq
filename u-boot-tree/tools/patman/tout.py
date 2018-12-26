@@ -1,5 +1,6 @@
-# SPDX-License-Identifier: GPL-2.0+
 # Copyright (c) 2016 Google, Inc
+#
+# SPDX-License-Identifier:            GPL-2.0+
 #
 # Terminal output logging.
 #
@@ -14,8 +15,6 @@ WARNING = 1
 NOTICE = 2
 INFO = 3
 DEBUG = 4
-
-in_progress = False
 
 """
 This class handles output of progress and other useful information
@@ -50,11 +49,9 @@ def UserIsPresent():
 
 def ClearProgress():
     """Clear any active progress message on the terminal."""
-    global in_progress
-    if verbose > 0 and stdout_is_tty and in_progress:
+    if verbose > 0 and stdout_is_tty:
         _stdout.write('\r%s\r' % (" " * len (_progress)))
         _stdout.flush()
-        in_progress = False
 
 def Progress(msg, warning=False, trailer='...'):
     """Display progress information.
@@ -62,7 +59,6 @@ def Progress(msg, warning=False, trailer='...'):
     Args:
         msg: Message to display.
         warning: True if this is a warning."""
-    global in_progress
     ClearProgress()
     if verbose > 0:
         _progress = msg + trailer
@@ -70,7 +66,6 @@ def Progress(msg, warning=False, trailer='...'):
             col = _color.YELLOW if warning else _color.GREEN
             _stdout.write('\r' + _color.Color(col, _progress))
             _stdout.flush()
-            in_progress = True
         else:
             _stdout.write(_progress + '\n')
 

@@ -1,7 +1,8 @@
-# SPDX-License-Identifier: GPL-2.0+
 # Copyright (c) 2013 The Chromium OS Authors.
 #
 # Bloat-o-meter code used here Copyright 2004 Matt Mackall <mpm@selenic.com>
+#
+# SPDX-License-Identifier:	GPL-2.0+
 #
 
 import collections
@@ -127,15 +128,6 @@ class Config:
                 val = val ^ hash(key) & hash(value)
         return val
 
-class Environment:
-    """Holds information about environment variables for a board."""
-    def __init__(self, target):
-        self.target = target
-        self.environment = {}
-
-    def Add(self, key, value):
-        self.environment[key] = value
-
 class Builder:
     """Class for building U-Boot for a particular commit.
 
@@ -208,17 +200,13 @@ class Builder:
                     value is itself a dictionary:
                         key: config name
                         value: config value
-            environment: Dictionary keyed by environment variable, Each
-                     value is the value of environment variable.
         """
-        def __init__(self, rc, err_lines, sizes, func_sizes, config,
-                     environment):
+        def __init__(self, rc, err_lines, sizes, func_sizes, config):
             self.rc = rc
             self.err_lines = err_lines
             self.sizes = sizes
             self.func_sizes = func_sizes
             self.config = config
-            self.environment = environment
 
     def __init__(self, toolchains, base_dir, git_dir, num_threads, num_jobs,
                  gnu_make='make', checkout=True, show_unknown=True, step=1,
@@ -290,7 +278,6 @@ class Builder:
         self._re_function = re.compile('(.*): In function.*')
         self._re_files = re.compile('In file included from.*')
         self._re_warning = re.compile('(.*):(\d*):(\d*): warning: .*')
-        self._re_dtb_warning = re.compile('(.*): Warning .*')
         self._re_note = re.compile('(.*):(\d*):(\d*): note: this is the location of the previous.*')
 
         self.queue = Queue.Queue()
@@ -324,8 +311,7 @@ class Builder:
 
     def SetDisplayOptions(self, show_errors=False, show_sizes=False,
                           show_detail=False, show_bloat=False,
-                          list_error_boards=False, show_config=False,
-                          show_environment=False):
+                          list_error_boards=False, show_config=False):
         """Setup display options for the builder.
 
         show_errors: True to show summarised error/warning info
@@ -334,7 +320,6 @@ class Builder:
         show_bloat: Show detail for each function
         list_error_boards: Show the boards which caused each error/warning
         show_config: Show config deltas
-        show_environment: Show environment deltas
         """
         self._show_errors = show_errors
         self._show_sizes = show_sizes
@@ -342,7 +327,6 @@ class Builder:
         self._show_bloat = show_bloat
         self._list_error_boards = list_error_boards
         self._show_config = show_config
-        self._show_environment = show_environment
 
     def _AddTimestamp(self):
         """Add a new timestamp to the list and record the build period.
@@ -409,7 +393,7 @@ class Builder:
         """
         cmd = [self.gnu_make] + list(args)
         result = command.RunPipe([cmd], capture=True, capture_stderr=True,
-                cwd=cwd, raise_on_error=False, infile='/dev/null', **kwargs)
+                cwd=cwd, raise_on_error=False, **kwargs)
         if self.verbose_build:
             result.stdout = '%s\n' % (' '.join(cmd)) + result.stdout
             result.combined = '%s\n' % (' '.join(cmd)) + result.combined
@@ -626,33 +610,8 @@ class Builder:
                     config[key] = value
         return config
 
-    def _ProcessEnvironment(self, fname):
-        """Read in a uboot.env file
-
-        This function reads in environment variables from a file.
-
-        Args:
-            fname: Filename to read
-
-        Returns:
-            Dictionary:
-                key: environment variable (e.g. bootlimit)
-                value: value of environment variable (e.g. 1)
-        """
-        environment = {}
-        if os.path.exists(fname):
-            with open(fname) as fd:
-                for line in fd.read().split('\0'):
-                    try:
-                        key, value = line.split('=', 1)
-                        environment[key] = value
-                    except ValueError:
-                        # ignore lines we can't parse
-                        pass
-        return environment
-
     def GetBuildOutcome(self, commit_upto, target, read_func_sizes,
-                        read_config, read_environment):
+                        read_config):
         """Work out the outcome of a build.
 
         Args:
@@ -660,7 +619,6 @@ class Builder:
             target: Target board to check
             read_func_sizes: True to read function size information
             read_config: True to read .config and autoconf.h files
-            read_environment: True to read uboot.env files
 
         Returns:
             Outcome object
@@ -670,7 +628,6 @@ class Builder:
         sizes = {}
         func_sizes = {}
         config = {}
-        environment = {}
         if os.path.exists(done_file):
             with open(done_file, 'r') as fd:
                 return_code = int(fd.readline())
@@ -720,18 +677,12 @@ class Builder:
                     fname = os.path.join(output_dir, name)
                     config[name] = self._ProcessConfig(fname)
 
-            if read_environment:
-                output_dir = self.GetBuildDir(commit_upto, target)
-                fname = os.path.join(output_dir, 'uboot.env')
-                environment = self._ProcessEnvironment(fname)
+            return Builder.Outcome(rc, err_lines, sizes, func_sizes, config)
 
-            return Builder.Outcome(rc, err_lines, sizes, func_sizes, config,
-                                   environment)
-
-        return Builder.Outcome(OUTCOME_UNKNOWN, [], {}, {}, {}, {})
+        return Builder.Outcome(OUTCOME_UNKNOWN, [], {}, {}, {})
 
     def GetResultSummary(self, boards_selected, commit_upto, read_func_sizes,
-                         read_config, read_environment):
+                         read_config):
         """Calculate a summary of the results of building a commit.
 
         Args:
@@ -739,7 +690,6 @@ class Builder:
             commit_upto: Commit number to summarize (0..self.count-1)
             read_func_sizes: True to read function size information
             read_config: True to read .config and autoconf.h files
-            read_environment: True to read uboot.env files
 
         Returns:
             Tuple:
@@ -756,9 +706,6 @@ class Builder:
                     value is itself a dictionary:
                         key: config name
                         value: config value
-                Dictionary keyed by board.target. Each value is a dictionary:
-                    key: environment variable
-                    value: value of environment variable
         """
         def AddLine(lines_summary, lines_boards, line, board):
             line = line.rstrip()
@@ -774,12 +721,10 @@ class Builder:
         warn_lines_summary = []
         warn_lines_boards = {}
         config = {}
-        environment = {}
 
         for board in boards_selected.itervalues():
             outcome = self.GetBuildOutcome(commit_upto, board.target,
-                                           read_func_sizes, read_config,
-                                           read_environment)
+                                           read_func_sizes, read_config)
             board_dict[board.target] = outcome
             last_func = None
             last_was_warning = False
@@ -789,8 +734,7 @@ class Builder:
                             self._re_files.match(line)):
                         last_func = line
                     else:
-                        is_warning = (self._re_warning.match(line) or
-                                      self._re_dtb_warning.match(line))
+                        is_warning = self._re_warning.match(line)
                         is_note = self._re_note.match(line)
                         if is_warning or (last_was_warning and is_note):
                             if last_func:
@@ -813,14 +757,8 @@ class Builder:
                         tconfig.Add(fname, key, value)
             config[board.target] = tconfig
 
-            tenvironment = Environment(board.target)
-            if outcome.environment:
-                for key, value in outcome.environment.iteritems():
-                    tenvironment.Add(key, value)
-            environment[board.target] = tenvironment
-
         return (board_dict, err_lines_summary, err_lines_boards,
-                warn_lines_summary, warn_lines_boards, config, environment)
+                warn_lines_summary, warn_lines_boards, config)
 
     def AddOutcome(self, board_dict, arch_list, changes, char, color):
         """Add an output to our list of outcomes for each architecture
@@ -873,14 +811,12 @@ class Builder:
         """
         self._base_board_dict = {}
         for board in board_selected:
-            self._base_board_dict[board] = Builder.Outcome(0, [], [], {}, {},
-                                                           {})
+            self._base_board_dict[board] = Builder.Outcome(0, [], [], {}, {})
         self._base_err_lines = []
         self._base_warn_lines = []
         self._base_err_line_boards = {}
         self._base_warn_line_boards = {}
         self._base_config = None
-        self._base_environment = None
 
     def PrintFuncSizeDetail(self, fname, old, new):
         grow, shrink, add, remove, up, down = 0, 0, 0, 0, 0, 0
@@ -1075,8 +1011,8 @@ class Builder:
 
     def PrintResultSummary(self, board_selected, board_dict, err_lines,
                            err_line_boards, warn_lines, warn_line_boards,
-                           config, environment, show_sizes, show_detail,
-                           show_bloat, show_config, show_environment):
+                           config, show_sizes, show_detail, show_bloat,
+                           show_config):
         """Compare results with the base results and display delta.
 
         Only boards mentioned in board_selected will be considered. This
@@ -1101,13 +1037,10 @@ class Builder:
                     value is itself a dictionary:
                         key: config name
                         value: config value
-            environment: Dictionary keyed by environment variable, Each
-                     value is the value of environment variable.
             show_sizes: Show image size deltas
             show_detail: Show detail for each board
             show_bloat: Show detail for each function
             show_config: Show config changes
-            show_environment: Show environment changes
         """
         def _BoardList(line, line_boards):
             """Helper function to get a line of boards containing a line
@@ -1196,11 +1129,10 @@ class Builder:
                 Print('   ' + line, newline=True, colour=col)
 
 
-        ok_boards = []      # List of boards fixed since last commit
-        warn_boards = []    # List of boards with warnings since last commit
-        err_boards = []     # List of new broken boards since last commit
-        new_boards = []     # List of boards that didn't exist last time
-        unknown_boards = [] # List of boards that were not built
+        better = []     # List of boards fixed since last commit
+        worse = []      # List of new broken boards since last commit
+        new = []        # List of boards that didn't exist last time
+        unknown = []    # List of boards that were not built
 
         for target in board_dict:
             if target not in board_selected:
@@ -1211,19 +1143,13 @@ class Builder:
                 base_outcome = self._base_board_dict[target].rc
                 outcome = board_dict[target]
                 if outcome.rc == OUTCOME_UNKNOWN:
-                    unknown_boards.append(target)
+                    unknown.append(target)
                 elif outcome.rc < base_outcome:
-                    if outcome.rc == OUTCOME_WARNING:
-                        warn_boards.append(target)
-                    else:
-                        ok_boards.append(target)
+                    better.append(target)
                 elif outcome.rc > base_outcome:
-                    if outcome.rc == OUTCOME_WARNING:
-                        warn_boards.append(target)
-                    else:
-                        err_boards.append(target)
+                    worse.append(target)
             else:
-                new_boards.append(target)
+                new.append(target)
 
         # Get a list of errors that have appeared, and disappeared
         better_err, worse_err = _CalcErrorDelta(self._base_err_lines,
@@ -1232,18 +1158,16 @@ class Builder:
                 self._base_warn_line_boards, warn_lines, warn_line_boards, 'w')
 
         # Display results by arch
-        if any((ok_boards, warn_boards, err_boards, unknown_boards, new_boards,
-                worse_err, better_err, worse_warn, better_warn)):
+        if (better or worse or unknown or new or worse_err or better_err
+                or worse_warn or better_warn):
             arch_list = {}
-            self.AddOutcome(board_selected, arch_list, ok_boards, '',
+            self.AddOutcome(board_selected, arch_list, better, '',
                     self.col.GREEN)
-            self.AddOutcome(board_selected, arch_list, warn_boards, 'w+',
-                    self.col.YELLOW)
-            self.AddOutcome(board_selected, arch_list, err_boards, '+',
+            self.AddOutcome(board_selected, arch_list, worse, '+',
                     self.col.RED)
-            self.AddOutcome(board_selected, arch_list, new_boards, '*', self.col.BLUE)
+            self.AddOutcome(board_selected, arch_list, new, '*', self.col.BLUE)
             if self._show_unknown:
-                self.AddOutcome(board_selected, arch_list, unknown_boards, '?',
+                self.AddOutcome(board_selected, arch_list, unknown, '?',
                         self.col.MAGENTA)
             for arch, target_list in arch_list.iteritems():
                 Print('%10s: %s' % (arch, target_list))
@@ -1264,36 +1188,6 @@ class Builder:
         if show_sizes:
             self.PrintSizeSummary(board_selected, board_dict, show_detail,
                                   show_bloat)
-
-        if show_environment and self._base_environment:
-            lines = []
-
-            for target in board_dict:
-                if target not in board_selected:
-                    continue
-
-                tbase = self._base_environment[target]
-                tenvironment = environment[target]
-                environment_plus = {}
-                environment_minus = {}
-                environment_change = {}
-                base = tbase.environment
-                for key, value in tenvironment.environment.iteritems():
-                    if key not in base:
-                        environment_plus[key] = value
-                for key, value in base.iteritems():
-                    if key not in tenvironment.environment:
-                        environment_minus[key] = value
-                for key, value in base.iteritems():
-                    new_value = tenvironment.environment.get(key)
-                    if new_value and value != new_value:
-                        desc = '%s -> %s' % (value, new_value)
-                        environment_change[key] = desc
-
-                _AddConfig(lines, target, environment_plus, environment_minus,
-                           environment_change)
-
-            _OutputConfigInfo(lines)
 
         if show_config and self._base_config:
             summary = {}
@@ -1401,7 +1295,6 @@ class Builder:
         self._base_err_line_boards = err_line_boards
         self._base_warn_line_boards = warn_line_boards
         self._base_config = config
-        self._base_environment = environment
 
         # Get a list of boards that did not get built, if needed
         not_built = []
@@ -1414,11 +1307,10 @@ class Builder:
 
     def ProduceResultSummary(self, commit_upto, commits, board_selected):
             (board_dict, err_lines, err_line_boards, warn_lines,
-             warn_line_boards, config, environment) = self.GetResultSummary(
+                    warn_line_boards, config) = self.GetResultSummary(
                     board_selected, commit_upto,
                     read_func_sizes=self._show_bloat,
-                    read_config=self._show_config,
-                    read_environment=self._show_environment)
+                    read_config=self._show_config)
             if commits:
                 msg = '%02d: %s' % (commit_upto + 1,
                         commits[commit_upto].subject)
@@ -1426,8 +1318,8 @@ class Builder:
             self.PrintResultSummary(board_selected, board_dict,
                     err_lines if self._show_errors else [], err_line_boards,
                     warn_lines if self._show_errors else [], warn_line_boards,
-                    config, environment, self._show_sizes, self._show_detail,
-                    self._show_bloat, self._show_config, self._show_environment)
+                    config, self._show_sizes, self._show_detail,
+                    self._show_bloat, self._show_config)
 
     def ShowSummary(self, commits, board_selected):
         """Show a build summary for U-Boot for a given board list.
