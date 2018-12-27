@@ -100,8 +100,6 @@
 
 #define CONFIG_MTD_DEVICE
 
-#define CONFIG_FIT_SIGNATURE_MAX_SIZE 0x10000000
-
 /* UBI support in full U-Boot */
 #define CONFIG_MTD_PARTITIONS
 #define CONFIG_CMD_MTDPARTS
