@@ -62,7 +62,7 @@
 #define CONFIG_SPL_NAND_BBT
 #define CONFIG_SPL_NAND_IDS
 
-#define CONFIG_SPL_BLK
+//#define CONFIG_SPL_BLK
 
 /* Load U-Boot to this address */
 #define CONFIG_SYS_NAND_U_BOOT_DST	CONFIG_SYS_TEXT_BASE
