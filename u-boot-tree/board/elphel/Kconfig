@@ -1,0 +1,45 @@
+
+#source "board/elphel/elphel393/parts/MT41J128M16HA15E/Kconfig"
+#source "board/elphel/elphel393/parts/MT41J256M8HX15E/Kconfig"
+#source "board/elphel/parts/MT41K256M16HA107/Kconfig"
+#source "board/elphel/elphel393/parts/MT41K256M16RE125/Kconfig"
+#source "board/elphel/elphel393/parts/XC7Z010_1CLG400/Kconfig"
+#source "board/elphel/elphel393/parts/XC7Z020_1CLG484/Kconfig"
+#source "board/elphel/parts/XC7Z030_1FBG484C/Kconfig"
+#source "board/elphel/elphel393/parts/XC7Z045_2FFG900C/Kconfig"
+ 
+if TARGET_ELPHEL393
+
+source "board/elphel/parts/MT41K256M16HA107/Kconfig"
+source "board/elphel/parts/XC7Z030_1FBG484C/Kconfig"
+source "board/elphel/elphel393/Kconfig"
+
+config SPL_NAND_BBT
+	bool
+	default y
+
+config SPL_NAND_IDS
+	bool
+	default y
+
+config EZYNQ_SKIP_CLK
+	bool
+	default y
+
+config SPL_NAND_ELPHEL393
+	bool
+	default y
+
+#config SYS_NO_FLASH
+#	bool
+#	default y
+
+#config ZYNQ_I2C0
+#	bool
+#	default y
+
+#config CONFIG_ZYNQ_SERIAL_UART0
+#	bool
+#	default y
+
+endif

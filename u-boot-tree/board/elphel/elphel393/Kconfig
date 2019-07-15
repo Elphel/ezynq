@@ -1,0 +1,1005 @@
+#
+# (C) Copyright 2013 Elphel, Inc.
+#
+# Configuration for Elphel393 hardware initialization (pre-U-Boot)
+#
+# This program is free software; you can redistribute it andor
+# modify it under the terms of the GNU General Public License as
+# published by the Free Software Foundation; either version 3 of
+# the License, or (at your option) any later version.
+#
+# You should have received a copy of the GNU General Public
+# License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 59 Temple Place, Suite 330, Boston,
+# MA 02111-1307 USA
+
+config EZYNQ
+	bool
+	default y
+
+config EZYNQ_BOOT_USERDEF
+	hex
+	default 0x1010000
+	help
+	  0x1234567  will be saved in the file header
+
+config EZYNQ_BOOT_OCM_OFFSET
+	hex
+	default 0x8c0
+	help
+	  0xa40 0x8C0      start of OCM data relative to the flash image
+	  start > 0x8C0, 63-bytes aligned
+
+config EZYNQ_BOOT_OCM_IMAGE_LENGTH
+	hex
+	default 0x30000
+	help
+	  0x1400c  0x30000   number of bytes to load to the OCM memory, <
+	  0x30000
+
+config EZYNQ_START_EXEC
+	hex
+	default 0x00
+	help
+	  start of execution address
+
+config EZYNQ_RESERVED44
+	int
+	default 0
+	help
+	  documented as 0, but actually 1
+
+config EZYNQ_BOOT_DEBUG
+	bool
+	default y
+	help
+	  configure UARTx and send register dumps there.
+
+config EZYNQ_LOCK_SLCR
+	string
+	default 'off'
+	help
+	  Lock SLCR registers when all is done.
+
+config EZYNQ_DUMP_SLCR_EARLY
+	bool
+	default n
+	help
+	  Dump SLCR registers as soon as UART is initialized (depends on
+	  CONFIG_EZYNQ_BOOT_DEBUG)
+
+config EZYNQ_DUMP_DDRC_EARLY
+	bool
+	default n
+	help
+	  Dump DDRC registers as soon as UART is initialized (depends on
+	  CONFIG_EZYNQ_BOOT_DEBUG)
+
+config EZYNQ_DUMP_SLCR_LATE
+	bool
+	default n
+	help
+	  Dump SLCR registers after DDR memory is initialized (depends on
+	  CONFIG_EZYNQ_BOOT_DEBUG)
+
+config EZYNQ_DUMP_DDRC_LATE
+	bool
+	default n
+	help
+	  Dump DDRC registers after DDR memory is initialized (depends on
+	  CONFIG_EZYNQ_BOOT_DEBUG)
+
+config EZYNQ_DUMP_TRAINING_EARLY
+	bool
+	default n
+	help
+	  Training results registers before DDRC initialization
+
+config EZYNQ_DUMP_TRAINING_LATE
+	bool
+	default y
+	help
+	  Training results registers after DDRC initialization
+
+config EZYNQ_DUMP_OCM
+	bool
+	default n
+	help
+	  Dump (some of) OCM data
+
+config EZYNQ_DUMP_DDR
+	bool
+	default n
+	help
+	  Dump (some of) DDR data
+
+config EZYNQ_ELPHEL393_H_IF_0
+	bool
+	default y
+
+if EZYNQ_ELPHEL393_H_IF_0
+
+config EZYNQ_DUMP_OCM_LOW
+	hex
+	default 0x0
+	help
+	  OCM dump start (deafault 0)
+
+config EZYNQ_DUMP_OCM_HIGH
+	hex
+	default 0x2ff
+	help
+	  OCM dump end   (deafault 0x2ff, full - 0x2ffff)
+
+config EZYNQ_DUMP_DDR_LOW
+	hex
+	default 0x4000000
+	help
+	  DDR dump start (deafault 0x4000000, start of the OCM copy)
+
+config EZYNQ_DUMP_DDR_HIGH
+	hex
+	default 0x40002ff
+	help
+	  DDR dump end   (deafault 0x40002ff)
+
+config EZYNQ_OCM_DDR_CHECKSUMS
+	bool
+	default y
+
+endif
+
+# Turning LED onoff at different stages of the boot process.
+# Requires CONFIG_EZYNQ_LED_DEBUG and CONFIG_EZYNQ_BOOT_DEBUG to
+# be set
+
+config EZYNQ_LED_CHECKPOINT_1
+	string
+	default 'off'
+	help
+	  in RBL setup, as soon as MIO is programmed, should be OFF to use
+	  GPIO
+
+config EZYNQ_LED_CHECKPOINT_2
+	string
+	default 'off'
+	help
+	  First after getting to user code
+
+config EZYNQ_LED_CHECKPOINT_3
+	string
+	default 'off'
+	help
+	  After setting clock registers
+
+config EZYNQ_LED_CHECKPOINT_4
+	string
+	default 'off'
+	help
+	  After PLL bypass is OFF
+
+config EZYNQ_LED_CHECKPOINT_5
+	string
+	default 'off'
+	help
+	  After UART is programmed
+
+config EZYNQ_LED_CHECKPOINT_6
+	string
+	default 'off'
+	help
+	  After DCI is calibrated
+
+config EZYNQ_LED_CHECKPOINT_7
+	string
+	default 'off'
+	help
+	  After DDR is initialized
+
+config EZYNQ_LED_CHECKPOINT_8
+	string
+	default 'off'
+	help
+	  Before relocation to DDR (to 0x4000000+ )
+
+config EZYNQ_LED_CHECKPOINT_9
+	string
+	default 'off'
+	help
+	  After  relocation to DDR (to 0x4000000+ )
+
+config EZYNQ_LED_CHECKPOINT_10
+	string
+	default 'on'
+	help
+	  Before remapping OCM0-OCM2 high
+
+config EZYNQ_LED_CHECKPOINT_11
+	string
+	default 'on'
+	help
+	  After remapping OCM0-OCM2 high
+
+config EZYNQ_LED_CHECKPOINT_12
+	string
+	default 'on'
+	help
+	  Before leaving lowlevel_init()
+
+config EZYNQ_LAST_PRINT_DEBUG
+	bool
+	default y
+	help
+	  'Output to UART before exiting arch_cpu_init()
+
+config EZYNQ_OCM
+	bool
+	default y
+	help
+	  not used
+
+config EZYNQ_MIO_0_VOLT
+	string
+	default '1.8'
+
+config EZYNQ_MIO_1_VOLT
+	string
+	default '1.8'
+
+config EZYNQ_NAND__SLOW
+	bool
+	default y
+
+config EZYNQ_MIO_ETH_0__SLOW
+	bool
+	default y
+
+config EZYNQ_MIO_ETH_MDIO__SLOW
+	bool
+	default y
+	default y if !EZYNQ_ELPHEL393_H_IF_1
+
+config EZYNQ_MIO_USB_0__SLOW
+	bool
+	default y
+
+config EZYNQ_MIO_USB_0__PULLUP
+	bool
+	default y
+
+config EZYNQ_MIO_SDIO_0
+	int
+	default 40
+	help
+	  16,28,40
+
+config EZYNQ_MIO_SDIO_0__SLOW
+	bool
+	default y
+
+config EZYNQ_MIO_SDIO_0__PULLUP
+	bool
+	default y
+
+config EZYNQ_MIO_SDCD_0
+	int
+	default 48
+	help
+	  any but 7,8
+
+config EZYNQ_MIO_SDCD_0__PULLUP
+	bool
+	default y
+
+config EZYNQ_MIO_I2C_0
+	int
+	default 50
+
+config EZYNQ_MIO_I2C_0__PULLUP
+	bool
+	default y
+
+config EZYNQ_MIO_SDWP_0
+	int
+	default 63
+
+config EZYNQ_MIO_UART_0
+	int
+	default 46
+	help
+	  #  8+4*N
+
+#
+# Red LED - pullup, input - on,
+# output (or undefined) -   off
+# #define CONFIG_EZYNQ_MIO_PULLUP_EN_47
+# #define CONFIG_EZYNQ_MIO_PULLUP_DIS_0
+# #define CONFIG_EZYNQ_MIO_INOUT_47   OUT
+# #define CONFIG_EZYNQ_MIO_INOUT_47   IN
+# #define CONFIG_EZYNQ_MIO_INOUT_47   BIDIR
+
+config EZYNQ_DDR_ENABLE
+	bool
+	default y
+	help
+	  Enable DDR memory
+
+config EZYNQ_DDR_BANK_ADDR_MAP
+	int
+	default 10
+	help
+	  DRAM address mapping: number of combined column and row
+	  addresses lower than BA0
+
+config EZYNQ_DDR_ARB_PAGE_BANK
+	bool
+	default n
+	help
+	  Enable Arbiter prioritization based on page/bank match
+
+config EZYNQ_DDR_ECC
+	string
+	default 'disabled'
+	help
+	  Enable ECC for the DDR memory
+
+config EZYNQ_DDR_BUS_WIDTH
+	int
+	default 32
+	help
+	  SoC DDR bus width
+
+config EZYNQ_DDR_TRAIN_WRITE_LEVEL
+	int
+	default 1
+	help
+	  Automatically train write leveling during initialization
+
+config EZYNQ_DDR_TRAIN_READ_GATE
+	int
+	default 1
+	help
+	  Automatically train read gate timing during initialization
+
+config EZYNQ_DDR_TRAIN_DATA_EYE
+	int
+	default 1
+	help
+	  Automatically train data eye during initialization
+
+config EZYNQ_DDR_CLOCK_STOP_EN
+	int
+	default 0
+	help
+	  Enable clock stop
+
+config EZYNQ_DDR_USE_INTERNAL_VREF
+	int
+	default 0
+	help
+	  Use internal Vref
+
+config EZYNQ_DDR_CL
+	int
+	default 7
+	help
+	  CAS read latency (in tCK)
+
+config EZYNQ_DDR_CWL
+	int
+	default 6
+	help
+	  CAS write latency (in tCK)
+
+config EZYNQ_DDR_AL
+	int
+	default 0
+	help
+	  Posted CAS additive latency (in tCK)
+
+config EZYNQ_DDR_BL
+	int
+	default 8
+	help
+	  Burst length, 16 is only supported for LPDDR2
+
+config EZYNQ_DDR_HIGH_TEMP
+	string
+	default 'false'
+	help
+	  Normal  High temperature (influences refresh)
+
+config EZYNQ_DDR_SPEED_BIN
+	string
+	default 'ddr3_1066f'
+	help
+	  Memory speed bin (currently not used - derive timing later)
+
+config EZYNQ_DDR_DDR2_RTT
+	int
+	default 75
+	help
+	  DDR2 on-chip termination, Ohm ('DISABLED','75','150','50'
+
+config EZYNQ_DDR_DDR3_RTT
+	int
+	default 60
+	help
+	  DDR3 on-chip termination, Ohm ('DISABLED','60','120','40') Does
+	  not include 20 & 30 - not clear if DDRC can use them with auto
+	  write leveling
+
+config EZYNQ_DDR_OUT_SLEW_NEG
+	int
+	default 26
+	help
+	  Slew rate negative for DDR address/clock outputs
+
+config EZYNQ_DDR_OUT_SLEW_POS
+	int
+	default 26
+	help
+	  Slew rate positive for DDR address/clock outputs
+
+config EZYNQ_DDR_OUT_DRIVE_NEG
+	int
+	default 12
+	help
+	  Drive strength negative for DDR address/clock outputs
+
+config EZYNQ_DDR_OUT_DRIVE_POS
+	int
+	default 28
+	help
+	  Drive strength positive for DDR address/clock outputs
+
+config EZYNQ_DDR_BIDIR_SLEW_NEG
+	int
+	default 31
+	help
+	  Slew rate negative for driving DDR DQ/DQS signals
+
+config EZYNQ_DDR_BIDIR_SLEW_POS
+	int
+	default 6
+	help
+	  Drive strength positive for driving DDR DQ/DQS signals
+
+config EZYNQ_DDR_BIDIR_DRIVE_NEG
+	int
+	default 12
+	help
+	  Drive strength negative for driving DDR DQ/DQS signals
+
+config EZYNQ_DDR_BIDIR_DRIVE_POS
+	int
+	default 28
+	help
+	  Slew rate positive for driving DDR DQ/DQS signals
+
+config EZYNQ_CLK_PS_MHZ
+	string
+	default '33.333333'
+	help
+	  PS_CLK System clock input frequency (MHz)
+
+config EZYNQ_CLK_DDR_MHZ
+	string
+	default '533.333333'
+	help
+	  DDR clock frequency - DDR_3X (MHz)
+
+config EZYNQ_CLK_DDR_3X_MAX_MHZ
+	string
+	default '533.333333'
+	help
+	  DDR clock frequency - DDR_3X (MHz)
+
+config EZYNQ_CLK_ARM_MHZ
+	int
+	default 667
+	help
+	  ARM CPU clock frequency cpu_6x4x (MHz)
+
+config EZYNQ_CLK_CPU_MODE
+	string
+	default '6_2_1'
+	help
+	  CPU clocks set 6:2:1 (6:3:2:1) or 4:2:1 (4:2:2:1)
+
+config EZYNQ_CLK_FPGA0_MHZ
+	string
+	default '50.0'
+	help
+	  FPGA 0 clock frequency (MHz)
+
+config EZYNQ_CLK_FPGA1_MHZ
+	string
+	default '50.0'
+	help
+	  FPGA 1 clock frequency (MHz)
+
+config EZYNQ_CLK_FPGA2_MHZ
+	string
+	default '50.0'
+	help
+	  FPGA 2 clock frequency (MHz)
+
+config EZYNQ_CLK_FPGA3_MHZ
+	string
+	default '0.0'
+	help
+	  FPGA 3 clock frequency (MHz)
+
+config EZYNQ_CLK_FPGA0_SRC
+	string
+	default 'io'
+	help
+	  FPGA 0 clock source
+
+config EZYNQ_CLK_FPGA1_SRC
+	string
+	default 'io'
+	help
+	  FPGA 1 clock source
+
+config EZYNQ_CLK_FPGA2_SRC
+	string
+	default "None"
+	help
+	  FPGA 2 clock source
+
+config EZYNQ_CLK_FPGA3_SRC
+	string
+	default 'io'
+	help
+	  FPGA 3 clock source
+
+config EZYNQ_CLK_DDR_DCI_MHZ
+	string
+	default '10.0'
+	help
+	  DDR DCI clock frequency (MHz). Normally 10Mhz
+
+config EZYNQ_CLK_DDR2X_MHZ
+	string
+	default '355.556'
+	help
+	  DDR2X clock frequency (MHz). Does not need to be exactly 2/3 of
+	  DDR3X clock
+
+config EZYNQ_CLK_SMC_MHZ
+	string
+	default '100.0'
+	help
+	  Static memory controller clock frequency (MHz). Normally 100 Mhz
+
+config EZYNQ_CLK_QSPI_MHZ
+	string
+	default '200.0'
+	help
+	  Quad SPI memory controller clock frequency (MHz). Normally 200
+	  Mhz
+
+config EZYNQ_CLK_GIGE0_MHZ
+	string
+	default '125.0'
+	help
+	  GigE 0 Ethernet controller reference clock frequency (MHz).
+	  Normally 125 Mhz
+
+config EZYNQ_CLK_GIGE1_MHZ
+	string
+	default '125.0'
+	help
+	  GigE 1 Ethernet controller reference clock frequency (MHz).
+	  Normally 125 Mhz
+
+config EZYNQ_CLK_SDIO_MHZ
+	string
+	default '100.0'
+	help
+	  SDIO controller reference clock frequency (MHz). Normally 100
+	  Mhz
+
+config EZYNQ_CLK_UART_MHZ
+	string
+	default '25.0'
+	help
+	  UART controller reference clock frequency (MHz). Normally 25 Mhz
+
+config EZYNQ_CLK_SPI_MHZ
+	string
+	default '200.0'
+	help
+	  SPI controller reference clock frequency (MHz). Normally 200 Mhz
+
+config EZYNQ_CLK_CAN_MHZ
+	string
+	default '100.0'
+	help
+	  CAN controller reference clock frequency (MHz). Normally 100 Mhz
+
+config EZYNQ_CLK_PCAP_MHZ
+	string
+	default '200.0'
+	help
+	  PCAP clock frequency (MHz). Normally 200 Mhz
+
+config EZYNQ_CLK_TRACE_MHZ
+	string
+	default '100.0'
+	help
+	  Trace Port clock frequency (MHz). Normally 100 Mhz
+
+config EZYNQ_CLK_ARM_SRC
+	string
+	default 'arm'
+	help
+	  ARM CPU clock source (normally ARM PLL)
+
+config EZYNQ_CLK_DDR_SRC
+	string
+	default 'ddr'
+	help
+	  DDR (DDR2x, DDR3x) clock source (normally DDR PLL)
+
+config EZYNQ_CLK_DDR_DCI_SRC
+	string
+	default 'ddr'
+	help
+	  DDR DCI clock source (normally DDR PLL)
+
+config EZYNQ_CLK_SMC_SRC
+	string
+	default 'io'
+	help
+	  Static memory controller clock source (normally IO PLL)
+
+config EZYNQ_CLK_QSPI_SRC
+	string
+	default 'arm'
+	help
+	  Quad SPI memory controller clock source (normally ARM PLL)
+
+config EZYNQ_CLK_GIGE0_SRC
+	string
+	default 'io'
+	help
+	  GigE 0 Ethernet controller clock source (normally IO PLL, can be
+	  EMIO)
+
+config EZYNQ_CLK_GIGE1_SRC
+	string
+	default 'io'
+	help
+	  GigE 1 Ethernet controller clock source (normally IO PLL, can be
+	  EMIO)
+
+config EZYNQ_CLK_SDIO_SRC
+	string
+	default 'io'
+	help
+	  SDIO controller clock source (normally IO PLL)
+
+config EZYNQ_CLK_UART_SRC
+	string
+	default 'io'
+	help
+	  UART controller clock source (normally IO PLL)
+
+config EZYNQ_CLK_SPI_SRC
+	string
+	default 'io'
+	help
+	  SPI controller clock source (normally IO PLL)
+
+config EZYNQ_CLK_CAN_SRC
+	string
+	default 'io'
+	help
+	  CAN controller clock source (normally IO PLL)
+
+config EZYNQ_CLK_PCAP_SRC
+	string
+	default 'io'
+	help
+	  PCAP controller clock source (normally IO PLL)
+
+config EZYNQ_CLK_TRACE_SRC
+	string
+	default 'io'
+	help
+	  Trace Port clock source (normally IO PLL)
+
+# Even if memory itself is DDR3L (1.35V) it also can support DDR3
+# mode (1.5V). And unfortunately Zynq has degraded
+# specs at 1.35V (only 400MHz maximal clock), so datasheets's
+# 'DDR3L' should be replaced with 'DDR3' and the board
+
+config EZYNQ_DDR_DS_MEMORY_TYPE
+	string
+	default 'ddr3'
+	help
+	  DDR memory type: DDR3 (1.5V), DDR3L (1.35V), DDR2 (1.8V), LPDDR2
+	  (1.2V)
+
+config EZYNQ_CLK_SPEED_GRADE
+	int
+	default 3
+	help
+	  Device speed grade
+
+config EZYNQ_CLK_COMPLIANCE_PERCENT
+	string
+	default '5.0'
+	help
+	  Allow exceeding maximal limits by this margin (percent
+
+config EZYNQ_DDR_BOARD_DELAY0
+	string
+	default '0.0'
+
+config EZYNQ_DDR_BOARD_DELAY1
+	string
+	default '0.0'
+
+config EZYNQ_DDR_BOARD_DELAY2
+	string
+	default '0.0'
+
+config EZYNQ_DDR_BOARD_DELAY3
+	string
+	default '0.0'
+
+config EZYNQ_DDR_DQS_0_LENGTH_MM
+	int
+	default 0
+
+config EZYNQ_DDR_DQS_1_LENGTH_MM
+	int
+	default 0
+
+config EZYNQ_DDR_DQS_2_LENGTH_MM
+	int
+	default 0
+
+config EZYNQ_DDR_DQS_3_LENGTH_MM
+	int
+	default 0
+
+config EZYNQ_DDR_DQ_0_LENGTH_MM
+	int
+	default 0
+
+config EZYNQ_DDR_DQ_1_LENGTH_MM
+	int
+	default 0
+
+config EZYNQ_DDR_DQ_2_LENGTH_MM
+	int
+	default 0
+
+config EZYNQ_DDR_DQ_3_LENGTH_MM
+	int
+	default 0
+
+config EZYNQ_DDR_CLOCK_0_LENGTH_MM
+	int
+	default 0
+
+config EZYNQ_DDR_CLOCK_1_LENGTH_MM
+	int
+	default 0
+
+config EZYNQ_DDR_CLOCK_2_LENGTH_MM
+	int
+	default 0
+
+config EZYNQ_DDR_CLOCK_3_LENGTH_MM
+	int
+	default 0
+
+config EZYNQ_ELPHEL393_H_IF_1
+	bool
+	default y
+
+config EZYNQ_UART_DEBUG_USE_LED
+	bool
+	default n
+	help
+	  turn on/off LED while waiting for transmit FIFO not full
+
+config EZYNQ_SILICON
+	int
+	default 3 if EZYNQ_ELPHEL393_H_IF_1
+	default 3 if !EZYNQ_ELPHEL393_H_IF_1
+	help
+	  Silicon revision
+
+config EZYNQ_PHY_WRLV_INIT_RATIO_0
+	hex
+	default 0x0 if EZYNQ_ELPHEL393_H_IF_1
+	default 0x4 if !EZYNQ_ELPHEL393_H_IF_1
+	help
+	  Initial ratio for write leveling FSM, slice 0
+
+config EZYNQ_PHY_WRLV_INIT_RATIO_1
+	hex
+	default 0x0 if EZYNQ_ELPHEL393_H_IF_1
+	default 0x0 if !EZYNQ_ELPHEL393_H_IF_1
+	help
+	  Initial ratio for write leveling FSM, slice 1
+
+config EZYNQ_PHY_WRLV_INIT_RATIO_2
+	hex
+	default 0x0 if EZYNQ_ELPHEL393_H_IF_1
+	default 0x5 if !EZYNQ_ELPHEL393_H_IF_1
+	help
+	  Initial ratio for write leveling FSM, slice 2
+
+config EZYNQ_PHY_WRLV_INIT_RATIO_3
+	hex
+	default 0x0 if EZYNQ_ELPHEL393_H_IF_1
+	default 0x7 if !EZYNQ_ELPHEL393_H_IF_1
+	help
+	  Initial ratio for write leveling FSM, slice 3
+
+config EZYNQ_PHY_GTLV_INIT_RATIO_0
+	hex
+	default 0x0 if EZYNQ_ELPHEL393_H_IF_1
+	default 0x8e if !EZYNQ_ELPHEL393_H_IF_1
+	help
+	  Initial ratio for gate leveling FSM, slice 0
+
+config EZYNQ_PHY_GTLV_INIT_RATIO_1
+	hex
+	default 0x0 if EZYNQ_ELPHEL393_H_IF_1
+	default 0x95 if !EZYNQ_ELPHEL393_H_IF_1
+	help
+	  Initial ratio for gate leveling FSM, slice 1
+
+config EZYNQ_PHY_GTLV_INIT_RATIO_2
+	hex
+	default 0x0 if EZYNQ_ELPHEL393_H_IF_1
+	default 0x8e if !EZYNQ_ELPHEL393_H_IF_1
+	help
+	  Initial ratio for gate leveling FSM, slice 2
+
+config EZYNQ_PHY_GTLV_INIT_RATIO_3
+	hex
+	default 0x0 if EZYNQ_ELPHEL393_H_IF_1
+	default 0x8c if !EZYNQ_ELPHEL393_H_IF_1
+	help
+	  Initial ratio for gate leveling FSM, slice 3
+
+config EZYNQ_PHY_RD_DQS_SLAVE_RATIO_0
+	hex
+	default 0x35
+	help
+	  Ratio for read DQS slave DLL (256 - clock period), slice 0
+
+config EZYNQ_PHY_RD_DQS_SLAVE_RATIO_1
+	hex
+	default 0x35
+	help
+	  Ratio for read DQS slave DLL (256 - clock period), slice 1
+
+config EZYNQ_PHY_RD_DQS_SLAVE_RATIO_2
+	hex
+	default 0x35
+	help
+	  Ratio for read DQS slave DLL (256 - clock period), slice 2
+
+config EZYNQ_PHY_RD_DQS_SLAVE_RATIO_3
+	hex
+	default 0x35
+	help
+	  Ratio for read DQS slave DLL (256 - clock period), slice 3
+
+config EZYNQ_PHY_WR_DQS_SLAVE_RATIO_0
+	hex
+	default 0x0 if EZYNQ_ELPHEL393_H_IF_1
+	default 0x84 if !EZYNQ_ELPHEL393_H_IF_1
+	help
+	  Ratio for write DQS slave DLL (256 - clock period), slice 0
+
+config EZYNQ_PHY_WR_DQS_SLAVE_RATIO_1
+	hex
+	default 0x0 if EZYNQ_ELPHEL393_H_IF_1
+	default 0x80 if !EZYNQ_ELPHEL393_H_IF_1
+	help
+	  Ratio for write DQS slave DLL (256 - clock period), slice 1
+
+config EZYNQ_PHY_WR_DQS_SLAVE_RATIO_2
+	hex
+	default 0x0 if EZYNQ_ELPHEL393_H_IF_1
+	default 0x85 if !EZYNQ_ELPHEL393_H_IF_1
+	help
+	  Ratio for write DQS slave DLL (256 - clock period), slice 2
+
+config EZYNQ_PHY_WR_DQS_SLAVE_RATIO_3
+	hex
+	default 0x0 if EZYNQ_ELPHEL393_H_IF_1
+	default 0x87 if !EZYNQ_ELPHEL393_H_IF_1
+	help
+	  Ratio for write DQS slave DLL (256 - clock period), slice 3
+
+config EZYNQ_PHY_FIFO_WE_SLAVE_RATIO_0
+	hex
+	default 0x35 if EZYNQ_ELPHEL393_H_IF_1
+	default 0xe3 if !EZYNQ_ELPHEL393_H_IF_1
+	help
+	  Ratio for FIFO WE slave DLL (256 - clock period), slice 0
+
+config EZYNQ_PHY_FIFO_WE_SLAVE_RATIO_1
+	hex
+	default 0x35 if EZYNQ_ELPHEL393_H_IF_1
+	default 0xea if !EZYNQ_ELPHEL393_H_IF_1
+	help
+	  Ratio for FIFO WE slave DLL (256 - clock period), slice 0
+
+config EZYNQ_PHY_FIFO_WE_SLAVE_RATIO_2
+	hex
+	default 0x35 if EZYNQ_ELPHEL393_H_IF_1
+	default 0xe3 if !EZYNQ_ELPHEL393_H_IF_1
+	help
+	  Ratio for FIFO WE slave DLL (256 - clock period), slice 0
+
+config EZYNQ_PHY_FIFO_WE_SLAVE_RATIO_3
+	hex
+	default 0x35 if EZYNQ_ELPHEL393_H_IF_1
+	default 0xe1 if !EZYNQ_ELPHEL393_H_IF_1
+	help
+	  Ratio for FIFO WE slave DLL (256 - clock period), slice 0
+
+config EZYNQ_PHY_PHY_WR_DATA_SLAVE_RATIO_0
+	hex
+	default 0x40 if EZYNQ_ELPHEL393_H_IF_1
+	default 0xc4 if !EZYNQ_ELPHEL393_H_IF_1
+	help
+	  Ratio for write data slave DLL (256 - clock period), slice 0
+
+config EZYNQ_PHY_PHY_WR_DATA_SLAVE_RATIO_1
+	hex
+	default 0x40 if EZYNQ_ELPHEL393_H_IF_1
+	default 0xc0 if !EZYNQ_ELPHEL393_H_IF_1
+	help
+	  Ratio for write data slave DLL (256 - clock period), slice 1
+
+config EZYNQ_PHY_PHY_WR_DATA_SLAVE_RATIO_2
+	hex
+	default 0x40 if EZYNQ_ELPHEL393_H_IF_1
+	default 0xc5 if !EZYNQ_ELPHEL393_H_IF_1
+	help
+	  Ratio for write data slave DLL (256 - clock period), slice 2
+
+config EZYNQ_PHY_PHY_WR_DATA_SLAVE_RATIO_3
+	hex
+	default 0x40 if EZYNQ_ELPHEL393_H_IF_1
+	default 0xc7 if !EZYNQ_ELPHEL393_H_IF_1
+	help
+	  Ratio for write data slave DLL (256 - clock period), slice 3
+
+config EZYNQ_PHY_PHY_CTRL_SLAVE_RATIO
+	hex
+	default 0xb0 if EZYNQ_ELPHEL393_H_IF_1
+	default 0x100 if !EZYNQ_ELPHEL393_H_IF_1
+	help
+	  0x90  0x70 0x80 Ratio for address/command (256 - clock period)
+
+config EZYNQ_PHY_INVERT_CLK
+	bool
+	default y if EZYNQ_ELPHEL393_H_IF_1
+	default y if !EZYNQ_ELPHEL393_H_IF_1
+	help
+	  Invert CLK out (if clk can arrive to DRAM chip earlier/at the
+	  same time as DQS)
+
+
+# not yet processed
+# #define CONFIG_EZYNQ_DDR_PERIPHERAL_CLKSRC   DDR PLL
+# #define CONFIG_EZYNQ_DDR_RAM_BASEADDR   0x00100000
+# #define CONFIG_EZYNQ_DDR_RAM_HIGHADDR   0x3FFFFFFF
+

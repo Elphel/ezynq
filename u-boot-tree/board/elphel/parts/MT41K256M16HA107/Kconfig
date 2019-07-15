@@ -1,0 +1,278 @@
+# 
+# (C) Copyright 2013 Elphel, Inc.
+# 
+# Configuration for ezynq for Micron MT41K256M16HA107 DDR3L memory
+# backward compatible to Micron MT41K256M16RE125 (used in
+# microzed, will keep settings initially)
+# 
+# This program is free software; you can redistribute it andor
+# modify it under the terms of the GNU General Public License as
+# published by the Free Software Foundation; either version 3 of
+# the License, or (at your option) any later version.
+# 
+# You should have received a copy of the GNU General Public
+# License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 59 Temple Place, Suite 330, Boston,
+# MA 02111-1307 USA
+
+config EZYNQ_DDR_DS_PARTNO
+	string
+	default 'mt41k256m16ha107'
+	help
+	  Memory part number  (currently not used - derive some parameters
+	  later)
+
+config EZYNQ_DDR_DS_MEMORY_TYPE
+	string
+	default 'ddr3l'
+	help
+	  DDR memory type: DDR3 (1.5V), DDR3L (1.35V), DDR2 (1.8V), LPDDR2
+	  (1.2V)
+
+config EZYNQ_DDR_DS_BANK_ADDR_COUNT
+	int
+	default 3
+	help
+	  Number of DDR banks
+
+config EZYNQ_DDR_DS_ROW_ADDR_COUNT
+	int
+	default 15
+	help
+	  Number of DDR Row Address bits
+
+config EZYNQ_DDR_DS_COL_ADDR_COUNT
+	int
+	default 10
+	help
+	  Number of DDR Column address bits
+
+config EZYNQ_DDR_DS_DRAM_WIDTH
+	int
+	default 16
+	help
+	  Memory chip bus width (not yet used)
+
+config EZYNQ_DDR_DS_RCD
+	int
+	default 7
+	help
+	  DESCRIPTION':'RAS to CAS delay (in tCK)
+
+config EZYNQ_DDR_DS_T_RCD
+	string
+	default '13.1'
+	help
+	  Activate to internal Read or Write (ns). May be used to
+	  calculate CONFIG_EZYNQ_DDR_DS_RCD automatically
+
+config EZYNQ_DDR_DS_RP
+	int
+	default 7
+	help
+	  Row Precharge time (in tCK)
+
+config EZYNQ_DDR_DS_T_RP
+	string
+	default '13.1'
+	help
+	  Precharge command period (ns).  May be used to calculate
+	  CONFIG_EZYNQ_DDR_DS_RP automatically,
+
+config EZYNQ_DDR_DS_T_RC
+	string
+	default '48.75'
+	help
+	  Activate to Activate or Refresh command period (ns)
+
+config EZYNQ_DDR_DS_T_RAS_MIN
+	string
+	default '35.0'
+	help
+	  Minimal Row Active time (ns)
+
+config EZYNQ_DDR_DS_T_FAW
+	string
+	default '40.0'
+	help
+	  Minimal running window for 4 page activates (ns)
+
+config EZYNQ_DDR_DS_T_RFC
+	string
+	default '300.0'
+	help
+	  Minimal Refresh-to-Activate or Refresh command period (ns)
+
+config EZYNQ_DDR_DS_T_WR
+	string
+	default '15.0'
+	help
+	  Write recovery time (ns)
+
+config EZYNQ_DDR_DS_T_REFI_US
+	string
+	default '7.8'
+	help
+	  Maximal average periodic refresh, microseconds. Will be
+	  automatically reduced if high temperature option is selected
+
+config EZYNQ_DDR_DS_RTP
+	int
+	default 4
+	help
+	  Minimal Read-to-Precharge time (in tCK). Will use max of this
+	  and CONFIG_EZYNQ_DDR_DS_T_RTP/tCK
+
+config EZYNQ_DDR_DS_T_RTP
+	string
+	default '7.5'
+	help
+	  Minimal Read-to-Precharge time  (ns). Will use max of this
+	  divided by tCK and CONFIG_EZYNQ_DDR_DS_RTP
+
+config EZYNQ_DDR_DS_WTR
+	int
+	default 4
+	help
+	  Minimal Write-to-Read time (in tCK). Will use max of this and
+	  CONFIG_EZYNQ_DDR_DS_T_WTR/tCK
+
+config EZYNQ_DDR_DS_T_WTR
+	string
+	default '7.5'
+	help
+	  Minimal Write-to-Read time  (ns). Will use max of this divided
+	  by tCK and CONFIG_EZYNQ_DDR_DS_WTR
+
+config EZYNQ_DDR_DS_XP
+	int
+	default 4
+	help
+	  Minimal time from power down (DLL on) to any operation (in tCK)
+
+config EZYNQ_DDR_DS_T_DQSCK_MAX
+	string
+	default '5.5'
+	help
+	  LPDDR2 only. DQS output access time from CK (ns). Used for
+	  LPDDR2
+
+config EZYNQ_DDR_DS_CCD
+	int
+	default 5
+	help
+	  DESCRIPTION':'CAS-to-CAS command delay (in tCK) (4 in Micron DS)
+
+config EZYNQ_DDR_DS_RRD
+	int
+	default 6
+	help
+	  ACTIVATE-to-ACTIVATE minimal command period (in tCK)
+
+config EZYNQ_DDR_DS_T_RRD
+	string
+	default '10.0'
+	help
+	  ACTIVATE-to-ACTIVATE minimal command period (ns). May be used to
+	  calculate CONFIG_EZYNQ_DDR_DS_RRD automatically
+
+config EZYNQ_DDR_DS_MRD
+	int
+	default 4
+	help
+	  MODE REGISTER SET command period (in tCK)
+
+config EZYNQ_DDR_DS_MOD
+	int
+	default 12
+	help
+	  MODE REGISTER SET update delay (in tCK)
+
+config EZYNQ_DDR_DS_T_MOD
+	string
+	default '15.0'
+	help
+	  MODE REGISTER SET update delay  (ns).
+
+config EZYNQ_DDR_DS_WLMRD
+	int
+	default 40
+	help
+	  Write leveling : time to the first DQS rising edge (cycles).
+
+config EZYNQ_DDR_DS_CKE
+	int
+	default 3
+	help
+	  CKE min pulse width (in tCK)
+
+config EZYNQ_DDR_DS_T_CKE
+	string
+	default '5.625'
+	help
+	  CKE min pulse width (ns). 7.5
+
+config EZYNQ_DDR_DS_CKSRE
+	int
+	default 5
+	help
+	  Keep valid clock after self refresh/power down entry (in tCK)
+
+config EZYNQ_DDR_DS_T_CKSRE
+	string
+	default '10.0'
+	help
+	  Keep valid clock after self refresh/power down entry (ns).
+
+config EZYNQ_DDR_DS_CKSRX
+	int
+	default 5
+	help
+	  Valid clock before self refresh, power down or reset exit (in
+	  tCK)
+
+config EZYNQ_DDR_DS_T_CKSRX
+	string
+	default '10.0'
+	help
+	  Valid clock before self refresh, power down or reset exit (ns).
+
+config EZYNQ_DDR_DS_ZQCS
+	int
+	default 64
+	help
+	  ZQCS command: short calibration time (in tCK)
+
+config EZYNQ_DDR_DS_ZQCL
+	int
+	default 512
+	help
+	  ZQCL command: long calibration time, including init (in tCK)
+
+config EZYNQ_DDR_DS_INIT2
+	int
+	default 5
+	help
+	  LPDDR2 only: tINIT2 (in tCK): clock stable before CKE high
+
+config EZYNQ_DDR_DS_T_INIT4_US
+	string
+	default '1.0'
+	help
+	  LPDDR2 only: tINIT4 (in us)- minimal idle time after RESET
+	  command.
+
+config EZYNQ_DDR_DS_T_INIT5_US
+	string
+	default '10.0'
+	help
+	  LPDDR2 only: tINIT5 (in us)- maximal duration of device auto
+	  initialization.
+
+config EZYNQ_DDR_DS_T_ZQINIT_US
+	string
+	default '1.0'
+	help
+	  LPDDR2 only: tZQINIT (in us)- ZQ initial calibration time.
+
