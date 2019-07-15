@@ -3,8 +3,10 @@ CONFIG_ARCH_ZYNQ=y
 
 # don't need this
 CONFIG_TARGET_ELPHEL393=y
+
 CONFIG_DEFAULT_DEVICE_TREE="elphel393"
 
+# 3 lines below (CONFIG_SYS_*) remove the need for rewriting Kconfig
 CONFIG_SYS_BOARD="elphel393"
 CONFIG_SYS_VENDOR="elphel"
 CONFIG_SYS_NAME="elphel393"
