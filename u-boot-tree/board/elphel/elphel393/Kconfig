@@ -490,11 +490,11 @@ config EZYNQ_CLK_DDR_MHZ
 	help
 	  DDR clock frequency - DDR_3X (MHz)
 
-config EZYNQ_CLK_DDR_3X_MAX_MHZ
-	string
-	default '533.333333'
-	help
-	  DDR clock frequency - DDR_3X (MHz)
+#config EZYNQ_CLK_DDR_3X_MAX_MHZ
+#	string
+#	default '533.333333'
+#	help
+#	  DDR clock frequency - DDR_3X (MHz)
 
 config EZYNQ_CLK_ARM_MHZ
 	int
