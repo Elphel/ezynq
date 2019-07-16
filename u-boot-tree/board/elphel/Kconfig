@@ -10,9 +10,9 @@
  
 if TARGET_ELPHEL393
 
+source "board/elphel/elphel393/Kconfig"
 source "board/elphel/parts/MT41K256M16HA107/Kconfig"
 source "board/elphel/parts/XC7Z030_1FBG484C/Kconfig"
-source "board/elphel/elphel393/Kconfig"
 
 config SPL_NAND_BBT
 	bool
