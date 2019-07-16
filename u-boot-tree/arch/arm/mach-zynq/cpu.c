@@ -43,7 +43,8 @@ static const struct {
 	{ /* Sentinel */ },
 };
 
-int arch_cpu_init(void)
+/* ELPHEL: Added __weak because the function is overridden in ezynq.c */
+__weak int arch_cpu_init(void)
 {
 	zynq_slcr_unlock();
 #ifndef CONFIG_SPL_BUILD
