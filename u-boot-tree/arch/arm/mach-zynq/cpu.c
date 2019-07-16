@@ -43,8 +43,7 @@ static const struct {
 	{ /* Sentinel */ },
 };
 
-/* ELPHEL: Added __weak because the function is overridden in ezynq.c */
-__weak int arch_cpu_init(void)
+int arch_cpu_init(void)
 {
 	zynq_slcr_unlock();
 #ifndef CONFIG_SPL_BUILD
@@ -84,7 +83,7 @@ void reset_cpu(ulong addr)
 		;
 }
 
-#ifndef CONFIG_SYS_DCACHE_OFF
+#if !CONFIG_IS_ENABLED(SYS_DCACHE_OFF)
 void enable_caches(void)
 {
 	/* Enable D-cache. I-cache is already enabled in start.S */
