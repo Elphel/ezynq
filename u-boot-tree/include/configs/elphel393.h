@@ -41,7 +41,7 @@
     #define CONFIG_MTD_DEVICE
 #endif
 
-#define CONFIG_SPL_NAND_ELPHEL393
+//#define CONFIG_SPL_NAND_ELPHEL393
 #define CONFIG_SPL_NAND_IDENT
 
 #define CONFIG_SYS_NAND_U_BOOT_OFFS	0x100000 /*look-up in dts!*/
@@ -59,8 +59,8 @@
 #define CONFIG_SPL_NAND_INIT
 #define CONFIG_SPL_NAND_BASE
 #define CONFIG_SPL_NAND_ECC
-#define CONFIG_SPL_NAND_BBT
-#define CONFIG_SPL_NAND_IDS
+//#define CONFIG_SPL_NAND_BBT
+//#define CONFIG_SPL_NAND_IDS
 
 //#define CONFIG_SPL_BLK
 
@@ -99,7 +99,7 @@
 #define CONFIG_SYS_PROMPT		"elphel393-u-boot> "
 
 /*#define CONFIG_EZYNQ_SKIP_DDR*/
-#define CONFIG_EZYNQ_SKIP_CLK
+//#define CONFIG_EZYNQ_SKIP_CLK
 
 #define CONFIG_MTD_DEVICE
 
