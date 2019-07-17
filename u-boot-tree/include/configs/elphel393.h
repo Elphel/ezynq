@@ -80,6 +80,7 @@
 
 /* MMC support */
 #ifdef CONFIG_MMC_SDHCI_ZYNQ
+#undef CONFIG_SPL_FS_LOAD_PAYLOAD_NAME
 #define CONFIG_SPL_FS_LOAD_PAYLOAD_NAME     "u-boot-dtb.img"
 #endif
 
