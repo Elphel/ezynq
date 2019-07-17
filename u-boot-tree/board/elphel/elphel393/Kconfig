@@ -1,13 +1,13 @@
-#
+# 
 # (C) Copyright 2013 Elphel, Inc.
-#
+# 
 # Configuration for Elphel393 hardware initialization (pre-U-Boot)
-#
+# 
 # This program is free software; you can redistribute it andor
 # modify it under the terms of the GNU General Public License as
 # published by the Free Software Foundation; either version 3 of
 # the License, or (at your option) any later version.
-#
+# 
 # You should have received a copy of the GNU General Public
 # License
 # along with this program; if not, write to the Free Software
@@ -114,12 +114,6 @@ config EZYNQ_DUMP_DDR
 	help
 	  Dump (some of) DDR data
 
-config EZYNQ_ELPHEL393_H_IF_0
-	bool
-	default y
-
-if EZYNQ_ELPHEL393_H_IF_0
-
 config EZYNQ_DUMP_OCM_LOW
 	hex
 	default 0x0
@@ -147,8 +141,6 @@ config EZYNQ_DUMP_DDR_HIGH
 config EZYNQ_OCM_DDR_CHECKSUMS
 	bool
 	default y
-
-endif
 
 # Turning LED onoff at different stages of the boot process.
 # Requires CONFIG_EZYNQ_LED_DEBUG and CONFIG_EZYNQ_BOOT_DEBUG to
@@ -231,7 +223,7 @@ config EZYNQ_LAST_PRINT_DEBUG
 	bool
 	default y
 	help
-	  'Output to UART before exiting arch_cpu_init()
+	  Output to UART before exiting arch_cpu_init()
 
 config EZYNQ_OCM
 	bool
@@ -258,7 +250,6 @@ config EZYNQ_MIO_ETH_0__SLOW
 config EZYNQ_MIO_ETH_MDIO__SLOW
 	bool
 	default y
-	default y if !EZYNQ_ELPHEL393_H_IF_1
 
 config EZYNQ_MIO_USB_0__SLOW
 	bool
@@ -310,7 +301,7 @@ config EZYNQ_MIO_UART_0
 	help
 	  #  8+4*N
 
-#
+# 
 # Red LED - pullup, input - on,
 # output (or undefined) -   off
 # #define CONFIG_EZYNQ_MIO_PULLUP_EN_47
@@ -490,12 +481,6 @@ config EZYNQ_CLK_DDR_MHZ
 	help
 	  DDR clock frequency - DDR_3X (MHz)
 
-#config EZYNQ_CLK_DDR_3X_MAX_MHZ
-#	string
-#	default '533.333333'
-#	help
-#	  DDR clock frequency - DDR_3X (MHz)
-
 config EZYNQ_CLK_ARM_MHZ
 	int
 	default 667
@@ -546,7 +531,7 @@ config EZYNQ_CLK_FPGA1_SRC
 
 config EZYNQ_CLK_FPGA2_SRC
 	string
-	default "None"
+	default 'None'
 	help
 	  FPGA 2 clock source
 
@@ -801,10 +786,6 @@ config EZYNQ_DDR_CLOCK_3_LENGTH_MM
 	int
 	default 0
 
-config EZYNQ_ELPHEL393_H_IF_1
-	bool
-	default y
-
 config EZYNQ_UART_DEBUG_USE_LED
 	bool
 	default n
@@ -813,64 +794,55 @@ config EZYNQ_UART_DEBUG_USE_LED
 
 config EZYNQ_SILICON
 	int
-	default 3 if EZYNQ_ELPHEL393_H_IF_1
-	default 3 if !EZYNQ_ELPHEL393_H_IF_1
+	default 3
 	help
 	  Silicon revision
 
 config EZYNQ_PHY_WRLV_INIT_RATIO_0
 	hex
-	default 0x0 if EZYNQ_ELPHEL393_H_IF_1
-	default 0x4 if !EZYNQ_ELPHEL393_H_IF_1
+	default 0x0
 	help
 	  Initial ratio for write leveling FSM, slice 0
 
 config EZYNQ_PHY_WRLV_INIT_RATIO_1
 	hex
-	default 0x0 if EZYNQ_ELPHEL393_H_IF_1
-	default 0x0 if !EZYNQ_ELPHEL393_H_IF_1
+	default 0x0
 	help
 	  Initial ratio for write leveling FSM, slice 1
 
 config EZYNQ_PHY_WRLV_INIT_RATIO_2
 	hex
-	default 0x0 if EZYNQ_ELPHEL393_H_IF_1
-	default 0x5 if !EZYNQ_ELPHEL393_H_IF_1
+	default 0x0
 	help
 	  Initial ratio for write leveling FSM, slice 2
 
 config EZYNQ_PHY_WRLV_INIT_RATIO_3
 	hex
-	default 0x0 if EZYNQ_ELPHEL393_H_IF_1
-	default 0x7 if !EZYNQ_ELPHEL393_H_IF_1
+	default 0x0
 	help
 	  Initial ratio for write leveling FSM, slice 3
 
 config EZYNQ_PHY_GTLV_INIT_RATIO_0
 	hex
-	default 0x0 if EZYNQ_ELPHEL393_H_IF_1
-	default 0x8e if !EZYNQ_ELPHEL393_H_IF_1
+	default 0x0
 	help
 	  Initial ratio for gate leveling FSM, slice 0
 
 config EZYNQ_PHY_GTLV_INIT_RATIO_1
 	hex
-	default 0x0 if EZYNQ_ELPHEL393_H_IF_1
-	default 0x95 if !EZYNQ_ELPHEL393_H_IF_1
+	default 0x0
 	help
 	  Initial ratio for gate leveling FSM, slice 1
 
 config EZYNQ_PHY_GTLV_INIT_RATIO_2
 	hex
-	default 0x0 if EZYNQ_ELPHEL393_H_IF_1
-	default 0x8e if !EZYNQ_ELPHEL393_H_IF_1
+	default 0x0
 	help
 	  Initial ratio for gate leveling FSM, slice 2
 
 config EZYNQ_PHY_GTLV_INIT_RATIO_3
 	hex
-	default 0x0 if EZYNQ_ELPHEL393_H_IF_1
-	default 0x8c if !EZYNQ_ELPHEL393_H_IF_1
+	default 0x0
 	help
 	  Initial ratio for gate leveling FSM, slice 3
 
@@ -900,103 +872,88 @@ config EZYNQ_PHY_RD_DQS_SLAVE_RATIO_3
 
 config EZYNQ_PHY_WR_DQS_SLAVE_RATIO_0
 	hex
-	default 0x0 if EZYNQ_ELPHEL393_H_IF_1
-	default 0x84 if !EZYNQ_ELPHEL393_H_IF_1
+	default 0x0
 	help
 	  Ratio for write DQS slave DLL (256 - clock period), slice 0
 
 config EZYNQ_PHY_WR_DQS_SLAVE_RATIO_1
 	hex
-	default 0x0 if EZYNQ_ELPHEL393_H_IF_1
-	default 0x80 if !EZYNQ_ELPHEL393_H_IF_1
+	default 0x0
 	help
 	  Ratio for write DQS slave DLL (256 - clock period), slice 1
 
 config EZYNQ_PHY_WR_DQS_SLAVE_RATIO_2
 	hex
-	default 0x0 if EZYNQ_ELPHEL393_H_IF_1
-	default 0x85 if !EZYNQ_ELPHEL393_H_IF_1
+	default 0x0
 	help
 	  Ratio for write DQS slave DLL (256 - clock period), slice 2
 
 config EZYNQ_PHY_WR_DQS_SLAVE_RATIO_3
 	hex
-	default 0x0 if EZYNQ_ELPHEL393_H_IF_1
-	default 0x87 if !EZYNQ_ELPHEL393_H_IF_1
+	default 0x0
 	help
 	  Ratio for write DQS slave DLL (256 - clock period), slice 3
 
 config EZYNQ_PHY_FIFO_WE_SLAVE_RATIO_0
 	hex
-	default 0x35 if EZYNQ_ELPHEL393_H_IF_1
-	default 0xe3 if !EZYNQ_ELPHEL393_H_IF_1
+	default 0x35
 	help
 	  Ratio for FIFO WE slave DLL (256 - clock period), slice 0
 
 config EZYNQ_PHY_FIFO_WE_SLAVE_RATIO_1
 	hex
-	default 0x35 if EZYNQ_ELPHEL393_H_IF_1
-	default 0xea if !EZYNQ_ELPHEL393_H_IF_1
+	default 0x35
 	help
 	  Ratio for FIFO WE slave DLL (256 - clock period), slice 0
 
 config EZYNQ_PHY_FIFO_WE_SLAVE_RATIO_2
 	hex
-	default 0x35 if EZYNQ_ELPHEL393_H_IF_1
-	default 0xe3 if !EZYNQ_ELPHEL393_H_IF_1
+	default 0x35
 	help
 	  Ratio for FIFO WE slave DLL (256 - clock period), slice 0
 
 config EZYNQ_PHY_FIFO_WE_SLAVE_RATIO_3
 	hex
-	default 0x35 if EZYNQ_ELPHEL393_H_IF_1
-	default 0xe1 if !EZYNQ_ELPHEL393_H_IF_1
+	default 0x35
 	help
 	  Ratio for FIFO WE slave DLL (256 - clock period), slice 0
 
 config EZYNQ_PHY_PHY_WR_DATA_SLAVE_RATIO_0
 	hex
-	default 0x40 if EZYNQ_ELPHEL393_H_IF_1
-	default 0xc4 if !EZYNQ_ELPHEL393_H_IF_1
+	default 0x40
 	help
 	  Ratio for write data slave DLL (256 - clock period), slice 0
 
 config EZYNQ_PHY_PHY_WR_DATA_SLAVE_RATIO_1
 	hex
-	default 0x40 if EZYNQ_ELPHEL393_H_IF_1
-	default 0xc0 if !EZYNQ_ELPHEL393_H_IF_1
+	default 0x40
 	help
 	  Ratio for write data slave DLL (256 - clock period), slice 1
 
 config EZYNQ_PHY_PHY_WR_DATA_SLAVE_RATIO_2
 	hex
-	default 0x40 if EZYNQ_ELPHEL393_H_IF_1
-	default 0xc5 if !EZYNQ_ELPHEL393_H_IF_1
+	default 0x40
 	help
 	  Ratio for write data slave DLL (256 - clock period), slice 2
 
 config EZYNQ_PHY_PHY_WR_DATA_SLAVE_RATIO_3
 	hex
-	default 0x40 if EZYNQ_ELPHEL393_H_IF_1
-	default 0xc7 if !EZYNQ_ELPHEL393_H_IF_1
+	default 0x40
 	help
 	  Ratio for write data slave DLL (256 - clock period), slice 3
 
 config EZYNQ_PHY_PHY_CTRL_SLAVE_RATIO
 	hex
-	default 0xb0 if EZYNQ_ELPHEL393_H_IF_1
-	default 0x100 if !EZYNQ_ELPHEL393_H_IF_1
+	default 0xb0
 	help
 	  0x90  0x70 0x80 Ratio for address/command (256 - clock period)
 
 config EZYNQ_PHY_INVERT_CLK
 	bool
-	default y if EZYNQ_ELPHEL393_H_IF_1
-	default y if !EZYNQ_ELPHEL393_H_IF_1
+	default y
 	help
 	  Invert CLK out (if clk can arrive to DRAM chip earlier/at the
 	  same time as DQS)
-
 
 # not yet processed
 # #define CONFIG_EZYNQ_DDR_PERIPHERAL_CLKSRC   DDR PLL
