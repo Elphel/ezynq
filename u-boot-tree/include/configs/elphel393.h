@@ -78,6 +78,11 @@
 
 #include <configs/zynq-common.h>
 
+/* MMC support */
+#ifdef CONFIG_MMC_SDHCI_ZYNQ
+#define CONFIG_SPL_FS_LOAD_PAYLOAD_NAME     "u-boot-dtb.img"
+#endif
+
 /* Need to define it - otherwise error "FDT creation failed!"*/
 #define CONFIG_SYS_SDRAM_BASE       0
 
@@ -96,7 +101,7 @@
 #define CONFIG_CMD_MEMTEST
 
 #define CONFIG_BOOTDELAY	1 /* -1 to Disable autoboot */
-#define CONFIG_SYS_PROMPT		"elphel393-u-boot> "
+#define CONFIG_SYS_PROMPT	"elphel393-u-boot> "
 
 /*#define CONFIG_EZYNQ_SKIP_DDR*/
 //#define CONFIG_EZYNQ_SKIP_CLK
