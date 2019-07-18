@@ -18,8 +18,8 @@
 #include <asm/arch/hardware.h>
 #include <asm/arch/sys_proto.h>
 
+// very old
 //extern nand_info_t nand_info[CONFIG_SYS_MAX_NAND_DEVICE];
-static struct mtd_info *mtd;
 
 static int is_badblock(struct mtd_info *mtd, loff_t offs, int allowbbt)
 {
@@ -55,6 +55,11 @@ int nand_spl_load_image(uint32_t offs, unsigned int size, void *buf)
 	//mtd = &nand_info[0];
 	//mtd.priv = &nand_chip;
 	//chip = mtd->priv;
+
+        // 2019.07.17, got funciton from nand.c
+        // 0 index is hardcoded, might do something later
+        mtd = get_nand_dev_by_index(0);
+
 	chip = mtd_to_nand(mtd);
 
 	page = offs >> chip->page_shift;
